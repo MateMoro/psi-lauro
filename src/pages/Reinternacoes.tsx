@@ -221,20 +221,33 @@ export default function Reinternacoes() {
                       )}
                     </div>
                     <Badge 
-                      variant={patient.admissions[0]?.genero === 'M' ? 'default' : 'secondary'}
+                      variant={patient.admissions[0]?.genero === 'MASC' ? 'default' : patient.admissions[0]?.genero === 'FEM' ? 'secondary' : 'outline'}
                     >
-                      {patient.admissions[0]?.genero === 'M' ? 'Masculino' : 'Feminino'}
+                      {patient.admissions[0]?.genero === 'MASC' ? 'Masculino' : patient.admissions[0]?.genero === 'FEM' ? 'Feminino' : 'Outros'}
                     </Badge>
+                  </div>
+
+                  <div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary">
+                        {patient.admissions[0]?.cid_grupo || 'N/A'}
+                      </Badge>
+                      <span className="text-sm text-muted-foreground">Diagnóstico</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm">{patient.admissions[0]?.caps_referencia || 'N/A'}</span>
+                    </div>
                   </div>
 
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead>Internação</TableHead>
                         <TableHead>Data Admissão</TableHead>
                         <TableHead>Data Alta</TableHead>
-                        <TableHead>Intervalo (dias)</TableHead>
-                        <TableHead>Diagnóstico</TableHead>
-                        <TableHead>CAPS</TableHead>
+                        <TableHead>Duração</TableHead>
+                        <TableHead>Intervalo</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -248,13 +261,33 @@ export default function Reinternacoes() {
                             )
                           : null;
 
+                        const duration = admission.data_alta && admission.data_admissao
+                          ? Math.floor(
+                              (new Date(admission.data_alta).getTime() - 
+                               new Date(admission.data_admissao).getTime()) / 
+                              (1000 * 60 * 60 * 24)
+                            )
+                          : null;
+
                         return (
                           <TableRow key={admissionIndex}>
+                            <TableCell className="font-medium">
+                              {admissionIndex + 1}ª internação
+                            </TableCell>
                             <TableCell className="font-medium">
                               {formatDate(admission.data_admissao)}
                             </TableCell>
                             <TableCell>
                               {formatDate(admission.data_alta || '')}
+                            </TableCell>
+                            <TableCell>
+                              {duration !== null ? (
+                                <Badge variant="outline">
+                                  {duration} dias
+                                </Badge>
+                              ) : (
+                                <span className="text-muted-foreground">Em curso</span>
+                              )}
                             </TableCell>
                             <TableCell>
                               {interval !== null ? (
@@ -264,15 +297,6 @@ export default function Reinternacoes() {
                               ) : (
                                 <span className="text-muted-foreground">—</span>
                               )}
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="secondary">
-                                {admission.cid_grupo || 'N/A'}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="flex items-center gap-1">
-                              <MapPin className="h-3 w-3 text-muted-foreground" />
-                              {admission.caps_referencia || 'N/A'}
                             </TableCell>
                           </TableRow>
                         );

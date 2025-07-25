@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { FilterBar, DashboardFilters } from "@/components/dashboard/FilterBar";
 import { PatientSearch } from "@/components/dashboard/PatientSearch";
-import { HorizontalBarChart } from "@/components/dashboard/charts/HorizontalBarChart";
+import { VerticalBarChart as DiagnosisChart } from "@/components/dashboard/charts/VerticalBarChart";
 import { CustomPieChart } from "@/components/dashboard/charts/PieChart";
 import { VerticalBarChart } from "@/components/dashboard/charts/VerticalBarChart";
 import { useToast } from "@/hooks/use-toast";
@@ -18,6 +18,7 @@ interface Patient {
   genero: string;
   data_nascimento: string;
   dias_internacao: number;
+  procedencia: string;
 }
 
 export default function Dashboard() {
@@ -25,6 +26,7 @@ export default function Dashboard() {
   const [filteredPatients, setFilteredPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [availableCaps, setAvailableCaps] = useState<string[]>([]);
+  const [availableProcedencias, setAvailableProcedencias] = useState<string[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -42,9 +44,11 @@ export default function Dashboard() {
       setPatients(data || []);
       setFilteredPatients(data || []);
       
-      // Extract unique CAPS
+      // Extract unique CAPS and Procedencias
       const uniqueCaps = [...new Set(data?.map(p => p.caps_referencia).filter(Boolean))];
+      const uniqueProcedencias = [...new Set(data?.map(p => p.procedencia).filter(Boolean))];
       setAvailableCaps(uniqueCaps);
+      setAvailableProcedencias(uniqueProcedencias);
     } catch (error) {
       console.error('Erro ao buscar pacientes:', error);
       toast({
@@ -60,17 +64,19 @@ export default function Dashboard() {
   const applyFilters = (filters: DashboardFilters) => {
     let filtered = [...patients];
 
-    if (filters.capsReferencia && filters.capsReferencia[0] !== 'all') {
-      filtered = filtered.filter(p => 
-        filters.capsReferencia?.includes(p.caps_referencia)
-      );
+    if (filters.capsReferencia) {
+      filtered = filtered.filter(p => p.caps_referencia === filters.capsReferencia);
     }
 
-    if (filters.genero && filters.genero !== 'all') {
+    if (filters.genero) {
       filtered = filtered.filter(p => p.genero === filters.genero);
     }
 
-    if (filters.faixaEtaria && filters.faixaEtaria !== 'all') {
+    if (filters.procedencia) {
+      filtered = filtered.filter(p => p.procedencia === filters.procedencia);
+    }
+
+    if (filters.faixaEtaria) {
       const [min, max] = filters.faixaEtaria.includes('+') 
         ? [parseInt(filters.faixaEtaria), 999]
         : filters.faixaEtaria.split('-').map(Number);
@@ -80,18 +86,6 @@ export default function Dashboard() {
         const age = new Date().getFullYear() - new Date(p.data_nascimento).getFullYear();
         return age >= min && age <= max;
       });
-    }
-
-    if (filters.dataInicio) {
-      filtered = filtered.filter(p => 
-        new Date(p.data_admissao) >= filters.dataInicio!
-      );
-    }
-
-    if (filters.dataFim) {
-      filtered = filtered.filter(p => 
-        new Date(p.data_admissao) <= filters.dataFim!
-      );
     }
 
     setFilteredPatients(filtered);
@@ -119,26 +113,44 @@ export default function Dashboard() {
   // Prepare chart data
   const getTopDiagnoses = () => {
     const diagnosisCount = filteredPatients.reduce((acc, p) => {
-      const diagnosis = p.cid_grupo || 'Não informado';
+      let diagnosis = p.cid_grupo || 'Não informado';
+      
+      // Map specific diagnoses as requested
+      if (diagnosis === 'Transtornos por uso de substâncias') {
+        diagnosis = 'Transtorno por uso de SPA';
+      } else if (diagnosis === 'Espectro da Esquizofrenia e Transtornos Psicóticos') {
+        diagnosis = 'Esquizofrenia e outros';
+      }
+      
       acc[diagnosis] = (acc[diagnosis] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
 
     return Object.entries(diagnosisCount)
       .sort(([,a], [,b]) => b - a)
-      .slice(0, 4)
-      .map(([name, value]) => ({ name, value, color: `hsl(var(--chart-${Math.floor(Math.random() * 4) + 1}))` }));
+      .slice(0, 3)
+      .map(([name, value], index) => ({ 
+        name, 
+        value, 
+        color: `hsl(var(--chart-${index + 1}))` 
+      }));
   };
 
   const getGenderDistribution = () => {
     const genderCount = filteredPatients.reduce((acc, p) => {
-      const gender = p.genero === 'M' ? 'Masculino' : p.genero === 'F' ? 'Feminino' : 'Não informado';
+      const gender = p.genero === 'MASC' ? 'Masculino' : 
+                     p.genero === 'FEM' ? 'Feminino' : 
+                     'Outros';
       acc[gender] = (acc[gender] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
 
     return Object.entries(genderCount)
-      .map(([name, value]) => ({ name, value, color: `hsl(var(--chart-${name === 'Masculino' ? '1' : '2'}))` }));
+      .map(([name, value], index) => ({ 
+        name, 
+        value, 
+        color: `hsl(var(--chart-${index + 1}))` 
+      }));
   };
 
   const getAgeDistribution = () => {
@@ -184,10 +196,14 @@ export default function Dashboard() {
         <p className="text-muted-foreground">Dashboard de análise de pacientes psiquiátricos</p>
       </div>
 
-      <FilterBar onFiltersChange={applyFilters} availableCaps={availableCaps} />
+      <FilterBar 
+        onFiltersChange={applyFilters} 
+        availableCaps={availableCaps} 
+        availableProcedencias={availableProcedencias} 
+      />
 
       {/* Metrics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <MetricCard
           title="Tempo Médio de Internação"
           value={metrics.avgStayDaysFormatted}
@@ -209,20 +225,13 @@ export default function Dashboard() {
           icon={RefreshCw}
           variant="warning"
         />
-        <MetricCard
-          title="Período Ativo"
-          value={filteredPatients.length > 0 ? "Atual" : "N/A"}
-          description="Status do período analisado"
-          icon={Calendar}
-          variant="info"
-        />
       </div>
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <HorizontalBarChart
+        <DiagnosisChart
           data={getTopDiagnoses()}
-          title="Top 4 Diagnósticos (CID Grupo)"
+          title="Top 3 Diagnósticos (CID Grupo)"
           description="Diagnósticos mais frequentes"
         />
         <CustomPieChart

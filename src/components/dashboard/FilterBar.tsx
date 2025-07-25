@@ -48,14 +48,14 @@ export function FilterBar({ onFiltersChange, availableCaps, availableProcedencia
               CAPS de Referência
             </Label>
             <Select
-              value={filters.capsReferencia || ""}
-              onValueChange={(value) => updateFilters({ capsReferencia: value || undefined })}
+              value={filters.capsReferencia || "all"}
+              onValueChange={(value) => updateFilters({ capsReferencia: value === "all" ? undefined : value })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Todos os CAPS" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os CAPS</SelectItem>
+                <SelectItem value="all">Todos os CAPS</SelectItem>
                 {availableCaps.map((caps) => (
                   <SelectItem key={caps} value={caps}>
                     {caps}
@@ -71,14 +71,14 @@ export function FilterBar({ onFiltersChange, availableCaps, availableProcedencia
               Gênero
             </Label>
             <Select
-              value={filters.genero || ""}
-              onValueChange={(value) => updateFilters({ genero: value || undefined })}
+              value={filters.genero || "all"}
+              onValueChange={(value) => updateFilters({ genero: value === "all" ? undefined : value })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Todos" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value="all">Todos</SelectItem>
                 <SelectItem value="MASC">Masculino</SelectItem>
                 <SelectItem value="FEM">Feminino</SelectItem>
                 <SelectItem value="OUTROS">Outros</SelectItem>
@@ -92,14 +92,14 @@ export function FilterBar({ onFiltersChange, availableCaps, availableProcedencia
               Procedência
             </Label>
             <Select
-              value={filters.procedencia || ""}
-              onValueChange={(value) => updateFilters({ procedencia: value || undefined })}
+              value={filters.procedencia || "all"}
+              onValueChange={(value) => updateFilters({ procedencia: value === "all" ? undefined : value })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Todas as procedências" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todas as procedências</SelectItem>
+                <SelectItem value="all">Todas as procedências</SelectItem>
                 {availableProcedencias.map((procedencia) => (
                   <SelectItem key={procedencia} value={procedencia}>
                     {procedencia}
@@ -115,14 +115,14 @@ export function FilterBar({ onFiltersChange, availableCaps, availableProcedencia
               Faixa Etária
             </Label>
             <Select
-              value={filters.faixaEtaria || ""}
-              onValueChange={(value) => updateFilters({ faixaEtaria: value || undefined })}
+              value={filters.faixaEtaria || "all"}
+              onValueChange={(value) => updateFilters({ faixaEtaria: value === "all" ? undefined : value })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Todas as idades" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todas as idades</SelectItem>
+                <SelectItem value="all">Todas as idades</SelectItem>
                 <SelectItem value="0-17">0-17 anos</SelectItem>
                 <SelectItem value="18-30">18-30 anos</SelectItem>
                 <SelectItem value="31-50">31-50 anos</SelectItem>

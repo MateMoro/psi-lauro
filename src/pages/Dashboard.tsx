@@ -158,7 +158,9 @@ export default function Dashboard() {
       .sort(([,a], [,b]) => b - a)
       .slice(0, 5)
       .map(([name, value], index) => ({ 
-        name, 
+        name: name.includes('Transt.') || name.includes('Esquizofrenia') 
+          ? name.replace(' ', '\n') 
+          : name, 
         value, 
         percentage: total > 0 ? Math.round((value / total) * 100) : 0,
         color: `hsl(var(--chart-${index + 1}))` 
@@ -167,10 +169,12 @@ export default function Dashboard() {
 
   const getGenderDistribution = () => {
     const genderCount = filteredPatients.reduce((acc, p) => {
-      const gender = p.genero === 'MASC' ? 'Masculino' : 
-                     p.genero === 'FEM' ? 'Feminino' : 
-                     'Outros';
-      acc[gender] = (acc[gender] || 0) + 1;
+      if (p.genero === 'MASC') {
+        acc['Masculino'] = (acc['Masculino'] || 0) + 1;
+      } else if (p.genero === 'FEM') {
+        acc['Feminino'] = (acc['Feminino'] || 0) + 1;
+      }
+      // Skip "Outros" category entirely
       return acc;
     }, {} as Record<string, number>);
 
@@ -227,10 +231,10 @@ export default function Dashboard() {
     <div className="space-y-6">
       <div className="text-center mb-8">
         <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-2">
-          Análises
+          PSIAnalytics
         </h1>
         <h2 className="text-xl font-semibold text-muted-foreground">
-          IntegraPsi – Análise Clínica de Internações Psiquiátricas | Hospital Planalto
+          Análise Clínica de Internações
         </h2>
       </div>
 

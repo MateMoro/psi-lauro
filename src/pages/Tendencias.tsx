@@ -49,6 +49,7 @@ interface ProcedenciaStats {
   avgStay: number;
   count: number;
   spaPercentage: number;
+  readmissionRate: number;
 }
 
 export default function Tendencias() {
@@ -210,11 +211,17 @@ export default function Tendencias() {
       ).length;
       const spaPercentage = (spaCount / patientList.length) * 100;
 
+      // Calculate readmission rate
+      const patientNames = patientList.map(p => p.nome);
+      const uniqueNames = new Set(patientNames);
+      const readmissionRate = ((patientNames.length - uniqueNames.size) / uniqueNames.size) * 100;
+
       return {
         procedencia,
         avgStay,
         count: patientList.length,
-        spaPercentage
+        spaPercentage,
+        readmissionRate
       };
     }).sort((a, b) => b.avgStay - a.avgStay);
   };
@@ -251,11 +258,15 @@ export default function Tendencias() {
       });
     }
 
-    // CAPS with highest stay (excluding Vila Monumento)
+    // CAPS with highest stay (excluding specific CAPS and those with < 10 patients)
     if (capsStats.length > 0) {
-      const zonaLesteCaps = capsStats.filter(caps => caps.caps !== 'ADULTO II VILA MONUMENTO');
-      if (zonaLesteCaps.length > 0) {
-        const topCaps = zonaLesteCaps.sort((a, b) => b.avgStay - a.avgStay)[0];
+      const validCaps = capsStats.filter(caps => 
+        caps.caps !== 'ADULTO II VILA MONUMENTO' && 
+        caps.caps !== 'AD II ERMELINO MATARAZZO' &&
+        caps.patientCount >= 10
+      );
+      if (validCaps.length > 0) {
+        const topCaps = validCaps.sort((a, b) => b.avgStay - a.avgStay)[0];
         newInsights.push({
           id: 'caps-highest-stay',
           title: 'CAPS com Maior Permanência (Zona Leste)',
@@ -433,7 +444,7 @@ export default function Tendencias() {
                   <TableHead>Diagnóstico</TableHead>
                   <TableHead className="text-right">Casos</TableHead>
                   <TableHead className="text-right">Permanência</TableHead>
-                  <TableHead className="text-right">Idosos (%)</TableHead>
+                  <TableHead className="text-right">Taxa de Reinternação (%)</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -447,8 +458,8 @@ export default function Tendencias() {
                       <Badge variant="outline">{diag.avgStay.toFixed(1)} dias</Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Badge variant={diag.elderlyPercentage > 30 ? "secondary" : "outline"}>
-                        {diag.elderlyPercentage.toFixed(0)}%
+                      <Badge variant={diag.readmissionRate > 15 ? "destructive" : "secondary"}>
+                        {diag.readmissionRate.toFixed(1)}%
                       </Badge>
                     </TableCell>
                   </TableRow>
@@ -473,7 +484,7 @@ export default function Tendencias() {
                   <TableHead>Procedência</TableHead>
                   <TableHead className="text-right">Casos</TableHead>
                   <TableHead className="text-right">Permanência</TableHead>
-                  <TableHead className="text-right">SPA (%)</TableHead>
+                  <TableHead className="text-right">Taxa de Reinternação (%)</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -494,8 +505,8 @@ export default function Tendencias() {
                         <Badge variant="outline">{proc.avgStay.toFixed(1)} dias</Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Badge variant={proc.spaPercentage > 20 ? "destructive" : "secondary"}>
-                          {proc.spaPercentage.toFixed(0)}%
+                        <Badge variant={proc.readmissionRate > 15 ? "destructive" : "secondary"}>
+                          {proc.readmissionRate.toFixed(1)}%
                         </Badge>
                       </TableCell>
                     </TableRow>

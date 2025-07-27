@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { TrendingUp, Clock, MapPin, Users, Brain, Activity } from "lucide-react";
+import { TrendingUp, Clock, MapPin, Users, Brain, Activity, BarChart3, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { HorizontalBarChart } from "@/components/dashboard/charts/HorizontalBarChart";
 import { useToast } from "@/hooks/use-toast";
 
 interface Patient {
@@ -24,15 +25,39 @@ interface Insight {
   description: string;
   icon: any;
   value: string;
-  type: 'caps' | 'procedencia' | 'genero' | 'diagnostico' | 'geral';
+  type: 'caps' | 'procedencia' | 'genero' | 'diagnostico' | 'geral' | 'idade';
+  priority: 'high' | 'medium' | 'low';
+}
+
+interface DiagnosisStats {
+  diagnosis: string;
+  avgStay: number;
+  readmissionRate: number;
+  count: number;
+  elderlyPercentage: number;
+}
+
+interface CapsStats {
+  caps: string;
+  avgStay: number;
+  patientCount: number;
+  readmissionRate: number;
+}
+
+interface ProcedenciaStats {
+  procedencia: string;
+  avgStay: number;
+  count: number;
+  spaPercentage: number;
 }
 
 export default function Tendencias() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [insights, setInsights] = useState<Insight[]>([]);
+  const [diagnosisStats, setDiagnosisStats] = useState<DiagnosisStats[]>([]);
+  const [capsStats, setCapsStats] = useState<CapsStats[]>([]);
+  const [procedenciaStats, setProcedenciaStats] = useState<ProcedenciaStats[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedDiagnosis, setSelectedDiagnosis] = useState<string>("");
-  const [availableDiagnoses, setAvailableDiagnoses] = useState<string[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -41,9 +66,9 @@ export default function Tendencias() {
 
   useEffect(() => {
     if (patients.length > 0) {
-      generateInsights();
+      generateAnalytics();
     }
-  }, [patients, selectedDiagnosis]);
+  }, [patients]);
 
   const fetchPatients = async () => {
     try {
@@ -54,10 +79,6 @@ export default function Tendencias() {
       if (error) throw error;
 
       setPatients(data || []);
-      
-      // Extract unique diagnoses
-      const uniqueDiagnoses = [...new Set(data?.map(p => p.cid_grupo).filter(Boolean))];
-      setAvailableDiagnoses(uniqueDiagnoses);
     } catch (error) {
       console.error('Erro ao buscar pacientes:', error);
       toast({
@@ -70,140 +91,200 @@ export default function Tendencias() {
     }
   };
 
-  const generateInsights = () => {
-    const filteredPatients = selectedDiagnosis 
-      ? patients.filter(p => p.cid_grupo === selectedDiagnosis)
-      : patients;
+  const generateAnalytics = () => {
+    // 1. Análise por Diagnóstico
+    const diagnosisAnalysis = generateDiagnosisAnalysis();
+    setDiagnosisStats(diagnosisAnalysis);
 
+    // 2. Análise por CAPS
+    const capsAnalysis = generateCapsAnalysis();
+    setCapsStats(capsAnalysis);
+
+    // 3. Análise por Procedência
+    const procedenciaAnalysis = generateProcedenciaAnalysis();
+    setProcedenciaStats(procedenciaAnalysis);
+
+    // 4. Gerar insights principais
+    generateKeyInsights(diagnosisAnalysis, capsAnalysis, procedenciaAnalysis);
+  };
+
+  const generateDiagnosisAnalysis = (): DiagnosisStats[] => {
+    const diagnosisGroups = patients.reduce((acc, p) => {
+      if (!p.cid_grupo) return acc;
+      if (!acc[p.cid_grupo]) {
+        acc[p.cid_grupo] = [];
+      }
+      acc[p.cid_grupo].push(p);
+      return acc;
+    }, {} as Record<string, Patient[]>);
+
+    return Object.entries(diagnosisGroups).map(([diagnosis, patientList]) => {
+      const avgStay = patientList.reduce((sum, p) => sum + (p.dias_internacao || 0), 0) / patientList.length;
+      
+      // Calculate readmission rate
+      const patientNames = patientList.map(p => p.nome);
+      const uniqueNames = new Set(patientNames);
+      const readmissionRate = ((patientNames.length - uniqueNames.size) / uniqueNames.size) * 100;
+
+      // Calculate elderly percentage (>60 years)
+      const elderlyCount = patientList.filter(p => {
+        if (!p.data_nascimento) return false;
+        const age = new Date().getFullYear() - new Date(p.data_nascimento).getFullYear();
+        return age > 60;
+      }).length;
+      const elderlyPercentage = (elderlyCount / patientList.length) * 100;
+
+      return {
+        diagnosis,
+        avgStay,
+        readmissionRate,
+        count: patientList.length,
+        elderlyPercentage
+      };
+    }).sort((a, b) => b.avgStay - a.avgStay);
+  };
+
+  const generateCapsAnalysis = (): CapsStats[] => {
+    const capsGroups = patients.reduce((acc, p) => {
+      if (!p.caps_referencia) return acc;
+      if (!acc[p.caps_referencia]) {
+        acc[p.caps_referencia] = [];
+      }
+      acc[p.caps_referencia].push(p);
+      return acc;
+    }, {} as Record<string, Patient[]>);
+
+    return Object.entries(capsGroups).map(([caps, patientList]) => {
+      const avgStay = patientList.reduce((sum, p) => sum + (p.dias_internacao || 0), 0) / patientList.length;
+      
+      // Calculate readmission rate
+      const patientNames = patientList.map(p => p.nome);
+      const uniqueNames = new Set(patientNames);
+      const readmissionRate = ((patientNames.length - uniqueNames.size) / uniqueNames.size) * 100;
+
+      return {
+        caps,
+        avgStay,
+        patientCount: patientList.length,
+        readmissionRate
+      };
+    }).sort((a, b) => b.patientCount - a.patientCount);
+  };
+
+  const generateProcedenciaAnalysis = (): ProcedenciaStats[] => {
+    const procedenciaGroups = patients.reduce((acc, p) => {
+      if (!p.procedencia) return acc;
+      if (!acc[p.procedencia]) {
+        acc[p.procedencia] = [];
+      }
+      acc[p.procedencia].push(p);
+      return acc;
+    }, {} as Record<string, Patient[]>);
+
+    return Object.entries(procedenciaGroups).map(([procedencia, patientList]) => {
+      const avgStay = patientList.reduce((sum, p) => sum + (p.dias_internacao || 0), 0) / patientList.length;
+      
+      // Calculate SPA percentage
+      const spaCount = patientList.filter(p => 
+        p.cid_grupo?.includes('substância') || p.cid_grupo?.includes('SPA')
+      ).length;
+      const spaPercentage = (spaCount / patientList.length) * 100;
+
+      return {
+        procedencia,
+        avgStay,
+        count: patientList.length,
+        spaPercentage
+      };
+    }).sort((a, b) => b.avgStay - a.avgStay);
+  };
+
+  const generateKeyInsights = (diagnosisStats: DiagnosisStats[], capsStats: CapsStats[], procedenciaStats: ProcedenciaStats[]) => {
     const newInsights: Insight[] = [];
 
-    // CAPS com maior média de permanência
-    const capsPermanencia = filteredPatients.reduce((acc, p) => {
-      if (!p.caps_referencia || !p.dias_internacao) return acc;
-      if (!acc[p.caps_referencia]) {
-        acc[p.caps_referencia] = { total: 0, count: 0 };
-      }
-      acc[p.caps_referencia].total += p.dias_internacao;
-      acc[p.caps_referencia].count += 1;
-      return acc;
-    }, {} as Record<string, { total: number; count: number }>);
-
-    const capsMedias = Object.entries(capsPermanencia)
-      .map(([caps, data]) => ({ caps, media: data.total / data.count }))
-      .sort((a, b) => b.media - a.media);
-
-    if (capsMedias.length > 0) {
+    // Top diagnosis with longest stay
+    if (diagnosisStats.length > 0) {
+      const topDiagnosis = diagnosisStats[0];
       newInsights.push({
-        id: 'caps-permanencia',
+        id: 'top-diagnosis-stay',
+        title: 'Diagnóstico com Maior Permanência',
+        description: `Pacientes com "${topDiagnosis.diagnosis}" apresentam o maior tempo médio de internação na rede.`,
+        icon: Brain,
+        value: `${topDiagnosis.avgStay.toFixed(1)} dias`,
+        type: 'diagnostico',
+        priority: 'high'
+      });
+    }
+
+    // Highest readmission diagnosis
+    const highestReadmission = diagnosisStats.sort((a, b) => b.readmissionRate - a.readmissionRate)[0];
+    if (highestReadmission && highestReadmission.readmissionRate > 10) {
+      newInsights.push({
+        id: 'highest-readmission',
+        title: 'Diagnóstico com Maior Taxa de Reinternação',
+        description: `"${highestReadmission.diagnosis}" apresenta a maior taxa de reinternação, indicando possível necessidade de acompanhamento ambulatorial intensificado.`,
+        icon: AlertTriangle,
+        value: `${highestReadmission.readmissionRate.toFixed(1)}%`,
+        type: 'diagnostico',
+        priority: 'high'
+      });
+    }
+
+    // CAPS with highest stay
+    if (capsStats.length > 0) {
+      const topCaps = capsStats.sort((a, b) => b.avgStay - a.avgStay)[0];
+      newInsights.push({
+        id: 'caps-highest-stay',
         title: 'CAPS com Maior Permanência',
-        description: `O CAPS ${capsMedias[0].caps} apresenta a maior média de permanência.`,
+        description: `O ${topCaps.caps} apresenta a maior média de permanência, sugerindo casos de maior complexidade clínica.`,
         icon: Clock,
-        value: `${capsMedias[0].media.toFixed(1)} dias`,
-        type: 'caps'
+        value: `${topCaps.avgStay.toFixed(1)} dias`,
+        type: 'caps',
+        priority: 'medium'
       });
     }
 
-    // Procedência com maior tempo médio
-    const procedenciaTempo = filteredPatients.reduce((acc, p) => {
-      if (!p.procedencia || !p.dias_internacao) return acc;
-      if (!acc[p.procedencia]) {
-        acc[p.procedencia] = { total: 0, count: 0 };
-      }
-      acc[p.procedencia].total += p.dias_internacao;
-      acc[p.procedencia].count += 1;
-      return acc;
-    }, {} as Record<string, { total: number; count: number }>);
-
-    const procedenciaMedias = Object.entries(procedenciaTempo)
-      .map(([proc, data]) => ({ proc, media: data.total / data.count }))
-      .sort((a, b) => b.media - a.media);
-
-    if (procedenciaMedias.length > 0) {
-      const procName = procedenciaMedias[0].proc === "Hospital Wadomiro de Paula – PS" 
+    // Procedencia with highest stay
+    if (procedenciaStats.length > 0) {
+      const topProcedencia = procedenciaStats[0];
+      const displayName = topProcedencia.procedencia === "Hospital Wadomiro de Paula – PS" 
         ? "Hospital Planalto – Porta"
-        : procedenciaMedias[0].proc === "Hospital Waldomiro de Paula – Enfermaria"
+        : topProcedencia.procedencia === "Hospital Waldomiro de Paula – Enfermaria"
         ? "Hospital Planalto – Transf Interna"
-        : procedenciaMedias[0].proc;
-
+        : topProcedencia.procedencia;
+        
       newInsights.push({
-        id: 'procedencia-tempo',
+        id: 'procedencia-highest-stay',
         title: 'Procedência com Maior Tempo de Internação',
-        description: `Pacientes provenientes do ${procName} têm maior tempo médio de internação.`,
+        description: `Pacientes provenientes do ${displayName} têm maior tempo médio de internação, indicando maior gravidade dos casos encaminhados.`,
         icon: MapPin,
-        value: `${procedenciaMedias[0].media.toFixed(1)} dias`,
-        type: 'procedencia'
+        value: `${topProcedencia.avgStay.toFixed(1)} dias`,
+        type: 'procedencia',
+        priority: 'medium'
       });
     }
 
-    // Análise por gênero
-    const generoDistribuicao = filteredPatients.reduce((acc, p) => {
-      const genero = p.genero === 'MASC' ? 'Masculino' : p.genero === 'FEM' ? 'Feminino' : 'Outros';
-      acc[genero] = (acc[genero] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-
-    const generoMaioria = Object.entries(generoDistribuicao)
-      .sort(([,a], [,b]) => b - a)[0];
-
-    if (generoMaioria) {
-      const porcentagem = ((generoMaioria[1] / filteredPatients.length) * 100).toFixed(1);
-      newInsights.push({
-        id: 'genero-distribuicao',
-        title: 'Distribuição por Gênero',
-        description: `A maioria dos pacientes é do sexo ${generoMaioria[0].toLowerCase()}.`,
-        icon: Users,
-        value: `${porcentagem}%`,
-        type: 'genero'
-      });
-    }
-
-    // Diagnóstico com maior permanência (apenas se não houver filtro de diagnóstico)
-    if (!selectedDiagnosis) {
-      const diagnosticoPermanencia = patients.reduce((acc, p) => {
-        if (!p.cid_grupo || !p.dias_internacao) return acc;
-        if (!acc[p.cid_grupo]) {
-          acc[p.cid_grupo] = { total: 0, count: 0 };
-        }
-        acc[p.cid_grupo].total += p.dias_internacao;
-        acc[p.cid_grupo].count += 1;
-        return acc;
-      }, {} as Record<string, { total: number; count: number }>);
-
-      const diagnosticoMedias = Object.entries(diagnosticoPermanencia)
-        .map(([diag, data]) => ({ diag, media: data.total / data.count }))
-        .sort((a, b) => b.media - a.media);
-
-      if (diagnosticoMedias.length > 0) {
-        let diagName = diagnosticoMedias[0].diag;
-        if (diagName === 'Espectro da Esquizofrenia e Transtornos Psicóticos') {
-          diagName = 'Esquizofrenia e outros transtornos psicóticos';
-        }
-
-        newInsights.push({
-          id: 'diagnostico-permanencia',
-          title: 'Diagnóstico com Maior Permanência',
-          description: `A média de permanência associada ao diagnóstico "${diagName}" é a mais longa.`,
-          icon: Brain,
-          value: `${diagnosticoMedias[0].media.toFixed(1)} dias`,
-          type: 'diagnostico'
-        });
-      }
-    }
-
-    // Insight de readmissões
-    const pacientesNomes = filteredPatients.map(p => p.nome);
-    const nomesUnicos = new Set(pacientesNomes);
-    const readmissoes = pacientesNomes.length - nomesUnicos.size;
-    const taxaReadmissao = ((readmissoes / nomesUnicos.size) * 100).toFixed(1);
-
-    newInsights.push({
-      id: 'readmissoes',
-      title: 'Taxa de Readmissão',
-      description: `${readmissoes} pacientes apresentaram múltiplas internações no período analisado.`,
-      icon: Activity,
-      value: `${taxaReadmissao}%`,
-      type: 'geral'
+    // Age analysis
+    const elderlyPatients = patients.filter(p => {
+      if (!p.data_nascimento) return false;
+      const age = new Date().getFullYear() - new Date(p.data_nascimento).getFullYear();
+      return age > 60;
     });
+    
+    if (elderlyPatients.length > 0) {
+      const elderlyAvgStay = elderlyPatients.reduce((sum, p) => sum + (p.dias_internacao || 0), 0) / elderlyPatients.length;
+      const elderlyPercentage = (elderlyPatients.length / patients.length) * 100;
+      
+      newInsights.push({
+        id: 'elderly-analysis',
+        title: 'Perfil Etário de Maior Permanência',
+        description: `Pacientes acima de 60 anos representam ${elderlyPercentage.toFixed(1)}% dos casos e têm permanência média elevada.`,
+        icon: Users,
+        value: `${elderlyAvgStay.toFixed(1)} dias`,
+        type: 'idade',
+        priority: 'medium'
+      });
+    }
 
     setInsights(newInsights);
   };
@@ -219,58 +300,50 @@ export default function Tendencias() {
     );
   }
 
+  const getTopDiagnosisChart = () => {
+    return diagnosisStats.slice(0, 5).map((stat, index) => ({
+      name: stat.diagnosis.length > 30 ? stat.diagnosis.substring(0, 30) + "..." : stat.diagnosis,
+      value: Math.round(stat.avgStay),
+      percentage: Math.round(stat.avgStay),
+      color: `hsl(var(--chart-${index + 1}))`
+    }));
+  };
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-foreground mb-2">Tendências e Insights</h1>
-        <p className="text-muted-foreground">Análises automáticas extraídas dos dados clínicos</p>
+        <p className="text-muted-foreground">Análises clínicas automáticas extraídas dos dados assistenciais</p>
       </div>
 
-      {/* Filtro por Diagnóstico */}
-      <Card className="shadow-medium">
-        <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <TrendingUp className="h-5 w-5 text-primary" />
-            Filtro de Análise
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2 max-w-md">
-            <Label htmlFor="diagnosis-select" className="text-sm font-medium">
-              Filtrar por Diagnóstico
-            </Label>
-            <Select
-              value={selectedDiagnosis || "all"}
-              onValueChange={(value) => setSelectedDiagnosis(value === "all" ? "" : value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Todos os diagnósticos" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os diagnósticos</SelectItem>
-                {availableDiagnoses.map((diagnosis) => (
-                  <SelectItem key={diagnosis} value={diagnosis}>
-                    {diagnosis}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Insights Cards */}
+      {/* Key Insights Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {insights.map((insight) => (
-          <Card key={insight.id} className="shadow-medium hover:shadow-soft transition-shadow">
+          <Card key={insight.id} className={`shadow-medium hover:shadow-soft transition-shadow ${
+            insight.priority === 'high' ? 'border-destructive/30 bg-destructive/5' : 
+            insight.priority === 'medium' ? 'border-warning/30 bg-warning/5' : ''
+          }`}>
             <CardHeader className="pb-2">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-gradient-primary rounded-lg">
-                  <insight.icon className="h-5 w-5 text-white" />
+                <div className={`p-2 rounded-lg ${
+                  insight.priority === 'high' ? 'bg-destructive/20' :
+                  insight.priority === 'medium' ? 'bg-warning/20' :
+                  'bg-gradient-primary'
+                }`}>
+                  <insight.icon className={`h-5 w-5 ${
+                    insight.priority === 'high' ? 'text-destructive' :
+                    insight.priority === 'medium' ? 'text-warning' :
+                    'text-white'
+                  }`} />
                 </div>
-                <CardTitle className="text-base font-semibold">
-                  {insight.title}
-                </CardTitle>
+                <div className="flex-1">
+                  <CardTitle className="text-base font-semibold">
+                    {insight.title}
+                  </CardTitle>
+                  {insight.priority === 'high' && (
+                    <Badge variant="destructive" className="text-xs mt-1">Atenção</Badge>
+                  )}
+                </div>
               </div>
             </CardHeader>
             <CardContent>
@@ -285,16 +358,156 @@ export default function Tendencias() {
         ))}
       </div>
 
-      {selectedDiagnosis && (
-        <Card className="shadow-medium bg-accent/20 border-accent">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Brain className="h-4 w-4" />
-              <span>Análise filtrada para: <strong>{selectedDiagnosis}</strong></span>
-            </div>
+      {/* Charts and Analysis */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Top Diagnoses by Stay Duration */}
+        <Card className="shadow-medium">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-primary" />
+              Top 5 Diagnósticos - Tempo Médio de Permanência
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <HorizontalBarChart
+              data={getTopDiagnosisChart()}
+              title=""
+              description="Dias de internação por diagnóstico"
+            />
           </CardContent>
         </Card>
-      )}
+
+        {/* CAPS Analysis Table */}
+        <Card className="shadow-medium">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <MapPin className="h-5 w-5 text-primary" />
+              CAPS - Análise Comparativa
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>CAPS</TableHead>
+                  <TableHead className="text-right">Pacientes</TableHead>
+                  <TableHead className="text-right">Permanência Média</TableHead>
+                  <TableHead className="text-right">Taxa Reinternação</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {capsStats.slice(0, 5).map((caps) => (
+                  <TableRow key={caps.caps}>
+                    <TableCell className="font-medium text-sm">
+                      {caps.caps.length > 20 ? caps.caps.substring(0, 20) + "..." : caps.caps}
+                    </TableCell>
+                    <TableCell className="text-right">{caps.patientCount}</TableCell>
+                    <TableCell className="text-right">
+                      <Badge variant="outline">{caps.avgStay.toFixed(1)} dias</Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Badge variant={caps.readmissionRate > 15 ? "destructive" : "secondary"}>
+                        {caps.readmissionRate.toFixed(1)}%
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Detailed Analysis Tables */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Diagnosis Analysis */}
+        <Card className="shadow-medium">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Brain className="h-5 w-5 text-primary" />
+              Análise por Diagnóstico
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Diagnóstico</TableHead>
+                  <TableHead className="text-right">Casos</TableHead>
+                  <TableHead className="text-right">Permanência</TableHead>
+                  <TableHead className="text-right">Idosos (%)</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {diagnosisStats.slice(0, 6).map((diag) => (
+                  <TableRow key={diag.diagnosis}>
+                    <TableCell className="font-medium text-sm">
+                      {diag.diagnosis.length > 25 ? diag.diagnosis.substring(0, 25) + "..." : diag.diagnosis}
+                    </TableCell>
+                    <TableCell className="text-right">{diag.count}</TableCell>
+                    <TableCell className="text-right">
+                      <Badge variant="outline">{diag.avgStay.toFixed(1)} dias</Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Badge variant={diag.elderlyPercentage > 30 ? "secondary" : "outline"}>
+                        {diag.elderlyPercentage.toFixed(0)}%
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
+        {/* Procedencia Analysis */}
+        <Card className="shadow-medium">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Activity className="h-5 w-5 text-primary" />
+              Procedência × Perfil de Gravidade
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Procedência</TableHead>
+                  <TableHead className="text-right">Casos</TableHead>
+                  <TableHead className="text-right">Permanência</TableHead>
+                  <TableHead className="text-right">SPA (%)</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {procedenciaStats.map((proc) => {
+                  const displayName = proc.procedencia === "Hospital Wadomiro de Paula – PS" 
+                    ? "Hospital Planalto – Porta"
+                    : proc.procedencia === "Hospital Waldomiro de Paula – Enfermaria"
+                    ? "Hospital Planalto – Transf Interna"
+                    : proc.procedencia;
+                    
+                  return (
+                    <TableRow key={proc.procedencia}>
+                      <TableCell className="font-medium text-sm">
+                        {displayName.length > 25 ? displayName.substring(0, 25) + "..." : displayName}
+                      </TableCell>
+                      <TableCell className="text-right">{proc.count}</TableCell>
+                      <TableCell className="text-right">
+                        <Badge variant="outline">{proc.avgStay.toFixed(1)} dias</Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Badge variant={proc.spaPercentage > 20 ? "destructive" : "secondary"}>
+                          {proc.spaPercentage.toFixed(0)}%
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

@@ -27,6 +27,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [availableCaps, setAvailableCaps] = useState<string[]>([]);
   const [availableProcedencias, setAvailableProcedencias] = useState<string[]>([]);
+  const [availableDiagnoses, setAvailableDiagnoses] = useState<string[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -44,11 +45,13 @@ export default function Dashboard() {
       setPatients(data || []);
       setFilteredPatients(data || []);
       
-      // Extract unique CAPS and Procedencias
+      // Extract unique CAPS, Procedencias, and Diagnoses
       const uniqueCaps = [...new Set(data?.map(p => p.caps_referencia).filter(Boolean))];
       const uniqueProcedencias = [...new Set(data?.map(p => p.procedencia).filter(Boolean))];
+      const uniqueDiagnoses = [...new Set(data?.map(p => p.cid_grupo).filter(Boolean))];
       setAvailableCaps(uniqueCaps);
       setAvailableProcedencias(uniqueProcedencias);
+      setAvailableDiagnoses(uniqueDiagnoses);
     } catch (error) {
       console.error('Erro ao buscar pacientes:', error);
       toast({
@@ -76,6 +79,10 @@ export default function Dashboard() {
       filtered = filtered.filter(p => p.procedencia === filters.procedencia);
     }
 
+    if (filters.patologia) {
+      filtered = filtered.filter(p => p.cid_grupo === filters.patologia);
+    }
+
     if (filters.faixaEtaria) {
       const [min, max] = filters.faixaEtaria.includes('+') 
         ? [parseInt(filters.faixaEtaria), 999]
@@ -97,10 +104,20 @@ export default function Dashboard() {
     const avgStayDays = filteredPatients.reduce((acc, p) => 
       acc + (p.dias_internacao || 0), 0) / totalPatients || 0;
     
-    // Count readmissions (patients with multiple entries)
-    const patientNames = filteredPatients.map(p => p.nome);
-    const uniqueNames = new Set(patientNames);
-    const readmissions = patientNames.length - uniqueNames.size;
+    // Count readmissions (patients with multiple entries) - count unique patients, not total readmissions
+    const patientGroups = filteredPatients.reduce((acc, patient) => {
+      const name = patient.nome;
+      if (!acc[name]) {
+        acc[name] = [];
+      }
+      acc[name].push(patient);
+      return acc;
+    }, {} as Record<string, Patient[]>);
+    
+    const readmissionPatients = Object.entries(patientGroups)
+      .filter(([, admissions]) => admissions.length > 1);
+    
+    const readmissions = readmissionPatients.length;
 
     return {
       totalPatients,
@@ -216,7 +233,8 @@ export default function Dashboard() {
       <FilterBar 
         onFiltersChange={applyFilters} 
         availableCaps={availableCaps} 
-        availableProcedencias={availableProcedencias} 
+        availableProcedencias={availableProcedencias}
+        availableDiagnoses={availableDiagnoses}
       />
 
       {/* Metrics Cards */}

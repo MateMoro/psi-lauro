@@ -74,20 +74,28 @@ export default function Reinternacoes() {
             new Date(a.data_admissao).getTime() - new Date(b.data_admissao).getTime()
           );
 
-          // Calculate intervals between admissions
-          const intervals: number[] = [];
-          for (let i = 1; i < sortedAdmissions.length; i++) {
-            const prevDischarge = sortedAdmissions[i - 1].data_alta;
-            const currentAdmission = sortedAdmissions[i].data_admissao;
-            
-            if (prevDischarge && currentAdmission) {
-              const interval = Math.floor(
-                (new Date(currentAdmission).getTime() - new Date(prevDischarge).getTime()) / 
-                (1000 * 60 * 60 * 24)
-              );
-              intervals.push(interval);
-            }
-          }
+           // Calculate intervals between admissions - corrected logic
+           const intervals: number[] = [];
+           for (let i = 1; i < sortedAdmissions.length; i++) {
+             const prevDischarge = sortedAdmissions[i - 1].data_alta;
+             const currentAdmission = sortedAdmissions[i].data_admissao;
+             
+             if (prevDischarge && currentAdmission) {
+               const prevDischargeDate = new Date(prevDischarge);
+               const currentAdmissionDate = new Date(currentAdmission);
+               
+               // Ensure we have valid dates and current admission is after previous discharge
+               if (prevDischargeDate <= currentAdmissionDate) {
+                 const interval = Math.floor(
+                   (currentAdmissionDate.getTime() - prevDischargeDate.getTime()) / 
+                   (1000 * 60 * 60 * 24)
+                 );
+                 if (interval >= 0) {
+                   intervals.push(interval);
+                 }
+               }
+             }
+           }
 
           const averageInterval = intervals.length > 0 
             ? intervals.reduce((sum, interval) => sum + interval, 0) / intervals.length 
@@ -317,13 +325,19 @@ export default function Reinternacoes() {
                     <TableBody>
                       {patient.admissions.map((admission, admissionIndex) => {
                         const prevAdmission = patient.admissions[admissionIndex - 1];
-                        const interval = prevAdmission?.data_alta && admission.data_admissao
-                          ? Math.floor(
-                              (new Date(admission.data_admissao).getTime() - 
-                               new Date(prevAdmission.data_alta).getTime()) / 
-                              (1000 * 60 * 60 * 24)
-                            )
-                          : null;
+                       let interval = null;
+                       if (prevAdmission?.data_alta && admission.data_admissao) {
+                         const prevDischargeDate = new Date(prevAdmission.data_alta);
+                         const currentAdmissionDate = new Date(admission.data_admissao);
+                         
+                         if (prevDischargeDate <= currentAdmissionDate) {
+                           interval = Math.floor(
+                             (currentAdmissionDate.getTime() - prevDischargeDate.getTime()) / 
+                             (1000 * 60 * 60 * 24)
+                           );
+                           if (interval < 0) interval = null;
+                         }
+                       }
 
                         const duration = admission.data_alta && admission.data_admissao
                           ? Math.floor(

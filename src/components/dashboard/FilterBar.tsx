@@ -9,6 +9,7 @@ interface FilterBarProps {
   onFiltersChange: (filters: DashboardFilters) => void;
   availableCaps: string[];
   availableProcedencias: string[];
+  availableDiagnoses: string[];
 }
 
 export interface DashboardFilters {
@@ -16,9 +17,10 @@ export interface DashboardFilters {
   genero?: string;
   faixaEtaria?: string;
   procedencia?: string;
+  patologia?: string;
 }
 
-export function FilterBar({ onFiltersChange, availableCaps, availableProcedencias }: FilterBarProps) {
+export function FilterBar({ onFiltersChange, availableCaps, availableProcedencias, availableDiagnoses }: FilterBarProps) {
   const [filters, setFilters] = useState<DashboardFilters>({});
 
   const updateFilters = (newFilters: Partial<DashboardFilters>) => {
@@ -41,7 +43,7 @@ export function FilterBar({ onFiltersChange, availableCaps, availableProcedencia
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           {/* CAPS Filter */}
           <div className="space-y-2">
             <Label htmlFor="caps-select" className="text-sm font-medium">
@@ -130,6 +132,29 @@ export function FilterBar({ onFiltersChange, availableCaps, availableProcedencia
                 <SelectItem value="31-50">31-50 anos</SelectItem>
                 <SelectItem value="51-70">51-70 anos</SelectItem>
                 <SelectItem value="70+">70+ anos</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Patologia Filter */}
+          <div className="space-y-2">
+            <Label htmlFor="patologia-select" className="text-sm font-medium">
+              Patologia (CID)
+            </Label>
+            <Select
+              value={filters.patologia || "all"}
+              onValueChange={(value) => updateFilters({ patologia: value === "all" ? undefined : value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Todas as patologias" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as patologias</SelectItem>
+                {availableDiagnoses.map((diagnosis) => (
+                  <SelectItem key={diagnosis} value={diagnosis}>
+                    {diagnosis}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

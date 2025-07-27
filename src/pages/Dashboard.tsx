@@ -136,17 +136,22 @@ export default function Dashboard() {
     const diagnosisCount = filteredPatients.reduce((acc, p) => {
       let diagnosis = p.cid_grupo || 'Não informado';
       
+      // Skip unwanted diagnoses
+      if (diagnosis === 'Psicose Não Especificada / Diagnóstico Provisório') {
+        return acc;
+      }
+      
       // Map specific diagnoses as requested
       if (diagnosis === 'Transtornos por uso de substâncias') {
-        diagnosis = 'Transt. por uso de SPA';
+        diagnosis = 'Transtornos por uso\nde SPA';
       } else if (diagnosis === 'Espectro da Esquizofrenia e Transtornos Psicóticos') {
-        diagnosis = 'Esquizofrenia e outros';
+        diagnosis = 'Esquizofrenia e\noutros';
       } else if (diagnosis === 'Transtornos de personalidade') {
-        diagnosis = 'Transtorno de Personalidade';
+        diagnosis = 'Transtorno de\nPersonalidade';
       } else if (diagnosis === 'Episódios depressivos') {
-        diagnosis = 'Depressão Unipolar';
+        diagnosis = 'Transtorno\nDepressivo Unipolar';
       } else if (diagnosis === 'Transtorno afetivo bipolar') {
-        diagnosis = 'Transt. Afetivo Bipolar';
+        diagnosis = 'Transtorno Afetivo\nBipolar';
       }
       
       acc[diagnosis] = (acc[diagnosis] || 0) + 1;
@@ -156,11 +161,9 @@ export default function Dashboard() {
     const total = filteredPatients.length;
     return Object.entries(diagnosisCount)
       .sort(([,a], [,b]) => b - a)
-      .slice(0, 5)
+      .slice(0, 4)
       .map(([name, value], index) => ({ 
-        name: name.includes('Transt.') || name.includes('Esquizofrenia') 
-          ? name.replace(' ', '\n') 
-          : name, 
+        name, 
         value, 
         percentage: total > 0 ? Math.round((value / total) * 100) : 0,
         color: `hsl(var(--chart-${index + 1}))` 

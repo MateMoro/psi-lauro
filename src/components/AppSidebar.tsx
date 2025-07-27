@@ -55,8 +55,8 @@ export function AppSidebar() {
             </div>
             {!collapsed && (
               <div>
-                <h2 className="text-lg font-bold text-foreground">Hospital Planalto</h2>
-                <p className="text-sm text-muted-foreground">PSIAnalytics</p>
+                <h2 className="text-lg font-bold text-foreground">PSIAnalytics</h2>
+                <p className="text-sm text-muted-foreground">Hospital Planalto</p>
               </div>
             )}
           </div>

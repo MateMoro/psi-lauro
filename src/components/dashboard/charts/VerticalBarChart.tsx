@@ -23,12 +23,16 @@ export function VerticalBarChart({ data, title, description }: VerticalBarChartP
         <ResponsiveContainer width="100%" height={300}>
           <BarChart
             data={data}
-            margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+            margin={{ top: 5, right: 30, left: 20, bottom: 80 }}
           >
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <XAxis 
               dataKey="name" 
-              tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+              tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+              interval={0}
+              angle={-45}
+              textAnchor="end"
+              height={80}
             />
             <YAxis 
               tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}

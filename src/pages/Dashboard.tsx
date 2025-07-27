@@ -229,14 +229,6 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-2">
-          PSIAnalytics
-        </h1>
-        <h2 className="text-xl font-semibold text-muted-foreground">
-          Análise Clínica de Internações
-        </h2>
-      </div>
 
       <FilterBar 
         onFiltersChange={applyFilters} 

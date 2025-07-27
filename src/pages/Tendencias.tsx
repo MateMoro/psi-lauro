@@ -111,6 +111,12 @@ export default function Tendencias() {
   const generateDiagnosisAnalysis = (): DiagnosisStats[] => {
     const diagnosisGroups = patients.reduce((acc, p) => {
       if (!p.cid_grupo) return acc;
+      // Exclude specific diagnoses
+      if (p.cid_grupo.includes('Deficiência Intelectual') || 
+          p.cid_grupo.includes('Transtornos Iniciados na Infância') ||
+          p.cid_grupo === 'Outro') {
+        return acc;
+      }
       if (!acc[p.cid_grupo]) {
         acc[p.cid_grupo] = [];
       }
@@ -145,8 +151,15 @@ export default function Tendencias() {
   };
 
   const generateCapsAnalysis = (): CapsStats[] => {
+    const excludedCaps = [
+      'ADULTO II VILA MONUMENTO',
+      'AD III PENHA',
+      'AD III VILA MATILDE',
+      'ADULTO II VILA PRUDENTE'
+    ];
+
     const capsGroups = patients.reduce((acc, p) => {
-      if (!p.caps_referencia) return acc;
+      if (!p.caps_referencia || excludedCaps.includes(p.caps_referencia)) return acc;
       if (!acc[p.caps_referencia]) {
         acc[p.caps_referencia] = [];
       }
@@ -172,8 +185,15 @@ export default function Tendencias() {
   };
 
   const generateProcedenciaAnalysis = (): ProcedenciaStats[] => {
+    const allowedProcedencias = [
+      'HOSPITAL CIDADE TIRADENTES',
+      'HOSPITAL JD IVA',
+      'HOSPITAL WALDOMIRO DE PAULA',
+      'SAMU'
+    ];
+
     const procedenciaGroups = patients.reduce((acc, p) => {
-      if (!p.procedencia) return acc;
+      if (!p.procedencia || !allowedProcedencias.includes(p.procedencia)) return acc;
       if (!acc[p.procedencia]) {
         acc[p.procedencia] = [];
       }
@@ -216,13 +236,14 @@ export default function Tendencias() {
       });
     }
 
-    // Highest readmission diagnosis
-    const highestReadmission = diagnosisStats.sort((a, b) => b.readmissionRate - a.readmissionRate)[0];
-    if (highestReadmission && highestReadmission.readmissionRate > 10) {
+    // Highest readmission diagnosis among top 4 most frequent
+    const topDiagnosesByCount = diagnosisStats.sort((a, b) => b.count - a.count).slice(0, 4);
+    const highestReadmission = topDiagnosesByCount.sort((a, b) => b.readmissionRate - a.readmissionRate)[0];
+    if (highestReadmission && highestReadmission.readmissionRate > 0) {
       newInsights.push({
         id: 'highest-readmission',
         title: 'Diagnóstico com Maior Taxa de Reinternação',
-        description: `"${highestReadmission.diagnosis}" apresenta a maior taxa de reinternação, indicando possível necessidade de acompanhamento ambulatorial intensificado.`,
+        description: `Entre as patologias mais frequentes, "${highestReadmission.diagnosis}" apresenta a maior taxa de reinternação (${highestReadmission.readmissionRate.toFixed(1)}%), indicando necessidade de acompanhamento ambulatorial intensificado.`,
         icon: AlertTriangle,
         value: `${highestReadmission.readmissionRate.toFixed(1)}%`,
         type: 'diagnostico',
@@ -230,18 +251,21 @@ export default function Tendencias() {
       });
     }
 
-    // CAPS with highest stay
+    // CAPS with highest stay (excluding Vila Monumento)
     if (capsStats.length > 0) {
-      const topCaps = capsStats.sort((a, b) => b.avgStay - a.avgStay)[0];
-      newInsights.push({
-        id: 'caps-highest-stay',
-        title: 'CAPS com Maior Permanência',
-        description: `O ${topCaps.caps} apresenta a maior média de permanência, sugerindo casos de maior complexidade clínica.`,
-        icon: Clock,
-        value: `${topCaps.avgStay.toFixed(1)} dias`,
-        type: 'caps',
-        priority: 'medium'
-      });
+      const zonaLesteCaps = capsStats.filter(caps => caps.caps !== 'ADULTO II VILA MONUMENTO');
+      if (zonaLesteCaps.length > 0) {
+        const topCaps = zonaLesteCaps.sort((a, b) => b.avgStay - a.avgStay)[0];
+        newInsights.push({
+          id: 'caps-highest-stay',
+          title: 'CAPS com Maior Permanência (Zona Leste)',
+          description: `O ${topCaps.caps} apresenta a maior média de permanência na rede da Zona Leste, sugerindo casos de maior complexidade clínica.`,
+          icon: Clock,
+          value: `${topCaps.avgStay.toFixed(1)} dias`,
+          type: 'caps',
+          priority: 'medium'
+        });
+      }
     }
 
     // Procedencia with highest stay
@@ -300,14 +324,6 @@ export default function Tendencias() {
     );
   }
 
-  const getTopDiagnosisChart = () => {
-    return diagnosisStats.slice(0, 5).map((stat, index) => ({
-      name: stat.diagnosis.length > 30 ? stat.diagnosis.substring(0, 30) + "..." : stat.diagnosis,
-      value: Math.round(stat.avgStay),
-      percentage: Math.round(stat.avgStay),
-      color: `hsl(var(--chart-${index + 1}))`
-    }));
-  };
 
   return (
     <div className="space-y-6">
@@ -358,31 +374,13 @@ export default function Tendencias() {
         ))}
       </div>
 
-      {/* Charts and Analysis */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Top Diagnoses by Stay Duration */}
-        <Card className="shadow-medium">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-primary" />
-              Top 5 Diagnósticos - Tempo Médio de Permanência
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <HorizontalBarChart
-              data={getTopDiagnosisChart()}
-              title=""
-              description="Dias de internação por diagnóstico"
-            />
-          </CardContent>
-        </Card>
-
-        {/* CAPS Analysis Table */}
+      {/* CAPS Analysis Table */}
+      <div className="grid grid-cols-1 gap-6">
         <Card className="shadow-medium">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <MapPin className="h-5 w-5 text-primary" />
-              CAPS - Análise Comparativa
+              CAPS - Análise Comparativa (Zona Leste)
             </CardTitle>
           </CardHeader>
           <CardContent>

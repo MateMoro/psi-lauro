@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { FilterBar, DashboardFilters } from "@/components/dashboard/FilterBar";
 import { PatientSearch } from "@/components/dashboard/PatientSearch";
-import { HorizontalBarChart as DiagnosisChart } from "@/components/dashboard/charts/HorizontalBarChart";
+
 import { CustomPieChart } from "@/components/dashboard/charts/PieChart";
 import { VerticalBarChart } from "@/components/dashboard/charts/VerticalBarChart";
 import { useToast } from "@/hooks/use-toast";
@@ -84,14 +84,18 @@ export default function Dashboard() {
     }
 
     if (filters.faixaEtaria) {
-      const [min, max] = filters.faixaEtaria.includes('+') 
-        ? [parseInt(filters.faixaEtaria), 999]
-        : filters.faixaEtaria.split('-').map(Number);
-      
       filtered = filtered.filter(p => {
         if (!p.data_nascimento) return false;
         const age = new Date().getFullYear() - new Date(p.data_nascimento).getFullYear();
-        return age >= min && age <= max;
+        
+        switch (filters.faixaEtaria) {
+          case '<18': return age < 18;
+          case '18–25': return age >= 18 && age <= 25;
+          case '26–44': return age >= 26 && age <= 44;
+          case '45–64': return age >= 45 && age <= 64;
+          case '65+': return age >= 65;
+          default: return true;
+        }
       });
     }
 
@@ -223,10 +227,10 @@ export default function Dashboard() {
     <div className="space-y-6">
       <div className="text-center mb-8">
         <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-2">
-          Hospital Planalto
+          Análises
         </h1>
         <h2 className="text-xl font-semibold text-muted-foreground">
-          Análise Clínica e Epidemiológica
+          IntegraPsi – Análise Clínica de Internações Psiquiátricas | Hospital Planalto
         </h2>
       </div>
 
@@ -264,7 +268,7 @@ export default function Dashboard() {
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <DiagnosisChart
+        <VerticalBarChart
           data={getTopDiagnoses()}
           title="Prevalência das principais patologias"
           description="Top 5 diagnósticos mais frequentes"

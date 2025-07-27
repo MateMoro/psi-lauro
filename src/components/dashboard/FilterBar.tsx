@@ -127,11 +127,11 @@ export function FilterBar({ onFiltersChange, availableCaps, availableProcedencia
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todas as idades</SelectItem>
-                <SelectItem value="0-17">0-17 anos</SelectItem>
-                <SelectItem value="18-30">18-30 anos</SelectItem>
-                <SelectItem value="31-50">31-50 anos</SelectItem>
-                <SelectItem value="51-70">51-70 anos</SelectItem>
-                <SelectItem value="70+">70+ anos</SelectItem>
+                <SelectItem value="<18">&lt;18</SelectItem>
+                <SelectItem value="18–25">18–25 anos</SelectItem>
+                <SelectItem value="26–44">26–44 anos</SelectItem>
+                <SelectItem value="45–64">45–64 anos</SelectItem>
+                <SelectItem value="65+">65+ anos</SelectItem>
               </SelectContent>
             </Select>
           </div>

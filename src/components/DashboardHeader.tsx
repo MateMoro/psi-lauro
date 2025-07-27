@@ -16,9 +16,9 @@ export function DashboardHeader() {
     <header className="h-16 border-b border-border bg-card flex items-center justify-between px-4 shadow-soft">
       <div className="flex items-center gap-4">
         <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
-        <div>
-          <h1 className="text-xl font-bold text-foreground">Dashboard Psiquiátrico</h1>
-          <p className="text-sm text-muted-foreground">Sistema de Análise Clínica - Planalto</p>
+        <div className="text-center flex-1">
+          <h1 className="text-2xl font-bold text-foreground tracking-tight">PSIAnalytics</h1>
+          <p className="text-base text-muted-foreground font-medium">Análise Clínica de Internações</p>
         </div>
       </div>
 

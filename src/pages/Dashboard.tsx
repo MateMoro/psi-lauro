@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { FilterBar, DashboardFilters } from "@/components/dashboard/FilterBar";
 import { PatientSearch } from "@/components/dashboard/PatientSearch";
-import { VerticalBarChart as DiagnosisChart } from "@/components/dashboard/charts/VerticalBarChart";
+import { HorizontalBarChart as DiagnosisChart } from "@/components/dashboard/charts/HorizontalBarChart";
 import { CustomPieChart } from "@/components/dashboard/charts/PieChart";
 import { VerticalBarChart } from "@/components/dashboard/charts/VerticalBarChart";
 import { useToast } from "@/hooks/use-toast";
@@ -117,21 +117,29 @@ export default function Dashboard() {
       
       // Map specific diagnoses as requested
       if (diagnosis === 'Transtornos por uso de substâncias') {
-        diagnosis = 'Transtorno por uso de SPA';
+        diagnosis = 'Transt. por uso de SPA';
       } else if (diagnosis === 'Espectro da Esquizofrenia e Transtornos Psicóticos') {
         diagnosis = 'Esquizofrenia e outros';
+      } else if (diagnosis === 'Transtornos de personalidade') {
+        diagnosis = 'Transtorno de Personalidade';
+      } else if (diagnosis === 'Episódios depressivos') {
+        diagnosis = 'Depressão Unipolar';
+      } else if (diagnosis === 'Transtorno afetivo bipolar') {
+        diagnosis = 'Transt. Afetivo Bipolar';
       }
       
       acc[diagnosis] = (acc[diagnosis] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
 
+    const total = filteredPatients.length;
     return Object.entries(diagnosisCount)
       .sort(([,a], [,b]) => b - a)
-      .slice(0, 3)
+      .slice(0, 5)
       .map(([name, value], index) => ({ 
         name, 
         value, 
+        percentage: total > 0 ? Math.round((value / total) * 100) : 0,
         color: `hsl(var(--chart-${index + 1}))` 
       }));
   };
@@ -155,25 +163,30 @@ export default function Dashboard() {
 
   const getAgeDistribution = () => {
     const ageRanges = {
-      '0-17': 0,
-      '18-30': 0,
-      '31-50': 0,
-      '51-70': 0,
-      '70+': 0
+      '<18': 0,
+      '18–25': 0,
+      '26–44': 0,
+      '45–64': 0,
+      '65+': 0
     };
 
     filteredPatients.forEach(p => {
       if (!p.data_nascimento) return;
       const age = new Date().getFullYear() - new Date(p.data_nascimento).getFullYear();
       
-      if (age <= 17) ageRanges['0-17']++;
-      else if (age <= 30) ageRanges['18-30']++;
-      else if (age <= 50) ageRanges['31-50']++;
-      else if (age <= 70) ageRanges['51-70']++;
-      else ageRanges['70+']++;
+      if (age < 18) ageRanges['<18']++;
+      else if (age <= 25) ageRanges['18–25']++;
+      else if (age <= 44) ageRanges['26–44']++;
+      else if (age <= 64) ageRanges['45–64']++;
+      else ageRanges['65+']++;
     });
 
-    return Object.entries(ageRanges).map(([name, value]) => ({ name, value }));
+    const total = filteredPatients.length;
+    return Object.entries(ageRanges).map(([name, count]) => ({ 
+      name, 
+      value: total > 0 ? Math.round((count / total) * 100) : 0,
+      count 
+    }));
   };
 
   const metrics = calculateMetrics();
@@ -191,9 +204,13 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Visão Geral</h1>
-        <p className="text-muted-foreground">Dashboard de análise de pacientes psiquiátricos</p>
+      <div className="text-center mb-8">
+        <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-2">
+          Hospital Planalto
+        </h1>
+        <h2 className="text-xl font-semibold text-muted-foreground">
+          Análise Clínica e Epidemiológica
+        </h2>
       </div>
 
       <FilterBar 
@@ -231,8 +248,8 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <DiagnosisChart
           data={getTopDiagnoses()}
-          title="Top 3 Diagnósticos (CID Grupo)"
-          description="Diagnósticos mais frequentes"
+          title="Prevalência das principais patologias"
+          description="Top 5 diagnósticos mais frequentes"
         />
         <CustomPieChart
           data={getGenderDistribution()}
@@ -245,7 +262,7 @@ export default function Dashboard() {
         <VerticalBarChart
           data={getAgeDistribution()}
           title="Distribuição por Faixa Etária"
-          description="Número de pacientes por idade"
+          description="Porcentagem de pacientes por idade"
         />
         <PatientSearch patients={filteredPatients} />
       </div>

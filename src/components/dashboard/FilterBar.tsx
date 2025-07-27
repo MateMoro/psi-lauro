@@ -102,7 +102,9 @@ export function FilterBar({ onFiltersChange, availableCaps, availableProcedencia
                 <SelectItem value="all">Todas as procedências</SelectItem>
                 {availableProcedencias.map((procedencia) => (
                   <SelectItem key={procedencia} value={procedencia}>
-                    {procedencia}
+                    {procedencia === "Hospital Wadomiro de Paula – PS" ? "Hospital Planalto – Porta" :
+                     procedencia === "Hospital Waldomiro de Paula – Enfermaria" ? "Hospital Planalto – Transf Interna" : 
+                     procedencia}
                   </SelectItem>
                 ))}
               </SelectContent>

@@ -3,7 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { RefreshCw, Calendar, MapPin, User } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { RefreshCw, Calendar, MapPin, User, Filter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface PatientAdmission {
@@ -24,12 +26,18 @@ interface ReadmissionPatient {
 
 export default function Reinternacoes() {
   const [readmissions, setReadmissions] = useState<ReadmissionPatient[]>([]);
+  const [filteredReadmissions, setFilteredReadmissions] = useState<ReadmissionPatient[]>([]);
   const [loading, setLoading] = useState(true);
+  const [intervalFilter, setIntervalFilter] = useState<string>("all");
   const { toast } = useToast();
 
   useEffect(() => {
     fetchReadmissions();
   }, []);
+
+  useEffect(() => {
+    applyIntervalFilter();
+  }, [readmissions, intervalFilter]);
 
   const fetchReadmissions = async () => {
     try {
@@ -107,6 +115,30 @@ export default function Reinternacoes() {
     }
   };
 
+  const applyIntervalFilter = () => {
+    if (intervalFilter === "all") {
+      setFilteredReadmissions(readmissions);
+      return;
+    }
+
+    const filtered = readmissions.filter(patient => {
+      switch (intervalFilter) {
+        case "7":
+          return patient.averageInterval <= 7;
+        case "15":
+          return patient.averageInterval <= 15;
+        case "30":
+          return patient.averageInterval <= 30;
+        case "30+":
+          return patient.averageInterval > 30;
+        default:
+          return true;
+      }
+    });
+
+    setFilteredReadmissions(filtered);
+  };
+
   const formatDate = (dateString: string) => {
     if (!dateString) return "N/A";
     return new Date(dateString).toLocaleDateString("pt-BR");
@@ -135,6 +167,38 @@ export default function Reinternacoes() {
         </p>
       </div>
 
+      {/* Filter Section */}
+      <Card className="shadow-medium">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Filter className="h-5 w-5 text-primary" />
+            Filtro por Intervalo de Reinternação
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2 max-w-md">
+            <Label htmlFor="interval-select" className="text-sm font-medium">
+              Intervalo entre internações
+            </Label>
+            <Select
+              value={intervalFilter}
+              onValueChange={(value) => setIntervalFilter(value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Todos os intervalos" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os intervalos</SelectItem>
+                <SelectItem value="7">Até 7 dias</SelectItem>
+                <SelectItem value="15">Até 15 dias</SelectItem>
+                <SelectItem value="30">Até 30 dias</SelectItem>
+                <SelectItem value="30+">Acima de 30 dias</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="shadow-medium">
@@ -145,7 +209,7 @@ export default function Reinternacoes() {
                   Total de Pacientes Reinternados
                 </p>
                 <p className="text-2xl font-bold text-foreground">
-                  {readmissions.length}
+                  {filteredReadmissions.length}
                 </p>
               </div>
               <User className="h-8 w-8 text-primary" />
@@ -161,7 +225,7 @@ export default function Reinternacoes() {
                   Total de Readmissões
                 </p>
                 <p className="text-2xl font-bold text-foreground">
-                  {readmissions.reduce((sum, p) => sum + p.totalAdmissions, 0)}
+                  {filteredReadmissions.reduce((sum, p) => sum + p.totalAdmissions, 0)}
                 </p>
               </div>
               <RefreshCw className="h-8 w-8 text-chart-3" />
@@ -177,10 +241,10 @@ export default function Reinternacoes() {
                   Intervalo Médio (dias)
                 </p>
                 <p className="text-2xl font-bold text-foreground">
-                  {readmissions.length > 0 
+                  {filteredReadmissions.length > 0 
                     ? Math.round(
-                        readmissions.reduce((sum, p) => sum + p.averageInterval, 0) / 
-                        readmissions.length
+                        filteredReadmissions.reduce((sum, p) => sum + p.averageInterval, 0) / 
+                        filteredReadmissions.length
                       )
                     : 0
                   }
@@ -198,14 +262,14 @@ export default function Reinternacoes() {
           <CardTitle>Pacientes com Múltiplas Internações</CardTitle>
         </CardHeader>
         <CardContent>
-          {readmissions.length === 0 ? (
+          {filteredReadmissions.length === 0 ? (
             <div className="text-center py-8">
               <RefreshCw className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <p className="text-muted-foreground">Nenhuma reinternação encontrada</p>
             </div>
           ) : (
             <div className="space-y-6">
-              {readmissions.map((patient, index) => (
+              {filteredReadmissions.map((patient, index) => (
                 <div key={index} className="border border-border rounded-lg p-4">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">

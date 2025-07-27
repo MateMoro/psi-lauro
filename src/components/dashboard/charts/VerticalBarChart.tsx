@@ -34,7 +34,10 @@ export function VerticalBarChart({ data, title, description }: VerticalBarChartP
               tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
             />
             <Tooltip 
-              formatter={(value) => [value, 'Pacientes']}
+              formatter={(value, name, props) => [
+                `${value}% (${props.payload?.count || 0} pacientes)`, 
+                'Porcentagem'
+              ]}
               labelFormatter={(label) => `Faixa Etária: ${label}`}
               contentStyle={{
                 backgroundColor: 'hsl(var(--card))',

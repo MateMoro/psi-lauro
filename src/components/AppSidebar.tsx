@@ -1,4 +1,4 @@
-import { BarChart3, Users, RefreshCw, Activity } from "lucide-react";
+import { BarChart3, Users, RefreshCw, Activity, TrendingUp } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -24,6 +24,12 @@ const navigationItems = [
     url: "/reinternacoes", 
     icon: RefreshCw,
     description: "Análise de pacientes com múltiplas internações"
+  },
+  { 
+    title: "Tendências", 
+    url: "/tendencias", 
+    icon: TrendingUp,
+    description: "Insights automáticos e análises clínicas"
   },
 ];
 

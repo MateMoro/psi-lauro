@@ -5,7 +5,8 @@ interface HorizontalBarChartProps {
   data: Array<{
     name: string;
     value: number;
-    color: string;
+    percentage?: number;
+    color?: string;
   }>;
   title: string;
   description?: string;
@@ -15,7 +16,7 @@ export function HorizontalBarChart({ data, title, description }: HorizontalBarCh
   return (
     <Card className="shadow-medium">
       <CardHeader>
-        <CardTitle className="text-lg">{title}</CardTitle>
+        <CardTitle className="text-lg font-semibold">{title}</CardTitle>
         {description && (
           <p className="text-sm text-muted-foreground">{description}</p>
         )}
@@ -25,7 +26,7 @@ export function HorizontalBarChart({ data, title, description }: HorizontalBarCh
           <BarChart
             data={data}
             layout="horizontal"
-            margin={{ top: 5, right: 30, left: 80, bottom: 5 }}
+            margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
           >
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <XAxis 
@@ -36,11 +37,14 @@ export function HorizontalBarChart({ data, title, description }: HorizontalBarCh
               type="category" 
               dataKey="name" 
               tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
-              width={70}
+              width={90}
             />
             <Tooltip 
-              formatter={(value) => [value, 'Pacientes']}
-              labelFormatter={(label) => `Diagnóstico: ${label}`}
+              formatter={(value, name, props) => [
+                `${value} pacientes (${props.payload?.percentage || 0}%)`, 
+                'Diagnóstico'
+              ]}
+              labelFormatter={(label) => `${label}`}
               contentStyle={{
                 backgroundColor: 'hsl(var(--card))',
                 border: '1px solid hsl(var(--border))',
@@ -50,7 +54,7 @@ export function HorizontalBarChart({ data, title, description }: HorizontalBarCh
             />
             <Bar 
               dataKey="value" 
-              fill="hsl(var(--chart-1))"
+              fill="hsl(var(--primary))"
               radius={[0, 4, 4, 0]}
             />
           </BarChart>

@@ -276,8 +276,12 @@ export default function Dashboard() {
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <HorizontalBarChart
-          data={getTopDiagnoses()}
+        <VerticalBarChart
+          data={getTopDiagnoses().map(item => ({
+            name: item.name,
+            value: item.percentage,
+            count: item.value
+          }))}
           title="Prevalência das principais patologias"
           description="Top 5 diagnósticos mais frequentes"
         />

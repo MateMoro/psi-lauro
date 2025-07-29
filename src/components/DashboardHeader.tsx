@@ -19,7 +19,7 @@ export function DashboardHeader() {
       
       <div className="text-center flex-1 px-4">
         <h1 className="text-lg md:text-xl font-bold text-primary tracking-tight leading-tight">
-          Painel de Internações Psiquiátricas – Hospital Planalto
+          Painel de Internações Psiquiátricas do Hospital Planalto
         </h1>
       </div>
 

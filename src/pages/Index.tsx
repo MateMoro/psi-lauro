@@ -23,13 +23,6 @@ export default function Index() {
       highlighted: true
     },
     {
-      title: "Visão Geral dos Dados",
-      description: "Dashboard principal com métricas",
-      icon: BarChart3,
-      variant: "secondary" as const,
-      action: () => navigate("/dashboard")
-    },
-    {
       title: "Indicadores e Tendências",
       description: "Análises temporais e estatísticas",
       icon: TrendingUp,

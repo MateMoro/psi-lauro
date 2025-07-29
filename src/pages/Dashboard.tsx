@@ -7,6 +7,7 @@ import { PatientSearch } from "@/components/dashboard/PatientSearch";
 
 import { CustomPieChart } from "@/components/dashboard/charts/PieChart";
 import { VerticalBarChart } from "@/components/dashboard/charts/VerticalBarChart";
+import { HorizontalBarChart } from "@/components/dashboard/charts/HorizontalBarChart";
 import { useToast } from "@/hooks/use-toast";
 
 interface Patient {
@@ -141,17 +142,17 @@ export default function Dashboard() {
         return acc;
       }
       
-      // Map specific diagnoses as requested
+      // Map specific diagnoses as requested - removed line breaks for horizontal chart
       if (diagnosis === 'Transtornos por uso de substâncias') {
-        diagnosis = 'Transtornos por uso\nde SPA';
+        diagnosis = 'Transtornos por uso de SPA';
       } else if (diagnosis === 'Espectro da Esquizofrenia e Transtornos Psicóticos') {
-        diagnosis = 'Esquizofrenia e\noutros';
+        diagnosis = 'Esquizofrenia e outros';
       } else if (diagnosis === 'Transtornos de personalidade') {
-        diagnosis = 'Transtorno de\nPersonalidade';
+        diagnosis = 'Transtorno de Personalidade';
       } else if (diagnosis === 'Episódios depressivos') {
-        diagnosis = 'Transtorno\nDepressivo Unipolar';
+        diagnosis = 'Transtorno Depressivo Unipolar';
       } else if (diagnosis === 'Transtorno afetivo bipolar') {
-        diagnosis = 'Transtorno Afetivo\nBipolar';
+        diagnosis = 'Transtorno Afetivo Bipolar';
       }
       
       acc[diagnosis] = (acc[diagnosis] || 0) + 1;
@@ -159,14 +160,22 @@ export default function Dashboard() {
     }, {} as Record<string, number>);
 
     const total = filteredPatients.length;
+    const chartColors = [
+      "hsl(220 70% 35%)",  // Blue
+      "hsl(160 76% 36%)",  // Teal
+      "hsl(340 82% 52%)",  // Rose
+      "hsl(260 85% 58%)",  // Purple
+      "hsl(35 91% 62%)"    // Orange
+    ];
+    
     return Object.entries(diagnosisCount)
       .sort(([,a], [,b]) => b - a)
-      .slice(0, 4)
+      .slice(0, 5)
       .map(([name, value], index) => ({ 
         name, 
         value, 
         percentage: total > 0 ? Math.round((value / total) * 100) : 0,
-        color: `hsl(var(--chart-${index + 1}))` 
+        color: chartColors[index] || "hsl(var(--chart-1))"
       }));
   };
 
@@ -267,7 +276,7 @@ export default function Dashboard() {
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <VerticalBarChart
+        <HorizontalBarChart
           data={getTopDiagnoses()}
           title="Prevalência das principais patologias"
           description="Top 5 diagnósticos mais frequentes"

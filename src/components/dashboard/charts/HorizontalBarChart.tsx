@@ -1,13 +1,8 @@
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 interface HorizontalBarChartProps {
-  data: Array<{
-    name: string;
-    value: number;
-    percentage?: number;
-    color?: string;
-  }>;
+  data: Array<{ name: string; value: number; color?: string }>;
   title: string;
   description?: string;
 }
@@ -16,9 +11,9 @@ export function HorizontalBarChart({ data, title, description }: HorizontalBarCh
   return (
     <Card className="shadow-medium">
       <CardHeader>
-        <CardTitle className="text-lg font-semibold">{title}</CardTitle>
+        <CardTitle className="text-lg font-semibold text-foreground">{title}</CardTitle>
         {description && (
-          <p className="text-sm text-muted-foreground">{description}</p>
+          <CardDescription className="text-muted-foreground">{description}</CardDescription>
         )}
       </CardHeader>
       <CardContent>
@@ -26,36 +21,50 @@ export function HorizontalBarChart({ data, title, description }: HorizontalBarCh
           <BarChart
             data={data}
             layout="horizontal"
-            margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
+            margin={{
+              top: 20,
+              right: 30,
+              left: 80,
+              bottom: 5,
+            }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
             <XAxis 
               type="number" 
-              tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+              stroke="hsl(var(--muted-foreground))"
+              fontSize={12}
+              tickLine={false}
+              axisLine={false}
             />
             <YAxis 
               type="category" 
               dataKey="name" 
-              tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
-              width={90}
+              stroke="hsl(var(--muted-foreground))"
+              fontSize={11}
+              tickLine={false}
+              axisLine={false}
+              width={75}
             />
-            <Tooltip 
-              formatter={(value, name, props) => [
-                `${value} pacientes (${props.payload?.percentage || 0}%)`, 
-                'Diagnóstico'
-              ]}
-              labelFormatter={(label) => `${label}`}
-              contentStyle={{
-                backgroundColor: 'hsl(var(--card))',
-                border: '1px solid hsl(var(--border))',
-                borderRadius: '8px',
-                fontSize: '12px'
+            <Tooltip
+              cursor={{ fill: "hsl(var(--muted))", opacity: 0.1 }}
+              content={({ active, payload, label }) => {
+                if (active && payload && payload.length) {
+                  return (
+                    <div className="bg-card border border-border rounded-lg shadow-lg p-3">
+                      <p className="font-medium text-foreground">{label}</p>
+                      <p className="text-sm text-muted-foreground">
+                        Casos: <span className="font-medium text-foreground">{payload[0].value}</span>
+                      </p>
+                    </div>
+                  );
+                }
+                return null;
               }}
             />
             <Bar 
               dataKey="value" 
-              fill="hsl(var(--primary))"
               radius={[0, 4, 4, 0]}
+              fill="hsl(var(--chart-1))"
             />
           </BarChart>
         </ResponsiveContainer>

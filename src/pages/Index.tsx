@@ -50,12 +50,6 @@ export default function Index() {
       <div className="w-full max-w-2xl space-y-8">
         {/* Header */}
         <div className="text-center space-y-4">
-          <h1 className="text-3xl md:text-4xl font-bold text-institutional-blue tracking-tight">
-            Painel de Internações Psiquiátricas
-          </h1>
-          <h2 className="text-xl md:text-2xl font-semibold text-institutional-blue/80">
-            Hospital Planalto
-          </h2>
           <p className="text-muted-foreground max-w-lg mx-auto">
             Sistema de análise e monitoramento das internações psiquiátricas
           </p>

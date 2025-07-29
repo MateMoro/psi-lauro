@@ -117,10 +117,8 @@ export default function SobreServico() {
             </ul>
             <div className="bg-accent/10 p-3 rounded-lg border-l-4 border-accent">
               <p className="text-sm text-foreground leading-relaxed">
-                <strong>Pioneiro na implantação do PTS na unidade</strong>, o Serviço de 
-                Psiquiatria foi o primeiro setor a registrar Projetos Terapêuticos Singulares 
-                diretamente no sistema SGHx, promovendo maior alinhamento clínico e qualificação 
-                do cuidado interdisciplinar.
+                <strong>Primeiro setor a registrar os PTS diretamente no sistema SGHx</strong>, 
+                promovendo maior alinhamento clínico e qualificação do cuidado interdisciplinar.
               </p>
             </div>
           </CardContent>

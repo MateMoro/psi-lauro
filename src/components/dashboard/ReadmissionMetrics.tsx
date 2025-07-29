@@ -9,32 +9,28 @@ export function ReadmissionMetrics() {
       value: "2,4%",
       icon: Clock,
       color: "text-green-600",
-      bgColor: "bg-green-50",
-      description: "Índice muito baixo"
+      bgColor: "bg-green-50"
     },
     {
       title: "Reinternações em até 15 dias", 
       value: "2,93%",
       icon: RefreshCw,
       color: "text-blue-600",
-      bgColor: "bg-blue-50",
-      description: "Dentro da meta"
+      bgColor: "bg-blue-50"
     },
     {
       title: "Reinternações em até 30 dias",
       value: "5,33%",
       icon: Calendar,
       color: "text-yellow-600", 
-      bgColor: "bg-yellow-50",
-      description: "Monitoramento contínuo"
+      bgColor: "bg-yellow-50"
     },
     {
       title: "Reinternações acima de 30 dias",
       value: "3,2%",
       icon: TrendingDown,
       color: "text-purple-600",
-      bgColor: "bg-purple-50",
-      description: "Baixo índice"
+      bgColor: "bg-purple-50"
     }
   ];
 
@@ -57,9 +53,6 @@ export function ReadmissionMetrics() {
                 <div className={`p-3 rounded-lg ${metric.bgColor}`}>
                   <metric.icon className={`h-6 w-6 ${metric.color}`} />
                 </div>
-                <Badge variant="outline" className="text-xs">
-                  {metric.description}
-                </Badge>
               </div>
               <div className="space-y-2">
                 <p className="text-sm font-medium text-muted-foreground leading-tight">
@@ -85,9 +78,7 @@ export function ReadmissionMetrics() {
                 Insight Clínico
               </h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                A maioria das reinternações ocorre entre 8 e 30 dias após a alta, com taxas precoces (≤ 7 dias) 
-                inferiores a 2,5%, indicando qualidade na transição do cuidado e acompanhamento pós-alta 
-                em articulação com os CAPS.
+                Taxas de reinternações precoces (≤ 7 dias) inferiores a 2,5%, indicando qualidade na transição do cuidado e acompanhamento pós-alta em articulação com os CAPS.
               </p>
             </div>
           </div>

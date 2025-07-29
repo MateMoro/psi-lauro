@@ -67,35 +67,6 @@ export default function SobreServico() {
           </CardContent>
         </Card>
 
-        {/* Indicadores */}
-        <Card className="shadow-medium">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-institutional-blue">
-              <TrendingUp className="h-5 w-5" />
-              Indicadores
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <ul className="space-y-2 text-sm leading-relaxed">
-              <li>
-                <span className="font-medium text-foreground">Média mensal:</span>
-                <span className="text-muted-foreground ml-1">cerca de 30 internações psiquiátricas.</span>
-              </li>
-              <li>
-                <span className="font-medium text-foreground">Tempo médio de permanência recente:</span>
-                <span className="text-muted-foreground ml-1">14,3 dias, compatível com o perfil clínico de maior gravidade.</span>
-              </li>
-              <li>
-                <span className="font-medium text-foreground">Taxa de ocupação:</span>
-                <span className="text-muted-foreground ml-1">91,3%.</span>
-              </li>
-              <li>
-                <span className="font-medium text-foreground">Taxa de reinternação em até 15 dias:</span>
-                <span className="text-muted-foreground ml-1">?.</span>
-              </li>
-            </ul>
-          </CardContent>
-        </Card>
 
         {/* Equipe e Práticas Clínicas */}
         <Card className="shadow-medium">

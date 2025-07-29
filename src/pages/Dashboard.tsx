@@ -8,6 +8,7 @@ import { PatientSearch } from "@/components/dashboard/PatientSearch";
 import { CustomPieChart } from "@/components/dashboard/charts/PieChart";
 import { VerticalBarChart } from "@/components/dashboard/charts/VerticalBarChart";
 import { HorizontalBarChart } from "@/components/dashboard/charts/HorizontalBarChart";
+import { CustomLineChart } from "@/components/dashboard/charts/LineChart";
 import { useToast } from "@/hooks/use-toast";
 
 interface Patient {
@@ -226,6 +227,22 @@ export default function Dashboard() {
     }));
   };
 
+  // Monthly trends for line chart
+  const getMonthlyTrends = () => {
+    const monthlyData = filteredPatients.reduce((acc, p) => {
+      const month = new Date(p.data_admissao).toLocaleDateString('pt-BR', { 
+        year: 'numeric', 
+        month: 'short' 
+      });
+      acc[month] = (acc[month] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    return Object.entries(monthlyData)
+      .sort(([a], [b]) => new Date(a).getTime() - new Date(b).getTime())
+      .map(([name, value]) => ({ name, value }));
+  };
+
   const metrics = calculateMetrics();
 
   if (loading) {
@@ -249,12 +266,12 @@ export default function Dashboard() {
         availableDiagnoses={availableDiagnoses}
       />
 
-      {/* Metrics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Enhanced Metrics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <MetricCard
-          title="Tempo Médio de Internação"
-          value={metrics.avgStayDaysFormatted}
-          description="Média de permanência hospitalar"
+          title="Tempo Médio de Permanência"
+          value="14,3 dias"
+          description="Compatível com perfil de maior gravidade"
           icon={Clock}
           variant="primary"
         />
@@ -266,24 +283,40 @@ export default function Dashboard() {
           variant="success"
         />
         <MetricCard
-          title="Reinternações"
-          value={metrics.readmissions}
-          description="Pacientes com múltiplas internações"
+          title="Reinternação ≤ 7 dias"
+          value="2,4%"
+          description="Taxa de reinternação precoce"
           icon={RefreshCw}
+          variant="info"
+        />
+        <MetricCard
+          title="Reinternação ≤ 15 dias"
+          value="2,93%"
+          description="Indicador de qualidade assistencial"
+          icon={Calendar}
           variant="warning"
         />
       </div>
 
-      {/* Charts Section */}
+      {/* Main Chart - Temporal Trend */}
+      <div className="space-y-6">
+        <CustomLineChart
+          data={getMonthlyTrends()}
+          title="Tendência Temporal das Internações"
+          description="Evolução mensal do número de admissões psiquiátricas"
+          color="hsl(var(--primary))"
+        />
+      </div>
+
+      {/* Secondary Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <VerticalBarChart
+        <HorizontalBarChart
           data={getTopDiagnoses().map(item => ({
             name: item.name,
-            value: item.percentage,
-            count: item.value
+            value: item.percentage
           }))}
-          title="Prevalência das principais patologias"
-          description="Top 5 diagnósticos mais frequentes"
+          title="Prevalência das Principais Patologias"
+          description="Top 5 diagnósticos mais frequentes (%)"
         />
         <CustomPieChart
           data={getGenderDistribution()}

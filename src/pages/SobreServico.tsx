@@ -4,8 +4,20 @@ import { Clock, Users, Shield, Activity, FileText, TrendingUp } from "lucide-rea
 export default function SobreServico() {
   return (
     <div className="space-y-6">
+      {/* Institutional Highlight */}
+      <Card className="shadow-large border-l-4 border-l-primary bg-gradient-to-r from-primary/5 to-primary/10">
+        <CardContent className="p-8 text-center">
+          <h2 className="text-2xl md:text-3xl font-bold text-primary mb-4">
+            🏆 Pioneiro na implantação do PTS na unidade
+          </h2>
+          <p className="text-lg text-primary/80 leading-relaxed">
+            Primeiro setor a registrar Projetos Terapêuticos Singulares no prontuário SGHx
+          </p>
+        </CardContent>
+      </Card>
+
       <div className="text-center space-y-2">
-        <h1 className="text-2xl md:text-3xl font-bold text-institutional-blue">
+        <h1 className="text-2xl md:text-3xl font-bold text-primary">
           🏥 Sobre o Serviço de Psiquiatria – Hospital Planalto
         </h1>
       </div>

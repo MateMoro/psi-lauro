@@ -1,4 +1,4 @@
-import { BarChart3, Users, RefreshCw, Activity, TrendingUp } from "lucide-react";
+import { Home, BarChart3, Users, RefreshCw, Activity, TrendingUp, Stethoscope, Download } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -14,10 +14,16 @@ import {
 
 const navigationItems = [
   { 
-    title: "Visão Geral", 
+    title: "Início", 
     url: "/", 
+    icon: Home,
+    description: "Tela inicial do sistema"
+  },
+  { 
+    title: "Dashboard", 
+    url: "/dashboard", 
     icon: BarChart3,
-    description: "Dashboard principal com indicadores e gráficos"
+    description: "Visão geral dos dados e indicadores"
   },
   { 
     title: "Reinternações", 
@@ -30,6 +36,18 @@ const navigationItems = [
     url: "/tendencias", 
     icon: TrendingUp,
     description: "Insights automáticos e análises clínicas"
+  },
+  { 
+    title: "Sobre o Serviço", 
+    url: "/sobre-servico", 
+    icon: Stethoscope,
+    description: "Informações institucionais e contexto"
+  },
+  { 
+    title: "Exportar", 
+    url: "/exportar", 
+    icon: Download,
+    description: "Gerar relatórios para download"
   },
 ];
 

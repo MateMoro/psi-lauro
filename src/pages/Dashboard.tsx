@@ -21,6 +21,7 @@ interface Patient {
   data_nascimento: string;
   dias_internacao: number;
   procedencia: string;
+  raca_cor: string;
 }
 
 export default function Dashboard() {
@@ -30,6 +31,7 @@ export default function Dashboard() {
   const [availableCaps, setAvailableCaps] = useState<string[]>([]);
   const [availableProcedencias, setAvailableProcedencias] = useState<string[]>([]);
   const [availableDiagnoses, setAvailableDiagnoses] = useState<string[]>([]);
+  const [availableCores, setAvailableCores] = useState<string[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -47,13 +49,15 @@ export default function Dashboard() {
       setPatients(data || []);
       setFilteredPatients(data || []);
       
-      // Extract unique CAPS, Procedencias, and Diagnoses
+      // Extract unique CAPS, Procedencias, Diagnoses, and Cores
       const uniqueCaps = [...new Set(data?.map(p => p.caps_referencia).filter(Boolean))];
       const uniqueProcedencias = [...new Set(data?.map(p => p.procedencia).filter(Boolean))];
       const uniqueDiagnoses = [...new Set(data?.map(p => p.cid_grupo).filter(Boolean))];
+      const uniqueCores = [...new Set(data?.map(p => p.raca_cor).filter(Boolean))];
       setAvailableCaps(uniqueCaps);
       setAvailableProcedencias(uniqueProcedencias);
       setAvailableDiagnoses(uniqueDiagnoses);
+      setAvailableCores(uniqueCores);
     } catch (error) {
       console.error('Erro ao buscar pacientes:', error);
       toast({
@@ -83,6 +87,10 @@ export default function Dashboard() {
 
     if (filters.patologia) {
       filtered = filtered.filter(p => p.cid_grupo === filters.patologia);
+    }
+
+    if (filters.cor) {
+      filtered = filtered.filter(p => p.raca_cor === filters.cor);
     }
 
     if (filters.faixaEtaria) {
@@ -274,6 +282,7 @@ export default function Dashboard() {
         availableCaps={availableCaps} 
         availableProcedencias={availableProcedencias}
         availableDiagnoses={availableDiagnoses}
+        availableCores={availableCores}
       />
 
       {/* Enhanced Metrics Cards */}

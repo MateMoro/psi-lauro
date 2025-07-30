@@ -10,6 +10,7 @@ interface FilterBarProps {
   availableCaps: string[];
   availableProcedencias: string[];
   availableDiagnoses: string[];
+  availableCores: string[];
 }
 
 export interface DashboardFilters {
@@ -18,9 +19,10 @@ export interface DashboardFilters {
   faixaEtaria?: string;
   procedencia?: string;
   patologia?: string;
+  cor?: string;
 }
 
-export function FilterBar({ onFiltersChange, availableCaps, availableProcedencias, availableDiagnoses }: FilterBarProps) {
+export function FilterBar({ onFiltersChange, availableCaps, availableProcedencias, availableDiagnoses, availableCores }: FilterBarProps) {
   const [filters, setFilters] = useState<DashboardFilters>({});
 
   const updateFilters = (newFilters: Partial<DashboardFilters>) => {
@@ -43,7 +45,7 @@ export function FilterBar({ onFiltersChange, availableCaps, availableProcedencia
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
           {/* CAPS Filter */}
           <div className="space-y-2">
             <Label htmlFor="caps-select" className="text-sm font-medium">
@@ -152,6 +154,29 @@ export function FilterBar({ onFiltersChange, availableCaps, availableProcedencia
                 {availableDiagnoses.map((diagnosis) => (
                   <SelectItem key={diagnosis} value={diagnosis}>
                     {diagnosis}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Cor Filter */}
+          <div className="space-y-2">
+            <Label htmlFor="cor-select" className="text-sm font-medium">
+              Cor
+            </Label>
+            <Select
+              value={filters.cor || "all"}
+              onValueChange={(value) => updateFilters({ cor: value === "all" ? undefined : value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Todas as cores" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as cores</SelectItem>
+                {availableCores.map((cor) => (
+                  <SelectItem key={cor} value={cor}>
+                    {cor}
                   </SelectItem>
                 ))}
               </SelectContent>

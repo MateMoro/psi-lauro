@@ -8,7 +8,7 @@ export default function Index() {
         textAlign: "center",
         backgroundColor: "white",
         zIndex: 9999,
-        padding: "20px 0",
+        padding: "20px 0 12px 0",
         boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
       }}>
         <h1 style={{ 
@@ -82,9 +82,6 @@ export default function Index() {
           </p>
         </div>
 
-        <div style={{ textAlign: "center", fontSize: "13px", color: "#666666" }}>
-          Desenvolvido pelo Serviço de Psiquiatria do Hospital Planalto
-        </div>
       </div>
       </div>
     </>

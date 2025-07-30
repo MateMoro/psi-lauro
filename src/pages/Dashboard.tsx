@@ -115,10 +115,12 @@ export default function Dashboard() {
   // Calculate metrics
   const calculateMetrics = () => {
     const totalPatients = filteredPatients.length;
+    
+    // Calculate average stay days
     const avgStayDays = filteredPatients.reduce((acc, p) => 
       acc + (p.dias_internacao || 0), 0) / totalPatients || 0;
     
-    // Count readmissions (patients with multiple entries) - count unique patients, not total readmissions
+    // Group patients by name to identify readmissions
     const patientGroups = filteredPatients.reduce((acc, patient) => {
       const name = patient.nome;
       if (!acc[name]) {
@@ -128,16 +130,60 @@ export default function Dashboard() {
       return acc;
     }, {} as Record<string, Patient[]>);
     
-    const readmissionPatients = Object.entries(patientGroups)
-      .filter(([, admissions]) => admissions.length > 1);
+    // Calculate readmission rates by time intervals
+    let readmissions7Days = 0;
+    let readmissions15Days = 0;
+    let readmissions30Days = 0;
+    let readmissionsOver30Days = 0;
+    let totalReadmissionEvents = 0;
     
-    const readmissions = readmissionPatients.length;
+    Object.values(patientGroups).forEach(admissions => {
+      if (admissions.length > 1) {
+        // Sort admissions by date
+        const sortedAdmissions = admissions.sort((a, b) => 
+          new Date(a.data_admissao).getTime() - new Date(b.data_admissao).getTime()
+        );
+        
+        // Check intervals between consecutive admissions
+        for (let i = 1; i < sortedAdmissions.length; i++) {
+          const prevDischarge = sortedAdmissions[i-1].data_alta;
+          const currentAdmission = sortedAdmissions[i].data_admissao;
+          
+          if (prevDischarge && currentAdmission) {
+            const daysBetween = Math.abs(
+              (new Date(currentAdmission).getTime() - new Date(prevDischarge).getTime()) / (1000 * 60 * 60 * 24)
+            );
+            
+            totalReadmissionEvents++;
+            
+            if (daysBetween <= 7) {
+              readmissions7Days++;
+            } else if (daysBetween <= 15) {
+              readmissions15Days++;
+            } else if (daysBetween <= 30) {
+              readmissions30Days++;
+            } else {
+              readmissionsOver30Days++;
+            }
+          }
+        }
+      }
+    });
+
+    // Calculate percentages
+    const readmissionRate7Days = totalPatients > 0 ? (readmissions7Days / totalPatients * 100) : 0;
+    const readmissionRate15Days = totalPatients > 0 ? (readmissions15Days / totalPatients * 100) : 0;
+    const readmissionRate30Days = totalPatients > 0 ? (readmissions30Days / totalPatients * 100) : 0;
+    const readmissionRateOver30Days = totalPatients > 0 ? (readmissionsOver30Days / totalPatients * 100) : 0;
 
     return {
       totalPatients,
       avgStayDays: avgStayDays.toFixed(1),
-      readmissions,
-      avgStayDaysFormatted: `${avgStayDays.toFixed(1)} dias`
+      avgStayDaysFormatted: `${avgStayDays.toFixed(1)} dias`,
+      readmissionRate7Days: readmissionRate7Days.toFixed(2),
+      readmissionRate15Days: readmissionRate15Days.toFixed(2),
+      readmissionRate30Days: readmissionRate30Days.toFixed(2),
+      readmissionRateOver30Days: readmissionRateOver30Days.toFixed(2)
     };
   };
 
@@ -296,7 +342,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <MetricCard
           title="Tempo Médio de Permanência"
-          value="14,3 dias"
+          value={metrics.avgStayDaysFormatted}
           description="Compatível com perfil de maior gravidade"
           icon={Clock}
           variant="primary"
@@ -310,14 +356,14 @@ export default function Dashboard() {
         />
         <MetricCard
           title="Reinternação ≤ 7 dias"
-          value="2,4%"
+          value={`${metrics.readmissionRate7Days}%`}
           description="Taxa de reinternação precoce"
           icon={RefreshCw}
           variant="info"
         />
         <MetricCard
           title="Reinternação ≤ 15 dias"
-          value="2,93%"
+          value={`${metrics.readmissionRate15Days}%`}
           description="Indicador de qualidade assistencial"
           icon={Calendar}
           variant="warning"

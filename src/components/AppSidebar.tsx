@@ -82,7 +82,7 @@ export function AppSidebar() {
 
         <SidebarGroup className="px-2 py-4">
           <SidebarGroupLabel className="text-muted-foreground font-medium mb-2">
-            {!collapsed && "Navegação"}
+            {!collapsed && ""}
           </SidebarGroupLabel>
           
           <SidebarGroupContent>

@@ -1,10 +1,11 @@
 export default function Index() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8 px-6">
-      <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-primary mb-6" style={{ 
-          fontFamily: "'Inter', 'Roboto Slab', serif", 
-          color: "#1565C0"
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-6 px-6">
+      <div className="text-center mb-4">
+        <h1 className="text-3xl font-semibold mb-4" style={{ 
+          fontFamily: "'Inter', 'Segoe UI', sans-serif", 
+          color: "#1565C0",
+          letterSpacing: "-0.025em"
         }}>
           Painel de Internações Psiquiátricas
         </h1>

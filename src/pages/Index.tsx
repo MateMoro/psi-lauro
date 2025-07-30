@@ -26,7 +26,7 @@ export default function Index() {
       </div>
 
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 px-6 overflow-x-hidden" style={{ 
-        paddingTop: "60px",
+        paddingTop: "80px", // Ajustado para a altura real do título fixo
         maxWidth: "100vw",
         boxSizing: "border-box"
       }}>

@@ -4,8 +4,20 @@ import { Clock, Users, Shield, Activity, FileText, TrendingUp } from "lucide-rea
 export default function SobreServico() {
   return (
     <div className="space-y-6">
+      {/* Institutional Highlight */}
+      <Card className="shadow-large border-l-4 border-l-primary bg-gradient-to-r from-primary/5 to-primary/10">
+        <CardContent className="p-8 text-center">
+          <h2 className="text-2xl md:text-3xl font-bold text-primary mb-4">
+            🏆 Pioneiro na implantação do PTS na unidade
+          </h2>
+          <p className="text-lg text-primary/80 leading-relaxed">
+            Primeiro setor a registrar Projetos Terapêuticos Singulares no prontuário SGHx
+          </p>
+        </CardContent>
+      </Card>
+
       <div className="text-center space-y-2">
-        <h1 className="text-2xl md:text-3xl font-bold text-institutional-blue">
+        <h1 className="text-2xl md:text-3xl font-bold text-primary">
           🏥 Sobre o Serviço de Psiquiatria – Hospital Planalto
         </h1>
       </div>
@@ -67,6 +79,35 @@ export default function SobreServico() {
           </CardContent>
         </Card>
 
+        {/* Indicadores */}
+        <Card className="shadow-medium">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-institutional-blue">
+              <TrendingUp className="h-5 w-5" />
+              Indicadores
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <ul className="space-y-2 text-sm leading-relaxed">
+              <li>
+                <span className="font-medium text-foreground">Média mensal:</span>
+                <span className="text-muted-foreground ml-1">cerca de 30 internações psiquiátricas.</span>
+              </li>
+              <li>
+                <span className="font-medium text-foreground">Tempo médio de permanência recente:</span>
+                <span className="text-muted-foreground ml-1">14,3 dias, compatível com o perfil clínico de maior gravidade.</span>
+              </li>
+              <li>
+                <span className="font-medium text-foreground">Taxa de ocupação:</span>
+                <span className="text-muted-foreground ml-1">91,3%.</span>
+              </li>
+              <li>
+                <span className="font-medium text-foreground">Taxa de reinternação em até 15 dias:</span>
+                <span className="text-muted-foreground ml-1">?.</span>
+              </li>
+            </ul>
+          </CardContent>
+        </Card>
 
         {/* Equipe e Práticas Clínicas */}
         <Card className="shadow-medium">
@@ -88,8 +129,10 @@ export default function SobreServico() {
             </ul>
             <div className="bg-accent/10 p-3 rounded-lg border-l-4 border-accent">
               <p className="text-sm text-foreground leading-relaxed">
-                <strong>Primeiro setor a registrar os PTS diretamente no sistema SGHx</strong>, 
-                promovendo maior alinhamento clínico e qualificação do cuidado interdisciplinar.
+                <strong>Pioneiro na implantação do PTS na unidade</strong>, o Serviço de 
+                Psiquiatria foi o primeiro setor a registrar Projetos Terapêuticos Singulares 
+                diretamente no sistema SGHx, promovendo maior alinhamento clínico e qualificação 
+                do cuidado interdisciplinar.
               </p>
             </div>
           </CardContent>

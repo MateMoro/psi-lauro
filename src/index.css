@@ -17,9 +17,8 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 213 27% 12%;
 
-    --primary: 214 84% 56%;
+    --primary: 220 70% 35%;
     --primary-foreground: 0 0% 100%;
-    --institutional-blue: 214 84% 56%;
 
     --secondary: 213 27% 96%;
     --secondary-foreground: 213 27% 12%;
@@ -27,8 +26,8 @@ All colors MUST be HSL.
     --muted: 213 27% 96%;
     --muted-foreground: 213 9% 46%;
 
-    --accent: 43 96% 56%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 213 27% 96%;
+    --accent-foreground: 213 27% 12%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
@@ -59,19 +58,19 @@ All colors MUST be HSL.
     --info: 197 71% 52%;
     --info-foreground: 0 0% 100%;
 
-    /* Professional gradients for healthcare dashboard */
-    --gradient-primary: linear-gradient(135deg, hsl(210 83% 53%), hsl(210 83% 63%));
+    /* Enhanced healthcare gradients with institutional colors */
+    --gradient-primary: linear-gradient(135deg, hsl(220 70% 35%), hsl(220 70% 45%));
     --gradient-secondary: linear-gradient(135deg, hsl(160 76% 36%), hsl(160 76% 46%));
-    --gradient-accent: linear-gradient(135deg, hsl(340 82% 52%), hsl(340 82% 62%));
+    --gradient-accent: linear-gradient(135deg, hsl(43 96% 56%), hsl(43 96% 66%));
     --gradient-info: linear-gradient(135deg, hsl(190 71% 47%), hsl(190 71% 57%));
-    --gradient-warning: linear-gradient(135deg, hsl(35 91% 62%), hsl(35 91% 72%));
+    --gradient-warning: linear-gradient(135deg, hsl(43 96% 56%), hsl(43 96% 66%));
     --gradient-success: linear-gradient(135deg, hsl(160 76% 36%), hsl(160 76% 46%));
 
-    /* Enhanced shadow system for depth */
-    --shadow-soft: 0 1px 3px 0 hsl(213 27% 12% / 0.1), 0 1px 2px 0 hsl(213 27% 12% / 0.06);
-    --shadow-medium: 0 4px 6px -1px hsl(213 27% 12% / 0.1), 0 2px 4px -1px hsl(213 27% 12% / 0.06);
-    --shadow-large: 0 10px 15px -3px hsl(213 27% 12% / 0.1), 0 4px 6px -2px hsl(213 27% 12% / 0.05);
-    --shadow-glow: 0 0 20px hsl(210 83% 53% / 0.3);
+    /* Enhanced shadow system for depth and professional appearance */
+    --shadow-soft: 0 2px 4px 0 hsl(213 27% 12% / 0.08), 0 1px 2px 0 hsl(213 27% 12% / 0.04);
+    --shadow-medium: 0 6px 12px -2px hsl(213 27% 12% / 0.12), 0 3px 6px -1px hsl(213 27% 12% / 0.08);
+    --shadow-large: 0 12px 24px -4px hsl(213 27% 12% / 0.15), 0 6px 12px -2px hsl(213 27% 12% / 0.1);
+    --shadow-glow: 0 0 32px hsl(220 70% 35% / 0.25);
     
     /* Text gradients */
     --text-gradient-primary: linear-gradient(135deg, hsl(210 83% 53%), hsl(260 85% 58%));

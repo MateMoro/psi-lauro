@@ -7,7 +7,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { RefreshCw, Calendar, MapPin, User, Filter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { ReadmissionMetrics } from "@/components/dashboard/ReadmissionMetrics";
 
 interface PatientAdmission {
   nome: string;
@@ -209,7 +208,7 @@ export default function Reinternacoes() {
       </Card>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="shadow-medium">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
@@ -242,10 +241,28 @@ export default function Reinternacoes() {
           </CardContent>
         </Card>
 
+        <Card className="shadow-medium">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Intervalo Médio (dias)
+                </p>
+                <p className="text-2xl font-bold text-foreground">
+                  {filteredReadmissions.length > 0 
+                    ? Math.round(
+                        filteredReadmissions.reduce((sum, p) => sum + p.averageInterval, 0) / 
+                        filteredReadmissions.length
+                      )
+                    : 0
+                  }
+                </p>
+              </div>
+              <Calendar className="h-8 w-8 text-chart-2" />
+            </div>
+          </CardContent>
+        </Card>
       </div>
-
-      {/* Readmission Metrics */}
-      <ReadmissionMetrics />
 
       {/* Readmissions Table */}
       <Card className="shadow-medium">

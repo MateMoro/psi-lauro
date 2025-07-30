@@ -17,37 +17,37 @@ const navigationItems = [
     title: "Início", 
     url: "/", 
     icon: Home,
-    description: ""
+    description: "Tela inicial do sistema"
   },
   { 
-    title: "Dados e Indicadores", 
+    title: "Dashboard", 
     url: "/dashboard", 
     icon: BarChart3,
-    description: ""
+    description: "Visão geral dos dados e indicadores"
   },
   { 
     title: "Reinternações", 
     url: "/reinternacoes", 
     icon: RefreshCw,
-    description: ""
+    description: "Análise de pacientes com múltiplas internações"
   },
   { 
     title: "Tendências", 
     url: "/tendencias", 
     icon: TrendingUp,
-    description: ""
+    description: "Insights automáticos e análises clínicas"
   },
   { 
     title: "Sobre o Serviço", 
     url: "/sobre-servico", 
     icon: Stethoscope,
-    description: ""
+    description: "Informações institucionais e contexto"
   },
   { 
     title: "Exportar", 
     url: "/exportar", 
     icon: Download,
-    description: ""
+    description: "Gerar relatórios para download"
   },
 ];
 
@@ -82,7 +82,7 @@ export function AppSidebar() {
 
         <SidebarGroup className="px-2 py-4">
           <SidebarGroupLabel className="text-muted-foreground font-medium mb-2">
-            {!collapsed && ""}
+            {!collapsed && "Navegação"}
           </SidebarGroupLabel>
           
           <SidebarGroupContent>
@@ -97,7 +97,12 @@ export function AppSidebar() {
                     >
                       <item.icon className="h-5 w-5" />
                       {!collapsed && (
-                        <span className="font-medium">{item.title}</span>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{item.title}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {item.description}
+                          </span>
+                        </div>
                       )}
                     </NavLink>
                   </SidebarMenuButton>

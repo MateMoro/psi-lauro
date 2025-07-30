@@ -4,10 +4,11 @@ export default function Index() {
       <div style={{
         position: "fixed",
         top: 0,
-        width: "100%",
+        left: "60px", // Espaço para o sidebar trigger
+        right: 0,
         textAlign: "center",
         backgroundColor: "white",
-        zIndex: 9999,
+        zIndex: 100, // Menor que o sidebar trigger
         padding: "20px 0 12px 0",
         boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
       }}>
@@ -22,9 +23,13 @@ export default function Index() {
         </h1>
       </div>
 
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 px-6" style={{ paddingTop: "60px" }}>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 px-6 overflow-x-hidden" style={{ 
+        paddingTop: "60px",
+        maxWidth: "100vw",
+        boxSizing: "border-box"
+      }}>
 
-      <div style={{ maxWidth: "720px", margin: "0 auto" }}>
+      <div style={{ maxWidth: "720px", margin: "0 auto", width: "100%" }}>
         <div style={{ 
           background: "#FFFFFF", 
           borderRadius: "12px", 

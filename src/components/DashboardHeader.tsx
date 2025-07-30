@@ -1,7 +1,7 @@
 import { SidebarTrigger } from "@/components/ui/sidebar";
 export function DashboardHeader() {
   return (
-    <header className="h-20 border-b border-border bg-card flex items-center justify-between px-4 shadow-soft">
+    <header className="h-20 border-b border-border bg-card flex items-center justify-between px-4 shadow-soft relative z-[200]">
       <div className="flex items-center gap-4">
         <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
       </div>

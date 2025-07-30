@@ -22,7 +22,7 @@ export default function Index() {
         </h1>
       </div>
 
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 px-6" style={{ paddingTop: "80px" }}>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 px-6" style={{ paddingTop: "60px" }}>
 
       <div style={{ maxWidth: "720px", margin: "0 auto" }}>
         <div style={{ 

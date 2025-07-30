@@ -22,19 +22,19 @@ export default function Index() {
             <img 
               src="/lovable-uploads/2559d5aa-43ca-44e7-a089-ae35cb9cb64d.png" 
               alt="Logotipos SPDM, SUS e Prefeitura de São Paulo - Saúde"
-              className="max-w-[45%] h-auto object-contain"
-              style={{ maxHeight: '50px' }}
+              className="max-w-[40%] h-auto object-contain"
+              style={{ maxHeight: '35px' }}
             />
           </div>
           
           {/* Título Principal */}
-          <h1 className="text-4xl font-bold text-[#1565C0] mb-8 font-serif tracking-tight">
+          <h1 className="text-[26px] font-bold text-[#1565C0] mb-8 font-sans tracking-tight">
             Painel de Internações Psiquiátricas
           </h1>
         </div>
 
         {/* Cards Informativos */}
-        <div className="space-y-8 max-w-3xl mx-auto">
+        <div className="space-y-6 max-w-3xl mx-auto">
           
           {/* Objetivo do Sistema */}
           <Card className="bg-white border border-[#E0E0E0] rounded-xl shadow-[0px_2px_12px_rgba(0,0,0,0.06)] p-6">
@@ -110,7 +110,7 @@ export default function Index() {
         </div>
 
         {/* Rodapé */}
-        <div className="text-center mt-16 pt-8 border-t border-[#E0E0E0]">
+        <div className="text-center mt-12 pt-6 border-t border-[#E0E0E0]">
           <p className="text-sm text-[#666666]">
             Desenvolvido pelo Serviço de Psiquiatria do Hospital Planalto
           </p>

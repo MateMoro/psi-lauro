@@ -20,34 +20,34 @@ const navigationItems = [
     description: ""
   },
   { 
-    title: "Dashboard", 
+    title: "Dados e Indicadores", 
     url: "/dashboard", 
     icon: BarChart3,
-    description: "Visão geral dos dados e indicadores"
+    description: ""
   },
   { 
     title: "Reinternações", 
     url: "/reinternacoes", 
     icon: RefreshCw,
-    description: "Análise de pacientes com múltiplas internações"
+    description: ""
   },
   { 
     title: "Tendências", 
     url: "/tendencias", 
     icon: TrendingUp,
-    description: "Insights automáticos e análises clínicas"
+    description: ""
   },
   { 
     title: "Sobre o Serviço", 
     url: "/sobre-servico", 
     icon: Stethoscope,
-    description: "Informações institucionais e contexto"
+    description: ""
   },
   { 
     title: "Exportar", 
     url: "/exportar", 
     icon: Download,
-    description: "Gerar relatórios para download"
+    description: ""
   },
 ];
 
@@ -97,12 +97,7 @@ export function AppSidebar() {
                     >
                       <item.icon className="h-5 w-5" />
                       {!collapsed && (
-                        <div className="flex flex-col">
-                          <span className="font-medium">{item.title}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {item.description}
-                          </span>
-                        </div>
+                        <span className="font-medium">{item.title}</span>
                       )}
                     </NavLink>
                   </SidebarMenuButton>

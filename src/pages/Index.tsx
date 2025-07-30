@@ -1,18 +1,10 @@
 export default function Index() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-12 px-6">
-      <div style={{ textAlign: "center", paddingTop: "24px", marginBottom: "32px" }}>
-        <img 
-          src="https://i.imgur.com/YbOPXHw.png" 
-          alt="Logo Institucional" 
-          style={{ maxWidth: "280px", height: "auto", marginBottom: "24px" }} 
-        />
-        <h1 style={{ 
-          fontFamily: "'Inter', sans-serif", 
-          fontSize: "28px", 
-          color: "#1565C0", 
-          fontWeight: "700", 
-          margin: "0" 
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8 px-6">
+      <div className="text-center mb-8">
+        <h1 className="text-4xl font-bold text-primary mb-6" style={{ 
+          fontFamily: "'Inter', 'Roboto Slab', serif", 
+          color: "#1565C0"
         }}>
           Painel de Internações Psiquiátricas
         </h1>

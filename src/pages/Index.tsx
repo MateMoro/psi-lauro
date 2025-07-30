@@ -4,13 +4,15 @@ export default function Index() {
       <div style={{
         position: "fixed",
         top: 0,
-        left: "60px", // Espaço para o sidebar trigger
+        left: 0,
         right: 0,
+        width: "100%",
         textAlign: "center",
         backgroundColor: "white",
-        zIndex: 100, // Menor que o sidebar trigger
+        zIndex: 1000,
         padding: "20px 0 12px 0",
-        boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+        borderBottom: "1px solid #e5e7eb"
       }}>
         <h1 style={{ 
           fontFamily: "'Inter', 'Roboto Slab', serif", 

@@ -20,19 +20,12 @@ export default function Index() {
         <div className="text-center space-y-4">
           <div className="flex justify-center">
             <img 
-              src="/src/assets/hospital-logo.png" 
+              src="/lovable-uploads/2559d5aa-43ca-44e7-a089-ae35cb9cb64d.png" 
               alt="Logotipos SPDM, SUS e Prefeitura de São Paulo - Saúde"
               className="max-w-[80%] h-auto object-contain"
               style={{ maxHeight: '120px' }}
             />
           </div>
-        </div>
-
-        {/* Título Central */}
-        <div className="text-center mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold text-institutional-blue leading-tight">
-            Análise Clínica e Institucional das Internações Psiquiátricas
-          </h1>
         </div>
 
         {/* Cards Informativos */}
@@ -48,7 +41,7 @@ export default function Index() {
             </CardHeader>
             <CardContent>
               <p className="text-foreground leading-relaxed text-base">
-                Este painel foi desenvolvido para permitir o acompanhamento técnico e analítico das internações psiquiátricas do Hospital Planalto.
+                Este aplicativo foi desenvolvido para permitir o acompanhamento técnico e analítico das internações psiquiátricas do Hospital Planalto.
                 Focado em indicadores clínico-administrativos, ele apoia a gestão da assistência, identifica padrões relevantes (como reinternações, tempo médio de internação e perfil clínico) e orienta melhorias em articulação com a Rede de Atenção Psicossocial (RAPS).
               </p>
             </CardContent>
@@ -65,7 +58,6 @@ export default function Index() {
             <CardContent>
               <div className="space-y-3 text-foreground leading-relaxed text-base">
                 <p>• Dados extraídos da base de internações da Enfermaria Psiquiátrica do Hospital Planalto.</p>
-                <p>• A análise é retrospectiva.</p>
                 <p>Seu foco é a análise institucional retroativa, com finalidade técnica e gerencial, oferecendo subsídios para qualificação do cuidado em saúde mental.</p>
               </div>
             </CardContent>

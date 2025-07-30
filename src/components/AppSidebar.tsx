@@ -17,7 +17,7 @@ const navigationItems = [
     title: "Início", 
     url: "/", 
     icon: Home,
-    description: "Tela inicial do sistema"
+    description: ""
   },
   { 
     title: "Dashboard", 

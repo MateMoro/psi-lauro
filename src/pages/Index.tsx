@@ -14,21 +14,21 @@ export default function Index() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8 px-6">
-      <div className="max-w-4xl mx-auto space-y-12">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-12 px-6">
+      <div className="max-w-4xl mx-auto space-y-16">
         {/* Logo Institucional */}
         <div className="text-center">
           <div className="flex justify-center mb-6">
             <img 
               src="/lovable-uploads/2559d5aa-43ca-44e7-a089-ae35cb9cb64d.png" 
               alt="Logotipos SPDM, SUS e Prefeitura de São Paulo - Saúde"
-              className="max-w-[50%] h-auto object-contain"
-              style={{ maxHeight: '80px' }}
+              className="max-w-[45%] h-auto object-contain"
+              style={{ maxHeight: '50px' }}
             />
           </div>
           
           {/* Título Principal */}
-          <h1 className="text-3xl font-bold text-[#1565C0] mb-8 font-inter">
+          <h1 className="text-4xl font-bold text-[#1565C0] mb-8 font-serif tracking-tight">
             Painel de Internações Psiquiátricas
           </h1>
         </div>
@@ -37,17 +37,17 @@ export default function Index() {
         <div className="space-y-8 max-w-3xl mx-auto">
           
           {/* Objetivo do Sistema */}
-          <Card className="bg-white border border-[#E0E0E0] rounded-lg shadow-lg p-8">
-            <CardHeader className="text-center pb-4">
-              <div className="flex justify-center mb-3">
-                <Target className="h-8 w-8 text-[#1565C0]" />
+          <Card className="bg-white border border-[#E0E0E0] rounded-xl shadow-[0px_2px_12px_rgba(0,0,0,0.06)] p-6">
+            <CardHeader className="text-center pb-6">
+              <div className="flex justify-center mb-4">
+                <Target className="h-6 w-6 text-[#1565C0]" />
               </div>
-              <CardTitle className="text-[#1565C0] text-xl font-semibold font-inter">
+              <CardTitle className="text-[#1565C0] text-xl font-bold">
                 OBJETIVO DO SISTEMA
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-0">
-              <p className="text-[#333333] leading-relaxed text-base text-center font-inter">
+            <CardContent className="pt-0 px-6">
+              <p className="text-[#333333] leading-relaxed text-base text-center">
                 Este aplicativo foi desenvolvido para permitir o acompanhamento técnico e analítico das internações psiquiátricas do Hospital Planalto.
                 Focado em indicadores clínico-administrativos, ele apoia a gestão da assistência, identifica padrões relevantes (como reinternações, tempo médio de internação e perfil clínico) e orienta melhorias em articulação com a Rede de Atenção Psicossocial (RAPS).
               </p>
@@ -55,17 +55,17 @@ export default function Index() {
           </Card>
 
           {/* Metodologia e Fonte dos Dados */}
-          <Card className="bg-white border border-[#E0E0E0] rounded-lg shadow-lg p-8">
-            <CardHeader className="text-center pb-4">
-              <div className="flex justify-center mb-3">
-                <FlaskConical className="h-8 w-8 text-[#1565C0]" />
+          <Card className="bg-white border border-[#E0E0E0] rounded-xl shadow-[0px_2px_12px_rgba(0,0,0,0.06)] p-6">
+            <CardHeader className="text-center pb-6">
+              <div className="flex justify-center mb-4">
+                <FlaskConical className="h-6 w-6 text-[#1565C0]" />
               </div>
-              <CardTitle className="text-[#1565C0] text-xl font-semibold font-inter">
+              <CardTitle className="text-[#1565C0] text-xl font-bold">
                 METODOLOGIA E FONTE DOS DADOS
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-0">
-              <div className="space-y-3 text-[#333333] leading-relaxed text-base text-center font-inter">
+            <CardContent className="pt-0 px-6">
+              <div className="space-y-3 text-[#333333] leading-relaxed text-base text-center">
                 <p>• Dados extraídos da base de internações da Enfermaria Psiquiátrica do Hospital Planalto.</p>
                 <p>Seu foco é a análise institucional retroativa, com finalidade técnica e gerencial, oferecendo subsídios para qualificação do cuidado em saúde mental.</p>
               </div>
@@ -73,40 +73,47 @@ export default function Index() {
           </Card>
 
           {/* Período dos Dados */}
-          <Card className="bg-white border border-[#E0E0E0] rounded-lg shadow-lg p-8">
-            <CardHeader className="text-center pb-4">
-              <div className="flex justify-center mb-3">
-                <Calendar className="h-8 w-8 text-[#1565C0]" />
+          <Card className="bg-white border border-[#E0E0E0] rounded-xl shadow-[0px_2px_12px_rgba(0,0,0,0.06)] p-6">
+            <CardHeader className="text-center pb-6">
+              <div className="flex justify-center mb-4">
+                <Calendar className="h-6 w-6 text-[#1565C0]" />
               </div>
-              <CardTitle className="text-[#1565C0] text-xl font-semibold font-inter">
+              <CardTitle className="text-[#1565C0] text-xl font-bold">
                 PERÍODO DOS DADOS
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-0">
-              <p className="text-[#333333] leading-relaxed text-base text-center font-inter">
+            <CardContent className="pt-0 px-6">
+              <p className="text-[#333333] leading-relaxed text-base text-center">
                 O painel abrange internações entre 11/06/2024 a 24/07/2025.
               </p>
             </CardContent>
           </Card>
 
           {/* Versão do Sistema */}
-          <Card className="bg-white border border-[#E0E0E0] rounded-lg shadow-lg p-8">
-            <CardHeader className="text-center pb-4">
-              <div className="flex justify-center mb-3">
-                <RefreshCw className="h-8 w-8 text-[#1565C0]" />
+          <Card className="bg-white border border-[#E0E0E0] rounded-xl shadow-[0px_2px_12px_rgba(0,0,0,0.06)] p-6">
+            <CardHeader className="text-center pb-6">
+              <div className="flex justify-center mb-4">
+                <RefreshCw className="h-6 w-6 text-[#1565C0]" />
               </div>
-              <CardTitle className="text-[#1565C0] text-xl font-semibold font-inter">
+              <CardTitle className="text-[#1565C0] text-xl font-bold">
                 VERSÃO DO SISTEMA
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-0">
-              <div className="space-y-2 text-[#333333] leading-relaxed text-base text-center font-inter">
+            <CardContent className="pt-0 px-6">
+              <div className="space-y-2 text-[#333333] leading-relaxed text-base text-center">
                 <p>• Versão 1.0</p>
                 <p>• Última atualização: {currentDate}</p>
               </div>
             </CardContent>
           </Card>
 
+        </div>
+
+        {/* Rodapé */}
+        <div className="text-center mt-16 pt-8 border-t border-[#E0E0E0]">
+          <p className="text-sm text-[#666666]">
+            Desenvolvido pelo Serviço de Psiquiatria do Hospital Planalto
+          </p>
         </div>
       </div>
     </div>

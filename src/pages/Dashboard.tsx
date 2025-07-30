@@ -237,28 +237,35 @@ export default function Dashboard() {
 
   // Monthly trends for line chart - limited to Jan-Jun 2025
   const getMonthlyTrends = () => {
-    const allowedMonths = ['jan. 2025', 'fev. 2025', 'mar. 2025', 'abr. 2025', 'mai. 2025', 'jun. 2025'];
+    const monthsOrder = [
+      { key: 'Janeiro 2025', display: 'Janeiro 2025', month: 1, year: 2025 },
+      { key: 'Fevereiro 2025', display: 'Fevereiro 2025', month: 2, year: 2025 },
+      { key: 'Março 2025', display: 'Março 2025', month: 3, year: 2025 },
+      { key: 'Abril 2025', display: 'Abril 2025', month: 4, year: 2025 },
+      { key: 'Maio 2025', display: 'Maio 2025', month: 5, year: 2025 },
+      { key: 'Junho 2025', display: 'Junho 2025', month: 6, year: 2025 }
+    ];
     
     const monthlyData = filteredPatients.reduce((acc, p) => {
-      const month = new Date(p.data_admissao).toLocaleDateString('pt-BR', { 
-        year: 'numeric', 
-        month: 'short' 
-      });
+      const admissionDate = new Date(p.data_admissao);
+      const month = admissionDate.getMonth() + 1; // getMonth() returns 0-11
+      const year = admissionDate.getFullYear();
       
       // Only include data for January to June 2025
-      if (allowedMonths.includes(month)) {
-        acc[month] = (acc[month] || 0) + 1;
+      if (year === 2025 && month >= 1 && month <= 6) {
+        const monthKey = monthsOrder.find(m => m.month === month && m.year === year)?.key;
+        if (monthKey) {
+          acc[monthKey] = (acc[monthKey] || 0) + 1;
+        }
       }
       return acc;
     }, {} as Record<string, number>);
 
-    // Ensure all months are represented with 0 if no data
-    const result = allowedMonths.map(month => ({
-      name: month,
-      value: monthlyData[month] || 0
+    // Return all months with their counts (0 if no data)
+    return monthsOrder.map(month => ({
+      name: month.display,
+      value: monthlyData[month.key] || 0
     }));
-
-    return result;
   };
 
   const metrics = calculateMetrics();
@@ -321,9 +328,9 @@ export default function Dashboard() {
       <div className="space-y-6">
         <CustomLineChart
           data={getMonthlyTrends()}
-          title="Tendência Temporal das Internações"
+          title="Tendência Temporal das Internações (Jan–Jun/2025)"
           description="Evolução mensal do número de admissões psiquiátricas"
-          color="hsl(var(--primary))"
+          color="#1565C0"
         />
       </div>
 

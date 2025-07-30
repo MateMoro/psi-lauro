@@ -41,8 +41,9 @@ export function CustomLineChart({ data, title, description, color = "hsl(var(--p
                 dataKey="value" 
                 stroke={color}
                 strokeWidth={3}
-                dot={{ fill: color, strokeWidth: 2, r: 4 }}
-                activeDot={{ r: 6, stroke: color, strokeWidth: 2 }}
+                dot={{ fill: color, strokeWidth: 2, r: 5 }}
+                activeDot={{ r: 7, stroke: color, strokeWidth: 2 }}
+                connectNulls={false}
               />
             </LineChart>
           </ResponsiveContainer>

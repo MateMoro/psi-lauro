@@ -28,7 +28,7 @@ export default function Index() {
           </div>
           
           {/* Título Principal */}
-          <h1 className="text-[26px] font-bold text-[#1565C0] mb-8 font-sans tracking-tight">
+          <h1 className="text-[28px] font-bold text-[#1565C0] mb-8 font-sans tracking-tight">
             Painel de Internações Psiquiátricas
           </h1>
         </div>

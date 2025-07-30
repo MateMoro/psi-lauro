@@ -1,16 +1,28 @@
 export default function Index() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 px-6">
-      <div className="text-center pt-6 mb-6">
-        <h1 className="text-3xl font-medium mb-0" style={{ 
-          fontFamily: "'Inter', 'Segoe UI', sans-serif", 
+    <>
+      <div style={{
+        position: "fixed",
+        top: 0,
+        width: "100%",
+        textAlign: "center",
+        backgroundColor: "white",
+        zIndex: 9999,
+        padding: "20px 0",
+        boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+      }}>
+        <h1 style={{ 
+          fontFamily: "'Inter', 'Roboto Slab', serif", 
+          fontSize: "28px",
           color: "#1565C0",
-          letterSpacing: "-0.025em",
-          fontWeight: "500"
+          fontWeight: "700",
+          margin: "0"
         }}>
           Painel de Internações Psiquiátricas
         </h1>
       </div>
+
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 px-6" style={{ paddingTop: "100px" }}>
 
       <div style={{ maxWidth: "720px", margin: "0 auto" }}>
         <div style={{ 
@@ -74,6 +86,7 @@ export default function Index() {
           Desenvolvido pelo Serviço de Psiquiatria do Hospital Planalto
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

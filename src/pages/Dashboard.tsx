@@ -227,20 +227,30 @@ export default function Dashboard() {
     }));
   };
 
-  // Monthly trends for line chart
+  // Monthly trends for line chart - limited to Jan-Jun 2025
   const getMonthlyTrends = () => {
+    const allowedMonths = ['jan. 2025', 'fev. 2025', 'mar. 2025', 'abr. 2025', 'mai. 2025', 'jun. 2025'];
+    
     const monthlyData = filteredPatients.reduce((acc, p) => {
       const month = new Date(p.data_admissao).toLocaleDateString('pt-BR', { 
         year: 'numeric', 
         month: 'short' 
       });
-      acc[month] = (acc[month] || 0) + 1;
+      
+      // Only include data for January to June 2025
+      if (allowedMonths.includes(month)) {
+        acc[month] = (acc[month] || 0) + 1;
+      }
       return acc;
     }, {} as Record<string, number>);
 
-    return Object.entries(monthlyData)
-      .sort(([a], [b]) => new Date(a).getTime() - new Date(b).getTime())
-      .map(([name, value]) => ({ name, value }));
+    // Ensure all months are represented with 0 if no data
+    const result = allowedMonths.map(month => ({
+      name: month,
+      value: monthlyData[month] || 0
+    }));
+
+    return result;
   };
 
   const metrics = calculateMetrics();
@@ -310,7 +320,7 @@ export default function Dashboard() {
 
       {/* Secondary Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <HorizontalBarChart
+        <VerticalBarChart
           data={getTopDiagnoses().map(item => ({
             name: item.name,
             value: item.percentage

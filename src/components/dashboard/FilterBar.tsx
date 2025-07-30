@@ -70,7 +70,7 @@ export function FilterBar({ onFiltersChange, availableCaps, availableProcedencia
           {/* Gender Filter */}
           <div className="space-y-2">
             <Label htmlFor="gender-select" className="text-sm font-medium">
-              Gênero
+              Sexo
             </Label>
             <Select
               value={filters.genero || "all"}
@@ -83,7 +83,6 @@ export function FilterBar({ onFiltersChange, availableCaps, availableProcedencia
                 <SelectItem value="all">Todos</SelectItem>
                 <SelectItem value="MASC">Masculino</SelectItem>
                 <SelectItem value="FEM">Feminino</SelectItem>
-                <SelectItem value="OUTROS">Outros</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -139,7 +138,7 @@ export function FilterBar({ onFiltersChange, availableCaps, availableProcedencia
           {/* Patologia Filter */}
           <div className="space-y-2">
             <Label htmlFor="patologia-select" className="text-sm font-medium">
-              Patologia (CID)
+              Patologia
             </Label>
             <Select
               value={filters.patologia || "all"}

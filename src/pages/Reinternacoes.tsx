@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { RefreshCw, Calendar, MapPin, User, Filter } from "lucide-react";
+import { RefreshCw, Calendar, MapPin, User, Filter, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface PatientAdmission {
@@ -180,13 +180,13 @@ export default function Reinternacoes() {
         <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Filter className="h-5 w-5 text-primary" />
-            Filtro por Intervalo de Reinternação
+            Taxas de Reinternações
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-2 max-w-md">
             <Label htmlFor="interval-select" className="text-sm font-medium">
-              Intervalo entre internações
+              Taxas de Reinternações
             </Label>
             <Select
               value={intervalFilter}
@@ -207,20 +207,27 @@ export default function Reinternacoes() {
         </CardContent>
       </Card>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Metric Cards with Readmission Rates */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="shadow-medium">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  Total de Pacientes Reinternados
+                  Reinternação ≤ 7 dias
                 </p>
                 <p className="text-2xl font-bold text-foreground">
-                  {filteredReadmissions.length}
+                  {(() => {
+                    const filtered7Days = readmissions.filter(patient => patient.averageInterval <= 7);
+                    const rate = readmissions.length > 0 ? (filtered7Days.length / readmissions.length * 100) : 0;
+                    return `${rate.toFixed(1)}%`;
+                  })()}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Taxa de reinternação precoce
                 </p>
               </div>
-              <User className="h-8 w-8 text-primary" />
+              <RefreshCw className="h-8 w-8 text-primary" />
             </div>
           </CardContent>
         </Card>
@@ -230,35 +237,66 @@ export default function Reinternacoes() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  Total de Readmissões
+                  Reinternação ≤ 15 dias
                 </p>
                 <p className="text-2xl font-bold text-foreground">
-                  {filteredReadmissions.reduce((sum, p) => sum + p.totalAdmissions, 0)}
+                  {(() => {
+                    const filtered15Days = readmissions.filter(patient => patient.averageInterval <= 15);
+                    const rate = readmissions.length > 0 ? (filtered15Days.length / readmissions.length * 100) : 0;
+                    return `${rate.toFixed(1)}%`;
+                  })()}
                 </p>
-              </div>
-              <RefreshCw className="h-8 w-8 text-chart-3" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-medium">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Intervalo Médio (dias)
-                </p>
-                <p className="text-2xl font-bold text-foreground">
-                  {filteredReadmissions.length > 0 
-                    ? Math.round(
-                        filteredReadmissions.reduce((sum, p) => sum + p.averageInterval, 0) / 
-                        filteredReadmissions.length
-                      )
-                    : 0
-                  }
+                <p className="text-xs text-muted-foreground mt-1">
+                  Indicador de seguimento clínico nas duas primeiras semanas
                 </p>
               </div>
               <Calendar className="h-8 w-8 text-chart-2" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-medium">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Reinternação ≤ 30 dias
+                </p>
+                <p className="text-2xl font-bold text-foreground">
+                  {(() => {
+                    const filtered30Days = readmissions.filter(patient => patient.averageInterval <= 30);
+                    const rate = readmissions.length > 0 ? (filtered30Days.length / readmissions.length * 100) : 0;
+                    return `${rate.toFixed(1)}%`;
+                  })()}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Readmissões precoces no primeiro mês
+                </p>
+              </div>
+              <User className="h-8 w-8 text-chart-3" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-medium">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Reinternação &gt; 30 dias
+                </p>
+                <p className="text-2xl font-bold text-foreground">
+                  {(() => {
+                    const filteredOver30Days = readmissions.filter(patient => patient.averageInterval > 30);
+                    const rate = readmissions.length > 0 ? (filteredOver30Days.length / readmissions.length * 100) : 0;
+                    return `${rate.toFixed(1)}%`;
+                  })()}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Readmissões tardias após o primeiro mês
+                </p>
+              </div>
+              <Clock className="h-8 w-8 text-chart-4" />
             </div>
           </CardContent>
         </Card>

@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Brain, TrendingUp } from "lucide-react";
+import { Search, BarChart3, Eye, TrendingUp, Users, AlertTriangle, PieChart, Activity } from "lucide-react";
 
 interface Patient {
   nome: string;
@@ -30,7 +30,12 @@ export default function Tendencias() {
     try {
       const { data, error } = await supabase
         .from('pacientes_planalto')
-        .select('*');
+        .select('*')
+        .gte('data_admissao', '2024-06-11')
+        .lte('data_admissao', '2025-07-24')
+        .not('caps_referencia', 'ilike', '%IJ%')
+        .not('caps_referencia', 'ilike', '%São Miguel%')
+        .not('caps_referencia', 'ilike', '%Vila Monumento%');
 
       if (error) throw error;
 
@@ -47,43 +52,73 @@ export default function Tendencias() {
     }
   };
 
-  // Calculate insights based on patient data
   const generateInsights = () => {
     if (patients.length === 0) return [];
     
     const insights = [];
 
-    // 1. Average stay by race and diagnosis comparison
+    // 1. Mulheres pardas vs brancas com transtorno bipolar
+    const bipolarPatients = patients.filter(p => 
+      p.cid_grupo?.toLowerCase().includes('bipolar') || 
+      p.cid_grupo?.toLowerCase().includes('maníaco')
+    );
+    
+    const femalePardaBipolar = bipolarPatients.filter(p => p.genero === 'FEM' && p.raca_cor === 'PARDA');
+    const femaleBrancaBipolar = bipolarPatients.filter(p => p.genero === 'FEM' && p.raca_cor === 'BRANCA');
+    
+    if (femalePardaBipolar.length > 0 && femaleBrancaBipolar.length > 0) {
+      const pardaAvg = (femalePardaBipolar.reduce((acc, p) => acc + (p.dias_internacao || 0), 0) / femalePardaBipolar.length);
+      const brancaAvg = (femaleBrancaBipolar.reduce((acc, p) => acc + (p.dias_internacao || 0), 0) / femaleBrancaBipolar.length);
+      const difference = (pardaAvg - brancaAvg);
+      
+      if (difference > 2) {
+        insights.push({
+          icon: Search,
+          text: `Mulheres pardas com diagnóstico de transtorno bipolar permaneceram internadas, em média, ${difference.toFixed(1)} dias a mais do que mulheres brancas com o mesmo diagnóstico. Esse dado pode indicar maior gravidade clínica ao momento da internação ou menor acesso prévio a cuidados ambulatoriais.`
+        });
+      }
+    }
+
+    // 2. Pacientes com uso de substâncias por procedência
+    const substancePatients = patients.filter(p => 
+      p.cid_grupo?.toLowerCase().includes('substância') || 
+      p.cid_grupo?.toLowerCase().includes('álcool') ||
+      p.cid_grupo?.toLowerCase().includes('droga')
+    );
+    
+    const substancePS = substancePatients.filter(p => 
+      p.procedencia?.toLowerCase().includes('pronto socorro') || 
+      p.procedencia?.toLowerCase().includes('ps')
+    );
+    const substanceUBS = substancePatients.filter(p => 
+      p.procedencia?.toLowerCase().includes('ubs') || 
+      p.procedencia?.toLowerCase().includes('unidade básica')
+    );
+    
+    if (substancePS.length > 0 && substanceUBS.length > 0) {
+      const psAvg = (substancePS.reduce((acc, p) => acc + (p.dias_internacao || 0), 0) / substancePS.length);
+      const ubsAvg = (substanceUBS.reduce((acc, p) => acc + (p.dias_internacao || 0), 0) / substanceUBS.length);
+      const difference = psAvg - ubsAvg;
+      
+      if (difference > 1) {
+        insights.push({
+          icon: TrendingUp,
+          text: `Pacientes com transtornos por uso de substâncias provenientes do Pronto Socorro apresentaram tempo médio de permanência ${difference.toFixed(0)} dias maior do que aqueles oriundos da UBS, sugerindo que os casos captados em pronto atendimento chegam em condição clínica mais grave.`
+        });
+      }
+    }
+
+    // 3. Homens negros com psicose e reinternação
     const psychosisPatients = patients.filter(p => 
       p.cid_grupo?.toLowerCase().includes('psicose') || 
       p.cid_grupo?.toLowerCase().includes('psicótica') ||
       p.cid_grupo?.toLowerCase().includes('esquizofrenia')
     );
     
-    if (psychosisPatients.length > 0) {
-      const maleStats = psychosisPatients
-        .filter(p => p.genero === 'MASC')
-        .reduce((acc, p) => {
-          const race = p.raca_cor || 'Não informado';
-          if (!acc[race]) acc[race] = { total: 0, count: 0 };
-          acc[race].total += p.dias_internacao || 0;
-          acc[race].count += 1;
-          return acc;
-        }, {} as Record<string, { total: number; count: number }>);
-
-      const pardoAvg = maleStats['PARDA'] ? (maleStats['PARDA'].total / maleStats['PARDA'].count).toFixed(1) : '0';
-      const brancaAvg = maleStats['BRANCA'] ? (maleStats['BRANCA'].total / maleStats['BRANCA'].count).toFixed(1) : '0';
-      
-      if (maleStats['PARDA']?.count > 0 && maleStats['BRANCA']?.count > 0) {
-        insights.push(`Homens pardos com diagnóstico de psicose apresentam maior tempo médio de internação (${pardoAvg} dias) do que homens brancos com o mesmo diagnóstico (${brancaAvg} dias), sugerindo possível diferença na gravidade da crise ou acesso prévio ao cuidado.`);
-      }
-    }
-
-    // 2. Readmission rates by CAPS
-    const capsList = [...new Set(patients.map(p => p.caps_referencia).filter(Boolean))];
-    capsList.forEach(caps => {
-      const capsPatients = patients.filter(p => p.caps_referencia === caps);
-      const patientGroups = capsPatients.reduce((acc, patient) => {
+    const maleBlackPsychosis = psychosisPatients.filter(p => p.genero === 'MASC' && p.raca_cor === 'PRETA');
+    
+    if (maleBlackPsychosis.length > 0) {
+      const patientGroups = maleBlackPsychosis.reduce((acc, patient) => {
         const name = patient.nome;
         if (!acc[name]) acc[name] = [];
         acc[name].push(patient);
@@ -114,62 +149,73 @@ export default function Tendencias() {
         }
       });
 
-      const readmissionRate = capsPatients.length > 0 ? ((readmissions7Days / capsPatients.length) * 100).toFixed(1) : '0.0';
-      if (Number(readmissionRate) > 5) {
-        insights.push(`O ${caps} apresenta taxa de reinternação precoce (≤ 7 dias) de ${readmissionRate}%, acima da média institucional, indicando fragilidade na articulação pós-alta ou menor retaguarda territorial.`);
-      }
-    });
-
-    // 3. Average stay by origin
-    const psPatients = patients.filter(p => p.procedencia?.toLowerCase().includes('pronto socorro') || p.procedencia?.toLowerCase().includes('ps'));
-    const ubsPatients = patients.filter(p => p.procedencia?.toLowerCase().includes('ubs') || p.procedencia?.toLowerCase().includes('unidade básica'));
-    
-    if (psPatients.length > 0 && ubsPatients.length > 0) {
-      const psAvg = (psPatients.reduce((acc, p) => acc + (p.dias_internacao || 0), 0) / psPatients.length).toFixed(1);
-      const ubsAvg = (ubsPatients.reduce((acc, p) => acc + (p.dias_internacao || 0), 0) / ubsPatients.length).toFixed(1);
-      const difference = (Number(psAvg) - Number(ubsAvg)).toFixed(1);
-      
-      if (Number(difference) > 0) {
-        insights.push(`Pacientes encaminhados de Pronto Socorro permanecem internados em média ${difference} dias a mais que os oriundos de UBS, o que pode refletir diferentes níveis de complexidade clínica ou dificuldade de estabilização prévia.`);
+      const readmissionRate = ((readmissions7Days / maleBlackPsychosis.length) * 100);
+      if (readmissionRate > 10) {
+        insights.push({
+          icon: BarChart3,
+          text: `Homens negros com diagnóstico de psicose apresentaram a maior taxa de reinternação precoce (≤ 7 dias), superando ${readmissionRate.toFixed(0)}%, o que pode indicar fragilidade na continuidade do cuidado ou dificuldade de adesão ao tratamento.`
+        });
       }
     }
 
-    // 4. Gender and race comparison for depression
+    // 4. CAPS com menor reinternação
+    const capsList = [...new Set(patients.map(p => p.caps_referencia).filter(Boolean))];
+    const capsReadmissionRates = capsList.map(caps => {
+      const capsPatients = patients.filter(p => p.caps_referencia === caps);
+      const patientGroups = capsPatients.reduce((acc, patient) => {
+        const name = patient.nome;
+        if (!acc[name]) acc[name] = [];
+        acc[name].push(patient);
+        return acc;
+      }, {} as Record<string, Patient[]>);
+
+      let readmissions15Days = 0;
+      Object.values(patientGroups).forEach(admissions => {
+        if (admissions.length > 1) {
+          const sortedAdmissions = admissions.sort((a, b) => 
+            new Date(a.data_admissao).getTime() - new Date(b.data_admissao).getTime()
+          );
+          
+          for (let i = 1; i < sortedAdmissions.length; i++) {
+            const prevDischarge = sortedAdmissions[i-1].data_alta;
+            const currentAdmission = sortedAdmissions[i].data_admissao;
+            
+            if (prevDischarge && currentAdmission) {
+              const daysBetween = Math.abs(
+                (new Date(currentAdmission).getTime() - new Date(prevDischarge).getTime()) / (1000 * 60 * 60 * 24)
+              );
+              
+              if (daysBetween <= 15) {
+                readmissions15Days++;
+              }
+            }
+          }
+        }
+      });
+
+      const rate = capsPatients.length > 0 ? ((readmissions15Days / capsPatients.length) * 100) : 0;
+      return { caps, rate };
+    }).sort((a, b) => a.rate - b.rate);
+
+    if (capsReadmissionRates.length > 0 && capsReadmissionRates[0].rate < 5) {
+      insights.push({
+        icon: Eye,
+        text: `Entre os CAPS da Zona Leste, o ${capsReadmissionRates[0].caps} apresentou a menor taxa de reinternação precoce em até 15 dias (${capsReadmissionRates[0].rate.toFixed(1)}%), o que pode refletir boa articulação pós-alta e adesão ao plano terapêutico.`
+      });
+    }
+
+    // 5. Transtorno depressivo recorrente
     const depressionPatients = patients.filter(p => 
       p.cid_grupo?.toLowerCase().includes('depressão') || 
       p.cid_grupo?.toLowerCase().includes('depressiv') ||
-      p.cid_grupo?.toLowerCase().includes('humor')
+      p.cid_grupo?.toLowerCase().includes('recorrente')
     );
     
     if (depressionPatients.length > 0) {
-      const femaleBlackAvg = depressionPatients
-        .filter(p => p.genero === 'FEM' && p.raca_cor === 'PRETA')
-        .reduce((acc, p, _, arr) => acc + (p.dias_internacao || 0) / arr.length, 0);
+      const avgStay = (depressionPatients.reduce((acc, p) => acc + (p.dias_internacao || 0), 0) / depressionPatients.length);
       
-      const femaleWhiteAvg = depressionPatients
-        .filter(p => p.genero === 'FEM' && p.raca_cor === 'BRANCA')
-        .reduce((acc, p, _, arr) => acc + (p.dias_internacao || 0) / arr.length, 0);
-
-      if (femaleBlackAvg > 0 && femaleWhiteAvg > 0 && femaleBlackAvg > femaleWhiteAvg) {
-        insights.push(`Mulheres pretas com diagnóstico de transtorno depressivo têm tempo médio de permanência maior (${femaleBlackAvg.toFixed(1)} dias) do que mulheres brancas com o mesmo diagnóstico (${femaleWhiteAvg.toFixed(1)} dias), sugerindo possíveis diferenças no acesso ao cuidado ambulatorial ou maior severidade clínica.`);
-      }
-    }
-
-    // 5. Young patients with bipolar disorder
-    const bipolarPatients = patients.filter(p => 
-      p.cid_grupo?.toLowerCase().includes('bipolar') || 
-      p.cid_grupo?.toLowerCase().includes('maníaco')
-    );
-    
-    const youngBipolar = bipolarPatients.filter(p => {
-      if (!p.data_nascimento) return false;
-      const age = new Date().getFullYear() - new Date(p.data_nascimento).getFullYear();
-      return age < 30;
-    });
-
-    if (youngBipolar.length > 0) {
-      // Calculate readmission rate for young bipolar patients
-      const patientGroups = youngBipolar.reduce((acc, patient) => {
+      // Calculate readmission rate
+      const patientGroups = depressionPatients.reduce((acc, patient) => {
         const name = patient.nome;
         if (!acc[name]) acc[name] = [];
         acc[name].push(patient);
@@ -181,35 +227,54 @@ export default function Tendencias() {
         if (admissions.length > 1) readmissions++;
       });
 
-      const readmissionRate = ((readmissions / youngBipolar.length) * 100).toFixed(1);
-      if (Number(readmissionRate) > 15) {
-        insights.push(`Pacientes jovens (<30 anos) com transtorno bipolar apresentam alta taxa de reinternação precoce (${readmissionRate}%), levantando hipótese de baixa adesão ao tratamento ou dificuldades no cuidado compartilhado com a RAPS.`);
+      const readmissionRate = ((readmissions / depressionPatients.length) * 100);
+      
+      if (avgStay < 10 && readmissionRate < 5) {
+        insights.push({
+          icon: Users,
+          text: `Pacientes com diagnóstico de transtorno depressivo recorrente apresentaram tempo médio de permanência inferior a ${avgStay.toFixed(1)} dias e taxa de reinternação precoce abaixo de ${readmissionRate.toFixed(1)}%, sugerindo estabilidade clínica após a alta.`
+        });
       }
     }
 
-    // 6. CAPS comparison
-    const capsAvgStay = capsList.map(caps => {
-      const capsPatients = patients.filter(p => p.caps_referencia === caps);
-      const avg = capsPatients.length > 0 ? 
-        (capsPatients.reduce((acc, p) => acc + (p.dias_internacao || 0), 0) / capsPatients.length).toFixed(1) : '0';
-      return { caps, avg: Number(avg) };
-    }).sort((a, b) => b.avg - a.avg);
-
-    if (capsAvgStay.length >= 2) {
-      const highest = capsAvgStay[0];
-      const lowest = capsAvgStay[capsAvgStay.length - 1];
-      if (highest.avg > lowest.avg + 3) {
-        insights.push(`O tempo médio de internação é maior entre os pacientes do ${highest.caps} (${highest.avg} dias) comparado ao ${lowest.caps} (${lowest.avg} dias), possivelmente associado a diferenças nos recursos de apoio ou gravidade dos quadros clínicos.`);
+    // 6. Mulheres vs homens com psicose
+    const femalePsychosis = psychosisPatients.filter(p => p.genero === 'FEM');
+    const malePsychosis = psychosisPatients.filter(p => p.genero === 'MASC');
+    
+    if (femalePsychosis.length > 0 && malePsychosis.length > 0) {
+      const femaleAvg = (femalePsychosis.reduce((acc, p) => acc + (p.dias_internacao || 0), 0) / femalePsychosis.length);
+      const maleAvg = (malePsychosis.reduce((acc, p) => acc + (p.dias_internacao || 0), 0) / malePsychosis.length);
+      const difference = maleAvg - femaleAvg;
+      
+      if (difference > 1) {
+        insights.push({
+          icon: AlertTriangle,
+          text: `Mulheres com diagnóstico de psicose têm, em média, permanência hospitalar ${difference.toFixed(1)} dias menor do que homens com o mesmo diagnóstico, possivelmente refletindo diferenças no padrão de sintomas e resposta terapêutica.`
+        });
       }
     }
 
-    // 7. Substance use disorders readmission
-    const substancePatients = patients.filter(p => 
-      p.cid_grupo?.toLowerCase().includes('substância') || 
-      p.cid_grupo?.toLowerCase().includes('álcool') ||
-      p.cid_grupo?.toLowerCase().includes('droga')
-    );
+    // 7. Pacientes pardos com patologia psicótica
+    const pardaPsychosis = psychosisPatients.filter(p => p.raca_cor === 'PARDA');
+    
+    if (pardaPsychosis.length > 0) {
+      const pardaAvg = (pardaPsychosis.reduce((acc, p) => acc + (p.dias_internacao || 0), 0) / pardaPsychosis.length);
+      
+      // Compare with other races
+      const otherRacesPsychosis = psychosisPatients.filter(p => p.raca_cor && p.raca_cor !== 'PARDA' && p.raca_cor !== 'NÃO INFORMADO');
+      if (otherRacesPsychosis.length > 0) {
+        const otherAvg = (otherRacesPsychosis.reduce((acc, p) => acc + (p.dias_internacao || 0), 0) / otherRacesPsychosis.length);
+        
+        if (pardaAvg > otherAvg + 2) {
+          insights.push({
+            icon: PieChart,
+            text: `Pacientes com cor/raça parda e patologia psicótica foram o subgrupo com maior tempo médio de permanência (${pardaAvg.toFixed(1)} dias) entre todos os recortes, o que pode representar vulnerabilidade social e atraso na captação de casos graves.`
+          });
+        }
+      }
+    }
 
+    // 8. Transtornos por uso de substâncias - reinternação
     if (substancePatients.length > 0) {
       const patientGroups = substancePatients.reduce((acc, patient) => {
         const name = patient.nome;
@@ -242,24 +307,16 @@ export default function Tendencias() {
         }
       });
 
-      const readmissionRate = ((readmissions15Days / substancePatients.length) * 100).toFixed(1);
-      if (Number(readmissionRate) > 10) {
-        insights.push(`A taxa de reinternação ≤ 15 dias é mais elevada entre pacientes com transtornos por uso de substâncias (${readmissionRate}%), reforçando a importância de articulação mais robusta com serviços de reabilitação psicossocial.`);
+      const readmissionRate = ((readmissions15Days / substancePatients.length) * 100);
+      if (readmissionRate > 8) {
+        insights.push({
+          icon: Activity,
+          text: `A taxa de reinternação ≤ 15 dias é mais elevada entre pacientes com transtornos por uso de substâncias (${readmissionRate.toFixed(1)}%), reforçando a importância de articulação mais robusta com serviços de reabilitação psicossocial.`
+        });
       }
     }
 
-    // 8. Psychotic vs depressive disorders comparison
-    const psychoticAvgStay = psychosisPatients.length > 0 ? 
-      (psychosisPatients.reduce((acc, p) => acc + (p.dias_internacao || 0), 0) / psychosisPatients.length).toFixed(1) : '0';
-    
-    const depressiveAvgStay = depressionPatients.length > 0 ? 
-      (depressionPatients.reduce((acc, p) => acc + (p.dias_internacao || 0), 0) / depressionPatients.length).toFixed(1) : '0';
-
-    if (Number(psychoticAvgStay) > Number(depressiveAvgStay) + 5) {
-      insights.push(`Pacientes diagnosticados com transtornos psicóticos têm maior tempo médio de permanência hospitalar (${psychoticAvgStay} dias) do que aqueles com transtornos depressivos (${depressiveAvgStay} dias), refletindo maior complexidade clínica e necessidade de estabilização prolongada.`);
-    }
-
-    return insights;
+    return insights.slice(0, 8); // Limit to 8 insights max
   };
 
   const insights = generateInsights();
@@ -276,41 +333,41 @@ export default function Tendencias() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="text-center space-y-2">
-        <h1 className="text-2xl md:text-3xl font-bold text-primary flex items-center justify-center gap-2">
-          <Brain className="h-8 w-8" />
-          Frases Interpretativas (Insights Automáticos)
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="text-center space-y-4">
+        <h1 className="text-3xl md:text-4xl font-bold text-primary">
+          INSIGHTS
         </h1>
-        <p className="text-muted-foreground">
-          Análises clínico-demográficas baseadas nos dados de internação psiquiátrica
-        </p>
       </div>
 
-      {/* Insights Section */}
-      <div className="space-y-4">
-        {insights.map((insight, index) => (
-          <Card key={index} className="shadow-lg border border-border/50 hover:shadow-xl transition-shadow duration-300">
-            <CardContent className="p-6">
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center mt-1">
-                  <TrendingUp className="h-3 w-3 text-primary" />
+      {/* Insights Cards */}
+      <div className="space-y-6">
+        {insights.map((insight, index) => {
+          const IconComponent = insight.icon;
+          return (
+            <Card key={index} className="border border-border/40 shadow-sm hover:shadow-md transition-shadow duration-300 bg-card/50 backdrop-blur-sm">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center mt-1">
+                    <IconComponent className="h-4 w-4 text-primary" />
+                  </div>
+                  <p className="text-foreground leading-relaxed font-medium text-base">
+                    {insight.text}
+                  </p>
                 </div>
-                <p className="text-sm text-foreground leading-relaxed font-medium">
-                  {insight}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          );
+        })}
         
         {insights.length === 0 && (
-          <Card className="shadow-lg border border-border/50">
-            <CardContent className="p-6">
+          <Card className="border border-border/40 shadow-sm">
+            <CardContent className="p-8">
               <div className="text-center">
-                <Brain className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground italic">
-                  Nenhum insight automático disponível com os dados atuais. 
+                <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground text-lg">
+                  Nenhum insight disponível com os dados atuais. 
                   Os insights são gerados quando há dados suficientes para análises comparativas.
                 </p>
               </div>
@@ -319,45 +376,13 @@ export default function Tendencias() {
         )}
       </div>
 
-      {/* Summary Card */}
-      <Card className="shadow-medium bg-muted/30">
-        <CardHeader>
-          <CardTitle className="text-primary flex items-center gap-2">
-            <TrendingUp className="h-5 w-5" />
-            Resumo dos Dados
-          </CardTitle>
-          <CardDescription>
-            Informações gerais sobre a base de dados analisada
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-            <div className="p-4 bg-background rounded-lg border">
-              <p className="text-2xl font-bold text-primary">{patients.length}</p>
-              <p className="text-sm text-muted-foreground">Total de Pacientes</p>
-            </div>
-            <div className="p-4 bg-background rounded-lg border">
-              <p className="text-2xl font-bold text-primary">
-                {[...new Set(patients.map(p => p.caps_referencia).filter(Boolean))].length}
-              </p>
-              <p className="text-sm text-muted-foreground">CAPS Analisados</p>
-            </div>
-            <div className="p-4 bg-background rounded-lg border">
-              <p className="text-2xl font-bold text-primary">
-                {[...new Set(patients.map(p => p.cid_grupo).filter(Boolean))].length}
-              </p>
-              <p className="text-sm text-muted-foreground">Diagnósticos Únicos</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Technical Note */}
-      <Card className="shadow-sm border-primary/20">
-        <CardContent className="p-4">
-          <p className="text-xs text-muted-foreground text-center">
+      <Card className="border-primary/20 bg-primary/5">
+        <CardContent className="p-6">
+          <p className="text-sm text-muted-foreground text-center leading-relaxed">
             <strong>Nota Técnica:</strong> Esta seção serve para subsidiar reuniões clínicas, análise gerencial e discussão com a rede de atenção psicossocial. 
-            Os insights são gerados automaticamente com base nos dados disponíveis e devem ser interpretados considerando o contexto clínico e territorial específico.
+            Os insights são gerados automaticamente com base nos dados de internações entre 11/06/2024 e 24/07/2025, excluindo CAPS fora da Zona Leste, 
+            e devem ser interpretados considerando o contexto clínico e territorial específico.
           </p>
         </CardContent>
       </Card>

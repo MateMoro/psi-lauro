@@ -361,6 +361,20 @@ export default function Dashboard() {
           icon={Users}
           variant="success"
         />
+        <MetricCard
+          title="Reinternação ≤ 7 dias"
+          value={`${metrics.readmissionRate7Days}%`}
+          description="Taxa de reinternação precoce"
+          icon={RefreshCw}
+          variant="info"
+        />
+        <MetricCard
+          title="Taxa de Readmissão"
+          value={`${metrics.readmissionRate30Days}%`}
+          description="Readmissões em até 30 dias"
+          icon={Calendar}
+          variant="warning"
+        />
       </div>
 
       {/* Main Chart - Temporal Trend */}

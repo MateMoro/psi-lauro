@@ -18,15 +18,18 @@ export function DashboardHeader() {
         <div className="flex items-center space-x-2">
           <Building2 className="h-5 w-5 text-primary" />
           <span className="text-sm font-medium text-muted-foreground">
-            Sistema de Análise Hospital Planalto
+            Hospital Waldomiro de Paula
           </span>
         </div>
       </div>
       
       <div className="text-center flex-1 px-4">
-        <h1 className="text-xl md:text-2xl font-bold text-primary">
-          Painel de Internações Psiquiátricas – Hospital Planalto
-        </h1>
+        <div className="flex items-center justify-center space-x-3">
+          <TrendingUp className="h-6 w-6 text-primary" />
+          <h1 className="text-xl md:text-2xl font-bold text-primary tracking-tight leading-tight">
+            Painel de Internações Psiquiátricas
+          </h1>
+        </div>
       </div>
 
       <div className="flex items-center gap-3">

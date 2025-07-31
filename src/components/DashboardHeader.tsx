@@ -17,9 +17,11 @@ export function DashboardHeader() {
         <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
       </div>
       
-      <div className="text-center flex-1 px-4">
-        <h1 className="text-lg md:text-xl font-bold text-primary tracking-tight leading-tight">
-          Painel de Internações Psiquiátricas – Hospital Planalto
+      <div className="text-center flex-1 px-2 sm:px-4">
+        <h1 className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-primary tracking-tight leading-tight break-words">
+          <span className="block sm:inline">Painel de Internações Psiquiátricas</span>
+          <span className="hidden sm:inline"> – </span>
+          <span className="block sm:inline">Hospital Planalto</span>
         </h1>
       </div>
 

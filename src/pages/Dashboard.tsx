@@ -130,20 +130,22 @@ export default function Dashboard() {
       return acc;
     }, {} as Record<string, Patient[]>);
     
-    // Calculate readmission rates by time intervals (cumulative)
-    let readmissions7Days = 0;
-    let readmissions15Days = 0;
-    let readmissions30Days = 0;
-    let readmissionsOver30Days = 0;
+  // Calculate total readmission rate for dashboard
     let totalReadmissionEvents = 0;
+    let totalPatientsWithDischarge = 0;
     
     Object.values(patientGroups).forEach(admissions => {
+      const sortedAdmissions = admissions.sort((a, b) => 
+        new Date(a.data_admissao).getTime() - new Date(b.data_admissao).getTime()
+      );
+      
+      // Count patients with at least one discharge (eligible for readmission)
+      const hasDischarge = sortedAdmissions.some(admission => admission.data_alta);
+      if (hasDischarge) {
+        totalPatientsWithDischarge++;
+      }
+      
       if (admissions.length > 1) {
-        // Sort admissions by date
-        const sortedAdmissions = admissions.sort((a, b) => 
-          new Date(a.data_admissao).getTime() - new Date(b.data_admissao).getTime()
-        );
-        
         // Check intervals between consecutive admissions
         for (let i = 1; i < sortedAdmissions.length; i++) {
           const prevDischarge = sortedAdmissions[i-1].data_alta;
@@ -154,40 +156,22 @@ export default function Dashboard() {
               (new Date(currentAdmission).getTime() - new Date(prevDischarge).getTime()) / (1000 * 60 * 60 * 24)
             );
             
-            totalReadmissionEvents++;
-            
-            // Cumulative logic: each readmission is counted in all applicable intervals
-            if (daysBetween <= 7) {
-              readmissions7Days++;
-              readmissions15Days++; // ≤ 7 days is also ≤ 15 days
-              readmissions30Days++;  // ≤ 7 days is also ≤ 30 days
-            } else if (daysBetween <= 15) {
-              readmissions15Days++;
-              readmissions30Days++;  // ≤ 15 days is also ≤ 30 days
-            } else if (daysBetween <= 30) {
-              readmissions30Days++;
-            } else {
-              readmissionsOver30Days++;
+            if (daysBetween >= 0) {
+              totalReadmissionEvents++;
             }
           }
         }
       }
     });
 
-    // Calculate percentages
-    const readmissionRate7Days = totalPatients > 0 ? (readmissions7Days / totalPatients * 100) : 0;
-    const readmissionRate15Days = totalPatients > 0 ? (readmissions15Days / totalPatients * 100) : 0;
-    const readmissionRate30Days = totalPatients > 0 ? (readmissions30Days / totalPatients * 100) : 0;
-    const readmissionRateOver30Days = totalPatients > 0 ? (readmissionsOver30Days / totalPatients * 100) : 0;
+    // Calculate overall readmission rate
+    const readmissionRate = totalPatientsWithDischarge > 0 ? (totalReadmissionEvents / totalPatientsWithDischarge * 100) : 0;
 
     return {
       totalPatients,
       avgStayDays: avgStayDays.toFixed(1),
       avgStayDaysFormatted: `${avgStayDays.toFixed(1)} dias`,
-      readmissionRate7Days: readmissionRate7Days.toFixed(2),
-      readmissionRate15Days: readmissionRate15Days.toFixed(2),
-      readmissionRate30Days: readmissionRate30Days.toFixed(2),
-      readmissionRateOver30Days: readmissionRateOver30Days.toFixed(2)
+      readmissionRate: readmissionRate.toFixed(1)
     };
   };
 
@@ -343,7 +327,7 @@ export default function Dashboard() {
       />
 
       {/* Enhanced Metrics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <MetricCard
           title="Tempo Médio de Permanência"
           value={metrics.avgStayDaysFormatted}
@@ -359,18 +343,11 @@ export default function Dashboard() {
           variant="success"
         />
         <MetricCard
-          title="Reinternação ≤ 7 dias"
-          value={`${metrics.readmissionRate7Days}%`}
-          description="Taxa de reinternação precoce"
+          title="Taxa de Readmissão"
+          value={`${metrics.readmissionRate}%`}
+          description="Percentual de pacientes reinternados"
           icon={RefreshCw}
           variant="info"
-        />
-        <MetricCard
-          title="Reinternação ≤ 15 dias"
-          value={`${metrics.readmissionRate15Days}%`}
-          description="Indicador de qualidade assistencial"
-          icon={Calendar}
-          variant="warning"
         />
       </div>
 
@@ -385,7 +362,7 @@ export default function Dashboard() {
       </div>
 
       {/* Secondary Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6">
         <VerticalBarChart
           data={getTopDiagnoses().map(item => ({
             name: item.name,
@@ -393,11 +370,6 @@ export default function Dashboard() {
           }))}
           title="Prevalência das Principais Patologias"
           description="Top 5 diagnósticos mais frequentes (%)"
-        />
-        <CustomPieChart
-          data={getGenderDistribution()}
-          title="Distribuição por Gênero"
-          description="Proporção de pacientes por gênero"
         />
       </div>
 

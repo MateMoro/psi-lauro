@@ -147,6 +147,28 @@ export default function Reinternacoes() {
     setFilteredReadmissions(filtered);
   };
 
+  const calculateReadmissionRate = (days: number) => {
+    if (readmissions.length === 0) return "0.0";
+
+    const totalPatients = readmissions.length;
+    let readmissionCount = 0;
+
+    readmissions.forEach(patient => {
+      if (days === 31) { // > 30 days
+        if (patient.averageInterval > 30) {
+          readmissionCount++;
+        }
+      } else { // <= days
+        if (patient.averageInterval <= days && patient.averageInterval > 0) {
+          readmissionCount++;
+        }
+      }
+    });
+
+    const rate = (readmissionCount / totalPatients) * 100;
+    return rate % 1 === 0 ? rate.toString() : rate.toFixed(1);
+  };
+
   const formatDate = (dateString: string) => {
     if (!dateString) return "N/A";
     return new Date(dateString).toLocaleDateString("pt-BR");
@@ -186,7 +208,7 @@ export default function Reinternacoes() {
         <CardContent>
           <div className="space-y-2 max-w-md">
             <Label htmlFor="interval-select" className="text-sm font-medium">
-              Intervalo entre internações
+              Taxas de Reinternações
             </Label>
             <Select
               value={intervalFilter}
@@ -207,20 +229,23 @@ export default function Reinternacoes() {
         </CardContent>
       </Card>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Readmission Rate Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="shadow-medium">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  Total de Pacientes Reinternados
+                  Reinternação ≤ 7 dias
                 </p>
                 <p className="text-2xl font-bold text-foreground">
-                  {filteredReadmissions.length}
+                  {calculateReadmissionRate(7)}%
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Taxa de reinternação precoce
                 </p>
               </div>
-              <User className="h-8 w-8 text-primary" />
+              <RefreshCw className="h-8 w-8 text-destructive" />
             </div>
           </CardContent>
         </Card>
@@ -230,10 +255,32 @@ export default function Reinternacoes() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  Total de Readmissões
+                  Reinternação ≤ 15 dias
                 </p>
                 <p className="text-2xl font-bold text-foreground">
-                  {filteredReadmissions.reduce((sum, p) => sum + p.totalAdmissions, 0)}
+                  {calculateReadmissionRate(15)}%
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Indicador de seguimento clínico nas duas primeiras semanas
+                </p>
+              </div>
+              <Calendar className="h-8 w-8 text-warning" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-medium">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Reinternação ≤ 30 dias
+                </p>
+                <p className="text-2xl font-bold text-foreground">
+                  {calculateReadmissionRate(30)}%
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Readmissões precoces no primeiro mês
                 </p>
               </div>
               <RefreshCw className="h-8 w-8 text-chart-3" />
@@ -246,19 +293,16 @@ export default function Reinternacoes() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  Intervalo Médio (dias)
+                  Reinternação &gt; 30 dias
                 </p>
                 <p className="text-2xl font-bold text-foreground">
-                  {filteredReadmissions.length > 0 
-                    ? Math.round(
-                        filteredReadmissions.reduce((sum, p) => sum + p.averageInterval, 0) / 
-                        filteredReadmissions.length
-                      )
-                    : 0
-                  }
+                  {calculateReadmissionRate(31)}%
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Readmissões tardias após o primeiro mês
                 </p>
               </div>
-              <Calendar className="h-8 w-8 text-chart-2" />
+              <User className="h-8 w-8 text-chart-2" />
             </div>
           </CardContent>
         </Card>

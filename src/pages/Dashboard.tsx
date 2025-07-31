@@ -130,7 +130,7 @@ export default function Dashboard() {
       return acc;
     }, {} as Record<string, Patient[]>);
     
-    // Calculate readmission rates by time intervals
+    // Calculate readmission rates by time intervals (cumulative)
     let readmissions7Days = 0;
     let readmissions15Days = 0;
     let readmissions30Days = 0;
@@ -156,10 +156,14 @@ export default function Dashboard() {
             
             totalReadmissionEvents++;
             
+            // Cumulative logic: each readmission is counted in all applicable intervals
             if (daysBetween <= 7) {
               readmissions7Days++;
+              readmissions15Days++; // ≤ 7 days is also ≤ 15 days
+              readmissions30Days++;  // ≤ 7 days is also ≤ 30 days
             } else if (daysBetween <= 15) {
               readmissions15Days++;
+              readmissions30Days++;  // ≤ 15 days is also ≤ 30 days
             } else if (daysBetween <= 30) {
               readmissions30Days++;
             } else {

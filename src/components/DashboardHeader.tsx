@@ -12,37 +12,38 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 export function DashboardHeader() {
   return (
-    <header className="h-20 border-b border-border bg-card flex items-center justify-between px-4 shadow-soft">
-      <div className="flex items-center gap-4">
-        <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
+    <header className="h-16 sm:h-20 border-b border-border bg-card flex items-center justify-between px-2 sm:px-4 md:px-6 shadow-soft">
+      <div className="flex items-center">
+        <SidebarTrigger className="text-muted-foreground hover:text-foreground mr-2 sm:mr-4" />
       </div>
       
-      <div className="text-center flex-1 px-2 sm:px-4">
-        <h1 className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-primary tracking-tight leading-tight break-words">
+      <div className="text-center flex-1 px-1 sm:px-2 md:px-4 max-w-2xl">
+        <h1 className="font-bold text-primary tracking-tight leading-tight" 
+            style={{ fontSize: 'clamp(1rem, 2.5vw, 1.5rem)' }}>
           <span className="block sm:inline">Painel de Internações Psiquiátricas</span>
           <span className="hidden sm:inline"> – </span>
           <span className="block sm:inline">Hospital Planalto</span>
         </h1>
       </div>
 
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
-          <Bell className="h-5 w-5" />
+      <div className="flex items-center gap-1 sm:gap-2 md:gap-3">
+        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground h-8 w-8 sm:h-10 sm:w-10">
+          <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
         </Button>
         
-        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
-          <Settings className="h-5 w-5" />
+        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground h-8 w-8 sm:h-10 sm:w-10">
+          <Settings className="h-4 w-4 sm:h-5 sm:w-5" />
         </Button>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="flex items-center gap-2 h-auto py-2 px-3">
-              <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-primary text-primary-foreground">
+            <Button variant="ghost" className="flex items-center gap-1 sm:gap-2 h-auto py-1 sm:py-2 px-2 sm:px-3">
+              <Avatar className="h-6 w-6 sm:h-8 sm:w-8">
+                <AvatarFallback className="bg-primary text-primary-foreground text-xs sm:text-sm">
                   U
                 </AvatarFallback>
               </Avatar>
-              <span className="text-sm font-medium text-foreground">Usuário</span>
+              <span className="text-xs sm:text-sm font-medium text-foreground hidden sm:inline">Usuário</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">

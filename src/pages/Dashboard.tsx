@@ -8,7 +8,6 @@ import { PatientSearch } from "@/components/dashboard/PatientSearch";
 import { CustomPieChart } from "@/components/dashboard/charts/PieChart";
 import { VerticalBarChart } from "@/components/dashboard/charts/VerticalBarChart";
 import { HorizontalBarChart } from "@/components/dashboard/charts/HorizontalBarChart";
-import { CustomLineChart } from "@/components/dashboard/charts/LineChart";
 import { useToast } from "@/hooks/use-toast";
 
 interface Patient {
@@ -233,11 +232,16 @@ export default function Dashboard() {
       return acc;
     }, {} as Record<string, number>);
 
+    const colors = [
+      "hsl(160 76% 36%)",  // Teal for Feminino
+      "hsl(220 70% 35%)"   // Blue for Masculino
+    ];
+
     return Object.entries(genderCount)
       .map(([name, value], index) => ({ 
         name, 
         value, 
-        color: `hsl(var(--chart-${index + 1}))` 
+        color: colors[index] || "hsl(var(--chart-1))" 
       }));
   };
 
@@ -269,38 +273,6 @@ export default function Dashboard() {
     }));
   };
 
-  // Monthly trends for line chart - limited to Jan-Jun 2025
-  const getMonthlyTrends = () => {
-    const monthsOrder = [
-      { key: 'Janeiro 2025', display: 'Janeiro 2025', month: 1, year: 2025 },
-      { key: 'Fevereiro 2025', display: 'Fevereiro 2025', month: 2, year: 2025 },
-      { key: 'Março 2025', display: 'Março 2025', month: 3, year: 2025 },
-      { key: 'Abril 2025', display: 'Abril 2025', month: 4, year: 2025 },
-      { key: 'Maio 2025', display: 'Maio 2025', month: 5, year: 2025 },
-      { key: 'Junho 2025', display: 'Junho 2025', month: 6, year: 2025 }
-    ];
-    
-    const monthlyData = filteredPatients.reduce((acc, p) => {
-      const admissionDate = new Date(p.data_admissao);
-      const month = admissionDate.getMonth() + 1; // getMonth() returns 0-11
-      const year = admissionDate.getFullYear();
-      
-      // Only include data for January to June 2025
-      if (year === 2025 && month >= 1 && month <= 6) {
-        const monthKey = monthsOrder.find(m => m.month === month && m.year === year)?.key;
-        if (monthKey) {
-          acc[monthKey] = (acc[monthKey] || 0) + 1;
-        }
-      }
-      return acc;
-    }, {} as Record<string, number>);
-
-    // Return all months with their counts (0 if no data)
-    return monthsOrder.map(month => ({
-      name: month.display,
-      value: monthlyData[month.key] || 0
-    }));
-  };
 
   const metrics = calculateMetrics();
 
@@ -351,13 +323,12 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* Main Chart - Temporal Trend */}
+      {/* Main Chart - Gender Distribution */}
       <div className="space-y-6">
-        <CustomLineChart
-          data={getMonthlyTrends()}
-          title="Tendência Temporal das Internações (Jan–Jun/2025)"
-          description="Evolução mensal do número de admissões psiquiátricas"
-          color="#1565C0"
+        <CustomPieChart
+          data={getGenderDistribution()}
+          title="Distribuição por Sexo"
+          description="Proporção de pacientes internados por gênero"
         />
       </div>
 

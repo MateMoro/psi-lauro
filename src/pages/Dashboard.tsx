@@ -249,14 +249,11 @@ export default function Dashboard() {
       return acc;
     }, {} as Record<string, number>);
 
-    const total = genderCount['Masculino'] + genderCount['Feminino'];
-    
     return Object.entries(genderCount)
-      .map(([name, value]) => ({ 
+      .map(([name, value], index) => ({ 
         name, 
-        value,
-        percentage: total > 0 ? Math.round((value / total) * 100) : 0,
-        color: name === 'Feminino' ? 'hsl(220 70% 50%)' : 'hsl(160 76% 40%)'  // Blue for Female, Green for Male
+        value, 
+        color: `hsl(var(--chart-${index + 1}))` 
       }));
   };
 
@@ -369,9 +366,9 @@ export default function Dashboard() {
           variant="info"
         />
         <MetricCard
-          title="Taxa de Readmissão"
-          value={`${metrics.readmissionRate30Days}%`}
-          description="Readmissões em até 30 dias"
+          title="Reinternação ≤ 15 dias"
+          value={`${metrics.readmissionRate15Days}%`}
+          description="Indicador de qualidade assistencial"
           icon={Calendar}
           variant="warning"
         />

@@ -99,8 +99,7 @@ export default {
 				'soft': 'var(--shadow-soft)',
 				'medium': 'var(--shadow-medium)',
 				'large': 'var(--shadow-large)',
-				'glow': 'var(--shadow-glow)',
-				'hover': 'var(--shadow-hover)'
+				'glow': 'var(--shadow-glow)'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

@@ -25,9 +25,14 @@ export default function Index() {
                 <span className="text-2xl">🧭</span>
                 <h3 className="text-xl font-bold text-primary">Objetivo do sistema</h3>
               </div>
-              <p className="text-muted-foreground leading-relaxed text-sm">
-                Este aplicativo foi desenvolvido para permitir o acompanhamento técnico e analítico das internações psiquiátricas do Hospital Planalto. Focado em indicadores clínico-administrativos, ele apoia a gestão da assistência, identifica padrões relevantes (como reinternações, tempo médio de internação e perfil clínico) e orienta melhorias em articulação com a Rede de Atenção Psicossocial (RAPS).
-              </p>
+              <div className="text-muted-foreground leading-relaxed text-sm space-y-2">
+                <p>Este aplicativo foi desenvolvido para permitir:</p>
+                <ul className="list-disc list-inside space-y-1 ml-4">
+                  <li><strong className="text-foreground">Acompanhamento técnico e analítico</strong> das internações psiquiátricas</li>
+                  <li><strong className="text-foreground">Identifica padrões relevantes</strong> como reinternações e tempo médio de internação</li>
+                  <li><strong className="text-foreground">Orienta melhorias</strong> em articulação com a Rede de Atenção Psicossocial (RAPS)</li>
+                </ul>
+              </div>
             </div>
           </Card>
 
@@ -37,9 +42,10 @@ export default function Index() {
                 <span className="text-2xl">🧪</span>
                 <h3 className="text-xl font-bold text-primary">Metodologia e fonte dos dados</h3>
               </div>
-              <p className="text-muted-foreground leading-relaxed text-sm">
-                Dados extraídos da base de internações da Enfermaria Psiquiátrica do Hospital Planalto. Seu foco é a análise institucional retroativa, com finalidade técnica e gerencial, oferecendo subsídios para qualificação do cuidado em saúde mental.
-              </p>
+              <div className="text-muted-foreground leading-relaxed text-sm space-y-2">
+                <p><strong className="text-foreground">Dados extraídos da base de internações</strong> da Enfermaria Psiquiátrica do Hospital Waldomiro de Paula.</p>
+                <p>O <strong className="text-foreground">foco é a análise institucional retroativa, com finalidade técnica e gerencial</strong>, oferecendo subsídios para qualificação do cuidado em saúde mental.</p>
+              </div>
             </div>
           </Card>
 

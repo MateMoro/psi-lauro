@@ -1,5 +1,5 @@
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Bell, Settings, User } from "lucide-react";
+import { Bell, Settings, User, TrendingUp, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -15,12 +15,21 @@ export function DashboardHeader() {
     <header className="h-20 border-b border-border bg-card flex items-center justify-between px-4 shadow-soft">
       <div className="flex items-center gap-4">
         <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
+        <div className="flex items-center space-x-2">
+          <Building2 className="h-5 w-5 text-primary" />
+          <span className="text-sm font-medium text-muted-foreground">
+            Hospital Waldomiro de Paula
+          </span>
+        </div>
       </div>
       
       <div className="text-center flex-1 px-4">
-        <h1 className="text-lg md:text-xl font-bold text-primary tracking-tight leading-tight">
-          Painel de Internações Psiquiátricas – Hospital Planalto
-        </h1>
+        <div className="flex items-center justify-center space-x-3">
+          <TrendingUp className="h-6 w-6 text-primary" />
+          <h1 className="text-xl md:text-2xl font-bold text-primary tracking-tight leading-tight">
+            Painel de Internações Psiquiátricas
+          </h1>
+        </div>
       </div>
 
       <div className="flex items-center gap-3">

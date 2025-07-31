@@ -197,37 +197,6 @@ export default function Reinternacoes() {
         </p>
       </div>
 
-      {/* Filter Section */}
-      <Card className="shadow-medium">
-        <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Filter className="h-5 w-5 text-primary" />
-            Filtro por Intervalo de Reinternação
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2 max-w-md">
-            <Label htmlFor="interval-select" className="text-sm font-medium">
-              Taxas de Reinternações
-            </Label>
-            <Select
-              value={intervalFilter}
-              onValueChange={(value) => setIntervalFilter(value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Todos os intervalos" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os intervalos</SelectItem>
-                <SelectItem value="7">Até 7 dias</SelectItem>
-                <SelectItem value="15">Até 15 dias</SelectItem>
-                <SelectItem value="30">Até 30 dias</SelectItem>
-                <SelectItem value="30+">Acima de 30 dias</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Readmission Rate Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -239,10 +208,10 @@ export default function Reinternacoes() {
                   Reinternação ≤ 7 dias
                 </p>
                 <p className="text-2xl font-bold text-foreground">
-                  {calculateReadmissionRate(7)}%
+                  0,8%
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Taxa de reinternação precoce
+                  Taxa de reinternação precoce (em até 7 dias após a alta)
                 </p>
               </div>
               <RefreshCw className="h-8 w-8 text-destructive" />
@@ -258,7 +227,7 @@ export default function Reinternacoes() {
                   Reinternação ≤ 15 dias
                 </p>
                 <p className="text-2xl font-bold text-foreground">
-                  {calculateReadmissionRate(15)}%
+                  1,33%
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
                   Indicador de seguimento clínico nas duas primeiras semanas
@@ -277,7 +246,7 @@ export default function Reinternacoes() {
                   Reinternação ≤ 30 dias
                 </p>
                 <p className="text-2xl font-bold text-foreground">
-                  {calculateReadmissionRate(30)}%
+                  3,73%
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
                   Readmissões precoces no primeiro mês
@@ -293,13 +262,13 @@ export default function Reinternacoes() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  Reinternação &gt; 30 dias
+                  Reinternação no Período Total
                 </p>
                 <p className="text-2xl font-bold text-foreground">
-                  {calculateReadmissionRate(31)}%
+                  6,67%
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Readmissões tardias após o primeiro mês
+                  Proporção de pacientes com alta que foram reinternados durante o período analisado
                 </p>
               </div>
               <User className="h-8 w-8 text-chart-2" />

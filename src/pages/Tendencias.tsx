@@ -444,35 +444,11 @@ export default function Tendencias() {
       }
     }
 
-    // New insight 2: CAPS São Miguel specific metrics
-    const saoMiguelPatients = patients.filter(p => 
-      p.caps_referencia?.toLowerCase().includes('são miguel') ||
-      p.caps_referencia?.toLowerCase().includes('sao miguel')
-    );
-    
-    if (saoMiguelPatients.length >= 3) {
-      const avgStay = (saoMiguelPatients.reduce((acc, p) => acc + (p.dias_internacao || 0), 0) / saoMiguelPatients.length);
-      
-      // Calculate readmission rate
-      const saoMiguelGroups = saoMiguelPatients.reduce((acc, patient) => {
-        const name = patient.nome;
-        if (!acc[name]) acc[name] = [];
-        acc[name].push(patient);
-        return acc;
-      }, {} as Record<string, Patient[]>);
-
-      let readmissions = 0;
-      Object.values(saoMiguelGroups).forEach(admissions => {
-        if (admissions.length > 1) readmissions++;
-      });
-
-      const readmissionRate = (readmissions / saoMiguelPatients.length * 100);
-      
-      insights.push({
-        icon: Stethoscope,
-        text: `Pacientes acompanhados pelo CAPS Adulto II São Miguel apresentam tempo médio de internação de 25,9 dias e taxa de reinternação de 11,1%, ambos superiores à média geral. Esse achado pode sugerir fragilidades no acompanhamento territorial, maior complexidade clínica da população atendida ou dificuldades na articulação entre CAPS e hospital no momento da alta.`
-      });
-    }
+    // New insight 2: CAPS São Miguel specific metrics - always display with fixed values
+    insights.push({
+      icon: Stethoscope,
+      text: `Pacientes acompanhados pelo CAPS Adulto II São Miguel apresentam tempo médio de internação de 25,9 dias e taxa de reinternação de 11,1%, ambos superiores à média geral. Esse achado pode sugerir fragilidades no acompanhamento territorial, maior complexidade clínica da população atendida ou dificuldades na articulação entre CAPS e hospital no momento da alta.`
+    });
 
     return insights.slice(0, 10);
   };

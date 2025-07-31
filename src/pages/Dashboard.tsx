@@ -323,14 +323,6 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* Main Chart - Gender Distribution */}
-      <div className="space-y-6">
-        <CustomPieChart
-          data={getGenderDistribution()}
-          title="Distribuição por Sexo"
-          description="Proporção de pacientes internados por gênero"
-        />
-      </div>
 
       {/* Secondary Charts */}
       <div className="grid grid-cols-1 gap-6">

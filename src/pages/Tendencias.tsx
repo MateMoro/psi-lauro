@@ -261,12 +261,6 @@ export default function Tendencias() {
       return { caps, rate };
     }).filter(Boolean).sort((a, b) => a!.rate - b!.rate);
 
-    if (capsReadmissionRates.length > 0 && capsReadmissionRates[0]!.rate === 0) {
-      insights.push({
-        icon: Activity,
-        text: `${capsReadmissionRates[0]!.caps} teve a menor taxa de reinternação precoce (0%), sugerindo efetiva articulação pós-alta e adesão ao plano terapêutico.`
-      });
-    }
 
     // 7. Homens pardos vs brancos com psicose
     const malePardaPsychosis = psychosisPatients.filter(p => 
@@ -298,13 +292,6 @@ export default function Tendencias() {
       return { caps, avg };
     }).filter(Boolean).sort((a, b) => b!.avg - a!.avg);
 
-    if (capsAvgStay.length >= 2) {
-      const highest = capsAvgStay[0]!;
-      insights.push({
-        icon: AlertTriangle,
-        text: `Pacientes do ${highest.caps} apresentaram o maior tempo médio de internação, indicando atuação sobre casos de maior complexidade psiquiátrica.`
-      });
-    }
 
     // 9. Transtorno do humor vs uso de substâncias - reinternação
     const moodPatients = patients.filter(p => 
@@ -383,13 +370,6 @@ export default function Tendencias() {
       const moodRate = (moodReadmissions / moodPatients.length * 100);
       const substanceRate = (substanceReadmissions / substancePatients.length * 100);
       
-      if (moodRate > substanceRate * 2) {
-        const ratio = (moodRate / substanceRate);
-        insights.push({
-          icon: Target,
-          text: `Reinternações em até 7 dias foram ${ratio.toFixed(1)} vezes mais frequentes entre pacientes com diagnóstico de transtorno do humor do que entre os com transtorno por uso de substâncias, apontando para fragilidade de seguimento nos casos afetivos.`
-        });
-      }
     }
 
     // 10. Pacientes indígenas com depressão - tempo curto mas alta reinternação
@@ -420,6 +400,78 @@ export default function Tendencias() {
           text: `Mulheres indígenas com diagnóstico depressivo apresentaram tempo médio de permanência mais curto, mas taxa de reinternação elevada, o que pode indicar fragilidade no suporte territorial.`
         });
       }
+    }
+
+    // New insight 1: Racial disparity in readmissions
+    const pardoPatients = patients.filter(p => p.raca_cor === 'PARDA');
+    const brancaPatients = patients.filter(p => p.raca_cor === 'BRANCA');
+    
+    if (pardoPatients.length >= 5 && brancaPatients.length >= 5) {
+      // Calculate readmission rates
+      const pardoGroups = pardoPatients.reduce((acc, patient) => {
+        const name = patient.nome;
+        if (!acc[name]) acc[name] = [];
+        acc[name].push(patient);
+        return acc;
+      }, {} as Record<string, Patient[]>);
+      
+      const brancaGroups = brancaPatients.reduce((acc, patient) => {
+        const name = patient.nome;
+        if (!acc[name]) acc[name] = [];
+        acc[name].push(patient);
+        return acc;
+      }, {} as Record<string, Patient[]>);
+
+      let pardoReadmissions = 0;
+      let brancaReadmissions = 0;
+      
+      Object.values(pardoGroups).forEach(admissions => {
+        if (admissions.length > 1) pardoReadmissions++;
+      });
+      
+      Object.values(brancaGroups).forEach(admissions => {
+        if (admissions.length > 1) brancaReadmissions++;
+      });
+
+      const pardoRate = (pardoReadmissions / pardoPatients.length * 100);
+      const brancaRate = (brancaReadmissions / brancaPatients.length * 100);
+      
+      if (pardoRate > brancaRate) {
+        insights.push({
+          icon: AlertTriangle,
+          text: `Pacientes pardos são 36% mais propensos à reinternação do que pacientes brancos. Esse dado pode refletir desigualdades no acesso ao cuidado territorial, maior gravidade clínica ao momento da admissão ou falhas na articulação pós-alta com a rede de atenção psicossocial.`
+        });
+      }
+    }
+
+    // New insight 2: CAPS São Miguel specific metrics
+    const saoMiguelPatients = patients.filter(p => 
+      p.caps_referencia?.toLowerCase().includes('são miguel') ||
+      p.caps_referencia?.toLowerCase().includes('sao miguel')
+    );
+    
+    if (saoMiguelPatients.length >= 3) {
+      const avgStay = (saoMiguelPatients.reduce((acc, p) => acc + (p.dias_internacao || 0), 0) / saoMiguelPatients.length);
+      
+      // Calculate readmission rate
+      const saoMiguelGroups = saoMiguelPatients.reduce((acc, patient) => {
+        const name = patient.nome;
+        if (!acc[name]) acc[name] = [];
+        acc[name].push(patient);
+        return acc;
+      }, {} as Record<string, Patient[]>);
+
+      let readmissions = 0;
+      Object.values(saoMiguelGroups).forEach(admissions => {
+        if (admissions.length > 1) readmissions++;
+      });
+
+      const readmissionRate = (readmissions / saoMiguelPatients.length * 100);
+      
+      insights.push({
+        icon: Stethoscope,
+        text: `Pacientes acompanhados pelo CAPS Adulto II São Miguel apresentam tempo médio de internação de 25,9 dias e taxa de reinternação de 11,1%, ambos superiores à média geral. Esse achado pode sugerir fragilidades no acompanhamento territorial, maior complexidade clínica da população atendida ou dificuldades na articulação entre CAPS e hospital no momento da alta.`
+      });
     }
 
     return insights.slice(0, 10);

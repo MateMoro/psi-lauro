@@ -1,4 +1,4 @@
-# Welcome to your Lovable project
+# PsiqAnalytics – Inteligência Clínica em Psiquiatria
 
 ## Project info
 

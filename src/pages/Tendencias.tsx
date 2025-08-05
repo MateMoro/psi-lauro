@@ -467,48 +467,81 @@ export default function Tendencias() {
   }
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-primary">
-          Tendências
-        </h1>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-emerald-50/20">
+      <div className="space-y-8 p-6">
+        
+        {/* Header Section */}
+        <div className="mb-8">
+          <div className="flex items-center gap-4 mb-3">
+            <div className="p-3 bg-gradient-to-br from-emerald-500 via-green-600 to-teal-700 rounded-2xl shadow-xl shadow-emerald-500/25">
+              <TrendingUp className="h-8 w-8 text-white drop-shadow-sm" />
+            </div>
+            <div>
+              <h1 className="text-4xl font-black text-slate-800 tracking-tight">
+                Tendências & Insights
+              </h1>
+              <p className="text-lg text-slate-600 font-medium">
+                Análises automáticas e padrões identificados nos dados
+              </p>
+            </div>
+          </div>
+        </div>
 
-      {/* Insights Cards */}
-      <div className="grid gap-6">
-        {insights.map((insight, index) => {
-          const IconComponent = insight.icon;
-          return (
-            <Card key={index} className="border border-border/20 shadow-md hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-card/95 to-card/85 backdrop-blur-sm">
-              <CardContent className="p-8">
-                <div className="flex items-start gap-6">
-                  <div className="flex-shrink-0 w-12 h-12 rounded-full bg-primary/15 flex items-center justify-center mt-1 shadow-inner border border-primary/20">
-                    <IconComponent className="h-6 w-6 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-foreground leading-relaxed font-medium text-lg tracking-wide">
-                      {insight.text}
+        {/* Insights Section */}
+        <div className="space-y-6">
+          <div className="flex items-center space-x-3 mb-6">
+            <div className="w-1 h-8 bg-gradient-to-b from-emerald-500 to-blue-500 rounded-full"></div>
+            <h2 className="text-2xl font-bold text-slate-800 tracking-tight">
+              Insights Clínicos Automatizados
+            </h2>
+          </div>
+          
+          <div className="grid gap-6">
+            {insights.map((insight, index) => {
+              const IconComponent = insight.icon;
+              const gradients = [
+                'from-blue-500 via-indigo-600 to-purple-700',
+                'from-emerald-500 via-green-600 to-teal-700', 
+                'from-orange-500 via-amber-600 to-yellow-600',
+                'from-red-500 via-pink-600 to-rose-700',
+                'from-purple-500 via-violet-600 to-indigo-700'
+              ];
+              const gradient = gradients[index % gradients.length];
+              
+              return (
+                <Card key={index} className="border-0 bg-gradient-to-br from-white to-slate-50/50 shadow-xl backdrop-blur-sm ring-1 ring-slate-200/50 rounded-2xl transition-all duration-300 hover:shadow-2xl hover:scale-[1.01]">
+                  <CardContent className="p-8">
+                    <div className="flex items-start gap-6">
+                      <div className={`flex-shrink-0 w-14 h-14 rounded-2xl bg-gradient-to-br ${gradient} flex items-center justify-center shadow-xl`}>
+                        <IconComponent className="h-7 w-7 text-white drop-shadow-sm" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-slate-700 leading-relaxed font-medium text-lg tracking-wide">
+                          {insight.text}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+            
+            {insights.length === 0 && (
+              <Card className="border-0 bg-gradient-to-br from-white to-slate-50/50 shadow-xl backdrop-blur-sm ring-1 ring-slate-200/50 rounded-2xl">
+                <CardContent className="p-12">
+                  <div className="text-center">
+                    <div className="p-4 bg-gradient-to-br from-slate-500 to-slate-600 rounded-2xl w-fit mx-auto mb-6 shadow-xl">
+                      <Search className="h-12 w-12 text-white" />
+                    </div>
+                    <p className="text-slate-600 text-xl leading-relaxed font-medium">
+                      Dados insuficientes para gerar análises comparativas robustas no período atual.
                     </p>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-        
-        {insights.length === 0 && (
-          <Card className="border border-border/20 shadow-md">
-            <CardContent className="p-12">
-              <div className="text-center">
-                <Search className="h-20 w-20 text-muted-foreground mx-auto mb-6" />
-                <p className="text-muted-foreground text-xl leading-relaxed">
-                  Dados insuficientes para gerar análises comparativas robustas no período atual.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ThemeToggle } from "@/components/ThemeToggle";
 export function DashboardHeader() {
   return (
     <header className="h-18 sm:h-24 border-b border-border bg-card flex items-center justify-between px-2 sm:px-4 md:px-6 shadow-soft">
@@ -27,6 +28,8 @@ export function DashboardHeader() {
       </div>
 
       <div className="flex items-center gap-1 sm:gap-2">
+        <ThemeToggle />
+        
         <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground h-7 w-7 sm:h-8 sm:w-8">
           <Bell className="h-4 w-4" />
         </Button>

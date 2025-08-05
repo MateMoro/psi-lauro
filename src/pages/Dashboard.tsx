@@ -1,13 +1,16 @@
 import { useState, useEffect } from "react";
-import { Clock, Users, RefreshCw, Calendar } from "lucide-react";
+import { Clock, Users, RefreshCw, Calendar, Filter, Database, MapPin, Building2, Palette, UserCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { MetricCard } from "@/components/dashboard/MetricCard";
-import { FilterBar, DashboardFilters } from "@/components/dashboard/FilterBar";
 import { PatientSearch } from "@/components/dashboard/PatientSearch";
+import { DashboardSkeleton } from "@/components/dashboard/LoadingSkeletons";
+import { EmptyState } from "@/components/ui/empty-state";
 
 import { CustomPieChart } from "@/components/dashboard/charts/PieChart";
 import { VerticalBarChart } from "@/components/dashboard/charts/VerticalBarChart";
 import { HorizontalBarChart } from "@/components/dashboard/charts/HorizontalBarChart";
+import { MiniChart } from "@/components/dashboard/MiniChart";
+import { RadialChart } from "@/components/dashboard/RadialChart";
 import { useToast } from "@/hooks/use-toast";
 
 interface Patient {
@@ -25,12 +28,7 @@ interface Patient {
 
 export default function Dashboard() {
   const [patients, setPatients] = useState<Patient[]>([]);
-  const [filteredPatients, setFilteredPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
-  const [availableCaps, setAvailableCaps] = useState<string[]>([]);
-  const [availableProcedencias, setAvailableProcedencias] = useState<string[]>([]);
-  const [availableDiagnoses, setAvailableDiagnoses] = useState<string[]>([]);
-  const [availableCores, setAvailableCores] = useState<string[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -46,17 +44,6 @@ export default function Dashboard() {
       if (error) throw error;
 
       setPatients(data || []);
-      setFilteredPatients(data || []);
-      
-      // Extract unique CAPS, Procedencias, Diagnoses, and Cores
-      const uniqueCaps = [...new Set(data?.map(p => p.caps_referencia).filter(Boolean))];
-      const uniqueProcedencias = [...new Set(data?.map(p => p.procedencia).filter(Boolean))];
-      const uniqueDiagnoses = [...new Set(data?.map(p => p.cid_grupo).filter(Boolean))];
-      const uniqueCores = [...new Set(data?.map(p => p.raca_cor).filter(Boolean))];
-      setAvailableCaps(uniqueCaps);
-      setAvailableProcedencias(uniqueProcedencias);
-      setAvailableDiagnoses(uniqueDiagnoses);
-      setAvailableCores(uniqueCores);
     } catch (error) {
       console.error('Erro ao buscar pacientes:', error);
       toast({
@@ -69,58 +56,17 @@ export default function Dashboard() {
     }
   };
 
-  const applyFilters = (filters: DashboardFilters) => {
-    let filtered = [...patients];
-
-    if (filters.capsReferencia) {
-      filtered = filtered.filter(p => p.caps_referencia === filters.capsReferencia);
-    }
-
-    if (filters.genero) {
-      filtered = filtered.filter(p => p.genero === filters.genero);
-    }
-
-    if (filters.procedencia) {
-      filtered = filtered.filter(p => p.procedencia === filters.procedencia);
-    }
-
-    if (filters.patologia) {
-      filtered = filtered.filter(p => p.cid_grupo === filters.patologia);
-    }
-
-    if (filters.cor) {
-      filtered = filtered.filter(p => p.raca_cor === filters.cor);
-    }
-
-    if (filters.faixaEtaria) {
-      filtered = filtered.filter(p => {
-        if (!p.data_nascimento) return false;
-        const age = new Date().getFullYear() - new Date(p.data_nascimento).getFullYear();
-        
-        switch (filters.faixaEtaria) {
-          case '<18': return age < 18;
-          case '18–25': return age >= 18 && age <= 25;
-          case '26–44': return age >= 26 && age <= 44;
-          case '45–64': return age >= 45 && age <= 64;
-          case '65+': return age >= 65;
-          default: return true;
-        }
-      });
-    }
-
-    setFilteredPatients(filtered);
-  };
 
   // Calculate metrics
   const calculateMetrics = () => {
-    const totalPatients = filteredPatients.length;
+    const totalPatients = patients.length;
     
     // Calculate average stay days
-    const avgStayDays = filteredPatients.reduce((acc, p) => 
+    const avgStayDays = patients.reduce((acc, p) => 
       acc + (p.dias_internacao || 0), 0) / totalPatients || 0;
     
     // Group patients by name to identify readmissions
-    const patientGroups = filteredPatients.reduce((acc, patient) => {
+    const patientGroups = patients.reduce((acc, patient) => {
       const name = patient.nome;
       if (!acc[name]) {
         acc[name] = [];
@@ -176,7 +122,7 @@ export default function Dashboard() {
 
   // Prepare chart data
   const getTopDiagnoses = () => {
-    const diagnosisCount = filteredPatients.reduce((acc, p) => {
+    const diagnosisCount = patients.reduce((acc, p) => {
       let diagnosis = p.cid_grupo || 'Não informado';
       
       // Skip unwanted diagnoses
@@ -201,47 +147,75 @@ export default function Dashboard() {
       return acc;
     }, {} as Record<string, number>);
 
-    const total = filteredPatients.length;
+    const total = patients.length;
     const chartColors = [
-      "hsl(220 70% 35%)",  // Blue
-      "hsl(160 76% 36%)",  // Teal
-      "hsl(340 82% 52%)",  // Rose
-      "hsl(260 85% 58%)",  // Purple
-      "hsl(35 91% 62%)"    // Orange
+      "#0ea5e9", // sky blue
+      "#10b981", // emerald green  
+      "#f97316", // orange
+      "#6366f1", // indigo
+      "#14b8a6", // teal
+      "#e11d48", // rose
+      "#7c3aed", // violet
+      "#dc2626", // red
+      "#059669", // green
+      "#0284c7", // blue
+      "#ca8a04", // yellow
+      "#be185d", // pink
+      "#7c2d12", // brown
+      "#374151", // gray
+      "#1f2937", // dark gray
+      "#991b1b", // dark red
+      "#166534", // dark green
+      "#1e40af", // dark blue
+      "#a21caf", // fuchsia
+      "#ea580c"  // amber
     ];
     
+    // Helper function to capitalize first letter
+    const capitalizeFirst = (str: string): string => {
+      if (!str) return str;
+      return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+    };
+
     return Object.entries(diagnosisCount)
       .sort(([,a], [,b]) => b - a)
-      .slice(0, 5)
       .map(([name, value], index) => ({ 
-        name, 
+        name: capitalizeFirst(name), 
         value, 
         percentage: total > 0 ? Math.round((value / total) * 100) : 0,
-        color: chartColors[index] || "hsl(var(--chart-1))"
+        color: chartColors[index % chartColors.length] || "#6b7280"
       }));
   };
 
   const getGenderDistribution = () => {
-    const genderCount = filteredPatients.reduce((acc, p) => {
-      if (p.genero === 'MASC') {
+    const genderCount = patients.reduce((acc, p) => {
+      if (p.genero === 'masc') {
         acc['Masculino'] = (acc['Masculino'] || 0) + 1;
-      } else if (p.genero === 'FEM') {
+      } else if (p.genero === 'fem') {
         acc['Feminino'] = (acc['Feminino'] || 0) + 1;
+      } else if (p.genero === 'outros') {
+        acc['Outros'] = (acc['Outros'] || 0) + 1;
       }
-      // Skip "Outros" category entirely
       return acc;
     }, {} as Record<string, number>);
 
     const colors = [
-      "hsl(160 76% 36%)",  // Teal for Feminino
-      "hsl(220 70% 35%)"   // Blue for Masculino
+      "#10b981",  // Green for Feminino
+      "#0ea5e9",  // Blue for Masculino
+      "#f97316"   // Orange for Outros
     ];
 
+    const capitalizeFirst = (str: string): string => {
+      if (!str) return str;
+      return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+    };
+
     return Object.entries(genderCount)
+      .filter(([, value]) => value > 0)  // Only include categories with data
       .map(([name, value], index) => ({ 
-        name, 
+        name: capitalizeFirst(name), 
         value, 
-        color: colors[index] || "hsl(var(--chart-1))" 
+        color: colors[index] || "#6b7280" 
       }));
   };
 
@@ -254,7 +228,7 @@ export default function Dashboard() {
       '65+': 0
     };
 
-    filteredPatients.forEach(p => {
+    patients.forEach(p => {
       if (!p.data_nascimento) return;
       const age = new Date().getFullYear() - new Date(p.data_nascimento).getFullYear();
       
@@ -265,7 +239,7 @@ export default function Dashboard() {
       else ageRanges['65+']++;
     });
 
-    const total = filteredPatients.length;
+    const total = patients.length;
     return Object.entries(ageRanges).map(([name, count]) => ({ 
       name, 
       value: total > 0 ? Math.round((count / total) * 100) : 0,
@@ -273,76 +247,282 @@ export default function Dashboard() {
     }));
   };
 
+  // New chart data functions
+  const getCapsDistribution = () => {
+    const capsCount = patients.reduce((acc, p) => {
+      const caps = p.caps_referencia || 'Não informado';
+      acc[caps] = (acc[caps] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#84cc16', '#eab308', '#f97316', '#ec4899'];
+    return Object.entries(capsCount)
+      .sort(([,a], [,b]) => b - a)
+      .map(([name, value], index) => ({ 
+        name,
+        value, 
+        fill: colors[index % colors.length] || '#6b7280'
+      }));
+  };
+
+  const getProcedenciaDistribution = () => {
+    const procedenciaCount = patients.reduce((acc, p) => {
+      const procedencia = p.procedencia || 'Não informado';
+      acc[procedencia] = (acc[procedencia] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const total = patients.length;
+    return Object.entries(procedenciaCount)
+      .sort(([,a], [,b]) => b - a)
+      .map(([name, count]) => ({ 
+        name,
+        value: total > 0 ? Math.round((count / total) * 100) : 0,
+        count 
+      }));
+  };
+
+  const getRaceDistribution = () => {
+    const raceCount = patients.reduce((acc, p) => {
+      const race = p.raca_cor || 'Não informado';
+      acc[race] = (acc[race] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const colors = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#84cc16', '#eab308'];
+    return Object.entries(raceCount)
+      .sort(([,a], [,b]) => b - a)
+      .map(([name, value], index) => ({ 
+        name, 
+        value, 
+        fill: colors[index % colors.length] || '#6b7280'
+      }));
+  };
+
+  const getGenderByDiagnosisData = () => {
+    const combinations = patients.reduce((acc, p) => {
+      if (!p.cid_grupo || !p.genero) return acc;
+      
+      const diagnosis = p.cid_grupo;
+      const gender = p.genero === 'MASC' ? 'M' : p.genero === 'FEM' ? 'F' : 'O';
+      const key = `${diagnosis} (${gender})`;
+      
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    return Object.entries(combinations)
+      .sort(([,a], [,b]) => b - a)
+      .map(([name, value]) => ({ 
+        name, 
+        value 
+      }));
+  };
+
+  const getAgeByDiagnosisData = () => {
+    const combinations = patients.reduce((acc, p) => {
+      if (!p.cid_grupo || !p.data_nascimento) return acc;
+      
+      const age = new Date().getFullYear() - new Date(p.data_nascimento).getFullYear();
+      let ageGroup = '';
+      if (age < 18) ageGroup = '<18';
+      else if (age <= 25) ageGroup = '18-25';
+      else if (age <= 44) ageGroup = '26-44';
+      else if (age <= 64) ageGroup = '45-64';
+      else ageGroup = '65+';
+      
+      const diagnosis = p.cid_grupo;
+      const key = `${diagnosis} [${ageGroup}]`;
+      
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    return Object.entries(combinations)
+      .sort(([,a], [,b]) => b - a)
+      .map(([name, value]) => ({ 
+        name, 
+        value 
+      }));
+  };
 
   const metrics = calculateMetrics();
 
   if (loading) {
+    return <DashboardSkeleton />;
+  }
+
+  // Check if no data is available
+  if (patients.length === 0) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Carregando dados...</p>
-        </div>
-      </div>
+      <EmptyState
+        icon={Database}
+        title="Nenhum dado encontrado"
+        description="Não foi possível encontrar dados de pacientes. Verifique a conexão com o banco de dados ou entre em contato com o administrador do sistema."
+        action={{
+          label: "Tentar novamente",
+          onClick: fetchPatients
+        }}
+      />
     );
   }
 
+
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-emerald-50/20">
+      <div className="space-y-8 p-6">
+        
+        {/* Header Section */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-black text-slate-800 tracking-tight mb-2">
+            Analytics Dashboard
+          </h1>
+          <p className="text-lg text-slate-600 font-medium">
+            Visão geral dos dados de pacientes psiquiátricos
+          </p>
+        </div>
 
-      <FilterBar 
-        onFiltersChange={applyFilters} 
-        availableCaps={availableCaps} 
-        availableProcedencias={availableProcedencias}
-        availableDiagnoses={availableDiagnoses}
-        availableCores={availableCores}
-      />
+        {/* Modern Compact Metrics */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <MetricCard
+            title="Tempo Médio"
+            value={metrics.avgStayDays}
+            description="dias de permanência"
+            icon={Clock}
+            variant="primary"
+          />
+          <MetricCard
+            title="Pacientes"
+            value={metrics.totalPatients}
+            description="total no período"
+            icon={Users}
+            variant="success"
+          />
+          <MetricCard
+            title="Readmissões"
+            value={`${metrics.readmissionRate}%`}
+            description="taxa de retorno"
+            icon={RefreshCw}
+            variant="info"
+          />
+        </div>
 
-      {/* Enhanced Metrics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <MetricCard
-          title="Tempo Médio de Permanência"
-          value={metrics.avgStayDaysFormatted}
-          description="Compatível com perfil de maior gravidade"
-          icon={Clock}
-          variant="primary"
-        />
-        <MetricCard
-          title="Total de Pacientes"
-          value={metrics.totalPatients}
-          description="Pacientes no período analisado"
-          icon={Users}
-          variant="success"
-        />
-        <MetricCard
-          title="Taxa de Readmissão"
-          value={`${metrics.readmissionRate}%`}
-          description="Percentual de pacientes reinternados"
-          icon={RefreshCw}
-          variant="info"
-        />
-      </div>
+        {/* Analytics Section */}
+        <div className="space-y-6">
+          <div className="flex items-center space-x-3 mb-6">
+            <div className="w-1 h-8 bg-gradient-to-b from-blue-500 to-emerald-500 rounded-full"></div>
+            <h2 className="text-2xl font-bold text-slate-800 tracking-tight">
+              Análises Detalhadas
+            </h2>
+          </div>
+          
+          {/* Primary Charts */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <MiniChart
+              data={getTopDiagnoses()}
+              title="Principais Patologias"
+              subtitle="Todos os diagnósticos"
+              type="bar"
+              total={patients.length}
+            />
+            
+            <MiniChart
+              data={getGenderDistribution().map(item => ({
+                name: item.name,
+                value: Math.round((item.value / patients.length) * 100),
+                color: item.color
+              }))}
+              title="Distribuição de Gênero"
+              subtitle="Pacientes por sexo"
+              type="pie"
+            />
+            
+            <MiniChart
+              data={getAgeDistribution()}
+              title="Faixa Etária"
+              subtitle="Distribuição por idade"
+              type="bar"
+            />
 
+            <MiniChart
+              data={getCapsDistribution().map(item => ({
+                name: item.name,
+                value: Math.round((item.value / patients.length) * 100),
+                color: item.fill
+              }))}
+              title="CAPS Referência"
+              subtitle="Principais unidades"
+              type="pie"
+              icon={Building2}
+            />
+          </div>
 
-      {/* Secondary Charts */}
-      <div className="grid grid-cols-1 gap-6">
-        <VerticalBarChart
-          data={getTopDiagnoses().map(item => ({
-            name: item.name,
-            value: item.percentage
-          }))}
-          title="Prevalência das Principais Patologias"
-          description="Top 5 diagnósticos mais frequentes (%)"
-        />
-      </div>
+          {/* Secondary Charts */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <MiniChart
+              data={getRaceDistribution().map(item => ({
+                name: item.name,
+                value: Math.round((item.value / patients.length) * 100),
+                color: item.fill
+              }))}
+              title="Distribuição Racial"
+              subtitle="Cor/raça declarada"
+              type="pie"
+              icon={Palette}
+            />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <VerticalBarChart
-          data={getAgeDistribution()}
-          title="Distribuição por Faixa Etária"
-          description="Porcentagem de pacientes por idade"
-        />
-        <PatientSearch patients={filteredPatients} />
+            <MiniChart
+              data={getProcedenciaDistribution()}
+              title="Procedência"
+              subtitle="Origem dos encaminhamentos"
+              type="bar"
+              icon={MapPin}
+            />
+
+            <MiniChart
+              data={getCapsDistribution().slice(0, 3).map(item => ({
+                name: item.name,
+                value: Math.round((item.value / patients.length) * 100),
+                color: item.fill
+              }))}
+              title="CAPS Principais"
+              subtitle="Top 3 unidades"
+              type="pie"
+              icon={Building2}
+            />
+          </div>
+
+          {/* Combination Charts */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <MiniChart
+              data={getGenderByDiagnosisData()}
+              title="Gênero × Diagnóstico"
+              subtitle="Combinações mais frequentes"
+              type="bar"
+              icon={Users}
+            />
+
+            <MiniChart
+              data={getAgeByDiagnosisData()}
+              title="Idade × Diagnóstico" 
+              subtitle="Padrões por faixa etária"
+              type="bar"
+              icon={Calendar}
+            />
+          </div>
+        </div>
+
+        {/* Patient Search Section */}
+        <div className="space-y-6">
+          <div className="flex items-center space-x-3 mb-6">
+            <div className="w-1 h-8 bg-gradient-to-b from-emerald-500 to-orange-500 rounded-full"></div>
+            <h2 className="text-2xl font-bold text-slate-800 tracking-tight">
+              Busca de Pacientes
+            </h2>
+          </div>
+          
+          <PatientSearch patients={patients} />
+        </div>
       </div>
     </div>
   );

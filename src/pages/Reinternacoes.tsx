@@ -5,7 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { RefreshCw, Calendar, MapPin, User, Filter } from "lucide-react";
+import { RefreshCw, Calendar, MapPin, User, Filter, Database } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useToast } from "@/hooks/use-toast";
 
 interface PatientAdmission {
@@ -174,120 +175,183 @@ export default function Reinternacoes() {
     return new Date(dateString).toLocaleDateString("pt-BR");
   };
 
+  const capitalizeWords = (text: string) => {
+    if (!text) return text;
+    return text
+      .toLowerCase()
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
+  const capitalizeLocation = (text: string) => {
+    if (!text) return text;
+    return text
+      .toLowerCase()
+      .split(' ')
+      .map(word => {
+        // Keep Roman numerals as uppercase (I, II, III, IV, V, VI, VII, VIII, IX, X, etc.)
+        if (/^i{1,3}v?|iv|v|ix|x{1,3}l?|xl|l|xc|c{1,3}d?|cd|d|cm|m{1,3}$/i.test(word)) {
+          return word.toUpperCase();
+        }
+        return word.charAt(0).toUpperCase() + word.slice(1);
+      })
+      .join(' ');
+  };
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Carregando dados de reinternações...</p>
+      <div className="space-y-6">
+        <div>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="h-8 w-8 bg-muted animate-pulse rounded" />
+            <div className="h-8 w-32 bg-muted animate-pulse rounded" />
+          </div>
+          <div className="h-4 w-64 bg-muted animate-pulse rounded" />
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Card key={i} className="shadow-medium">
+              <CardContent className="pt-6">
+                <div className="animate-pulse space-y-3">
+                  <div className="h-4 w-32 bg-muted rounded" />
+                  <div className="h-8 w-20 bg-muted rounded" />
+                  <div className="h-3 w-full bg-muted rounded" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-          <RefreshCw className="h-8 w-8 text-primary" />
-          Reinternações
-        </h1>
-        <p className="text-muted-foreground">
-          Análise de pacientes com múltiplas internações
-        </p>
-      </div>
-
-
-      {/* Readmission Rate Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="shadow-medium">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Reinternação ≤ 7 dias
-                </p>
-                <p className="text-2xl font-bold text-foreground">
-                  0,8%
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Taxa de reinternação precoce (em até 7 dias após a alta)
-                </p>
-              </div>
-              <RefreshCw className="h-8 w-8 text-destructive" />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-emerald-50/20 dark:from-gray-950 dark:via-gray-900 dark:to-gray-800">
+      <div className="space-y-8 p-6">
+        
+        {/* Header Section */}
+        <div className="mb-8">
+          <div className="flex items-center gap-4 mb-3">
+            <div className="p-3 bg-gradient-to-br from-orange-500 via-amber-600 to-yellow-600 rounded-2xl shadow-xl shadow-orange-500/25">
+              <RefreshCw className="h-8 w-8 text-white drop-shadow-sm" />
             </div>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-medium">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Reinternação ≤ 15 dias
-                </p>
-                <p className="text-2xl font-bold text-foreground">
-                  1,33%
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Indicador de seguimento clínico nas duas primeiras semanas
-                </p>
-              </div>
-              <Calendar className="h-8 w-8 text-warning" />
+            <div>
+              <h1 className="text-4xl font-black text-slate-800 dark:text-gray-100 tracking-tight">
+                Reinternações
+              </h1>
+              <p className="text-lg text-slate-600 dark:text-gray-300 font-medium">
+                Análise de pacientes com múltiplas internações
+              </p>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Card className="shadow-medium">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Reinternação ≤ 30 dias
-                </p>
-                <p className="text-2xl font-bold text-foreground">
-                  3,73%
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Readmissões precoces no primeiro mês
-                </p>
+        {/* Modern Readmission Rate Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card className="transition-all duration-300 hover:scale-[1.03] hover:-translate-y-1 border-0 bg-gradient-to-br from-red-500 via-pink-600 to-rose-700 text-white shadow-xl shadow-red-500/30 backdrop-blur-sm rounded-2xl overflow-hidden">
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold tracking-wide uppercase truncate text-red-50">
+                    ≤ 7 Dias
+                  </p>
+                  <div className="text-3xl font-extrabold mt-2 tracking-tight text-white">
+                    0,8%
+                  </div>
+                  <p className="text-sm mt-2 font-medium text-red-100/80">
+                    reinternação precoce
+                  </p>
+                </div>
+                <div className="ml-4 p-3 rounded-xl bg-white/15 backdrop-blur-sm ring-1 ring-white/10">
+                  <RefreshCw className="h-6 w-6 text-red-100 drop-shadow-sm" />
+                </div>
               </div>
-              <RefreshCw className="h-8 w-8 text-chart-3" />
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card className="shadow-medium">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Reinternação no Período Total
-                </p>
-                <p className="text-2xl font-bold text-foreground">
-                  6,67%
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Proporção de pacientes com alta que foram reinternados durante o período analisado
-                </p>
+          <Card className="transition-all duration-300 hover:scale-[1.03] hover:-translate-y-1 border-0 bg-gradient-to-br from-amber-500 via-orange-600 to-yellow-600 text-white shadow-xl shadow-amber-500/30 backdrop-blur-sm rounded-2xl overflow-hidden">
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold tracking-wide uppercase truncate text-amber-50">
+                    ≤ 15 Dias
+                  </p>
+                  <div className="text-3xl font-extrabold mt-2 tracking-tight text-white">
+                    1,33%
+                  </div>
+                  <p className="text-sm mt-2 font-medium text-amber-100/80">
+                    primeiras duas semanas
+                  </p>
+                </div>
+                <div className="ml-4 p-3 rounded-xl bg-white/15 backdrop-blur-sm ring-1 ring-white/10">
+                  <Calendar className="h-6 w-6 text-amber-100 drop-shadow-sm" />
+                </div>
               </div>
-              <User className="h-8 w-8 text-chart-2" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            </CardContent>
+          </Card>
 
-      {/* Readmissions Table */}
-      <Card className="shadow-medium">
-        <CardHeader>
-          <CardTitle>Pacientes com Múltiplas Internações</CardTitle>
-        </CardHeader>
-        <CardContent>
+          <Card className="transition-all duration-300 hover:scale-[1.03] hover:-translate-y-1 border-0 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white shadow-xl shadow-blue-500/30 backdrop-blur-sm rounded-2xl overflow-hidden">
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold tracking-wide uppercase truncate text-blue-50">
+                    ≤ 30 Dias
+                  </p>
+                  <div className="text-3xl font-extrabold mt-2 tracking-tight text-white">
+                    3,73%
+                  </div>
+                  <p className="text-sm mt-2 font-medium text-blue-100/80">
+                    primeiro mês
+                  </p>
+                </div>
+                <div className="ml-4 p-3 rounded-xl bg-white/15 backdrop-blur-sm ring-1 ring-white/10">
+                  <RefreshCw className="h-6 w-6 text-blue-100 drop-shadow-sm" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="transition-all duration-300 hover:scale-[1.03] hover:-translate-y-1 border-0 bg-gradient-to-br from-emerald-500 via-green-600 to-teal-700 text-white shadow-xl shadow-emerald-500/30 backdrop-blur-sm rounded-2xl overflow-hidden">
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold tracking-wide uppercase truncate text-emerald-50">
+                    Total
+                  </p>
+                  <div className="text-3xl font-extrabold mt-2 tracking-tight text-white">
+                    6,67%
+                  </div>
+                  <p className="text-sm mt-2 font-medium text-emerald-100/80">
+                    período analisado
+                  </p>
+                </div>
+                <div className="ml-4 p-3 rounded-xl bg-white/15 backdrop-blur-sm ring-1 ring-white/10">
+                  <User className="h-6 w-6 text-emerald-100 drop-shadow-sm" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Patients Section */}
+        <div className="space-y-6">
+          <div className="flex items-center space-x-3 mb-6">
+            <div className="w-1 h-8 bg-gradient-to-b from-orange-500 to-emerald-500 rounded-full"></div>
+            <h2 className="text-2xl font-bold text-slate-800 dark:text-gray-100 tracking-tight">
+              Pacientes com Múltiplas Internações
+            </h2>
+          </div>
+          
+          <Card className="border-0 bg-gradient-to-br from-white to-slate-50/50 dark:from-gray-900 dark:to-gray-800/50 shadow-xl backdrop-blur-sm ring-1 ring-slate-200/50 dark:ring-gray-700/50 rounded-2xl">
+            <CardContent className="p-6">
           {filteredReadmissions.length === 0 ? (
-            <div className="text-center py-8">
-              <RefreshCw className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">Nenhuma reinternação encontrada</p>
-            </div>
+            <EmptyState
+              icon={RefreshCw}
+              title="Nenhuma reinternação encontrada"
+              description="Não foram encontrados pacientes com múltiplas internações nos dados disponíveis. Isso pode indicar um bom controle de readmissões."
+            />
           ) : (
             <div className="space-y-6">
               {filteredReadmissions.map((patient, index) => (
@@ -295,7 +359,7 @@ export default function Reinternacoes() {
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <User className="h-5 w-5 text-primary" />
-                      <h3 className="text-lg font-semibold">{patient.nome}</h3>
+                      <h3 className="text-lg font-semibold text-foreground">{capitalizeWords(patient.nome)}</h3>
                       <Badge variant="secondary">
                         {patient.totalAdmissions} internações
                       </Badge>
@@ -315,13 +379,13 @@ export default function Reinternacoes() {
                   <div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
                     <div className="flex items-center gap-2">
                       <Badge variant="secondary">
-                        {patient.admissions[0]?.cid_grupo || 'N/A'}
+                        {capitalizeWords(patient.admissions[0]?.cid_grupo) || 'N/A'}
                       </Badge>
                       <span className="text-sm text-muted-foreground">Diagnóstico</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <MapPin className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">{patient.admissions[0]?.caps_referencia || 'N/A'}</span>
+                      <span className="text-sm text-foreground">{capitalizeLocation(patient.admissions[0]?.caps_referencia) || 'N/A'}</span>
                     </div>
                   </div>
 
@@ -398,8 +462,10 @@ export default function Reinternacoes() {
               ))}
             </div>
           )}
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }

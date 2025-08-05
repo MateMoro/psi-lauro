@@ -1,0 +1,685 @@
+{
+  "memories": [
+    {
+      "id": "mem_1754331179097_awcle7yok",
+      "content": "Dashboard atual análise completa:\n- Dashboard está em /src/pages/Dashboard.tsx\n- MetricCard está em /src/components/dashboard/MetricCard.tsx\n- Usa 3 métricas principais: Tempo Médio (Clock), Total Pacientes (Users), Taxa Readmissão (RefreshCw)\n- Tem gráficos grandes: VerticalBarChart para patologias, faixa etária\n- Layout atual: grid de 3 cards no topo, depois gráficos grandes em grid\n- Cores: usa gradientes e variantes (primary, success, info)\n- Responsivo: sm/lg breakpoints\n- Precisa modernizar: cards menores, gráficos compactos, layout mais denso",
+      "type": "general",
+      "tags": [
+        "general",
+        "dashboard",
+        "analysis",
+        "current-state"
+      ],
+      "timestamp": "2025-08-04T18:12:59.096Z",
+      "context": "Dashboard modernization project - current state analysis",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-04T18:12:59.096Z",
+      "lastVerified": "2025-08-04T18:12:59.096Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1754331311429_9ork7epyi",
+      "content": "Dashboard modernizado com sucesso:\n- MetricCard redesenhado: layout mais compacto, gradientes modernos, ícones em caixas arredondadas\n- MiniChart criado: componente para gráficos pequenos (bar/pie) com dados resumidos\n- Layout atualizado: grid 4 colunas para métricas, 3 colunas para mini-gráficos\n- Responsividade mantida: sm/md/lg breakpoints\n- Build funciona: npm run build passou sem erros críticos\n- Servidor dev funcionando: localhost:8080\n- Informações mais resumidas: títulos curtos, descrições concisas\n- Gráficos compactos: altura 20 (80px), legendas limitadas a 3 itens",
+      "type": "general",
+      "tags": [
+        "general",
+        "dashboard",
+        "completed",
+        "modern",
+        "compact"
+      ],
+      "timestamp": "2025-08-04T18:15:11.429Z",
+      "context": "Dashboard modernization completed successfully",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-04T18:15:11.429Z",
+      "lastVerified": "2025-08-04T18:15:11.429Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1754331930486_nfx44a6yh",
+      "content": "Dashboard UI/UX modernizado com sucesso:\n- Paleta atualizada: azul (#0ea5e9), verde (#10b981), laranja (#f97316), índigo (#6366f1), teal (#14b8a6)\n- MetricCard: gradientes 3-stop (via colors), sombras XL, backdrop-blur, animações hover com translate-y, bordas arredondadas (rounded-2xl), tipografia extrabold\n- MiniChart: design glassmorphism, ícones em gradiente azul-índigo, legendas com ring-2 ring-white, área de gráficos com bg-gradient\n- Layout geral: fundo gradient from-slate-50 via-blue-50/30 to-emerald-50/20, header com h1 4xl font-black, seções com divisores coloridos (w-1 h-8 gradient)\n- Espaçamentos: p-6, space-y-8, gap-6\n- Build funciona: npm run build OK, dev server em localhost:8081\n- Tipografia moderna: tracking-tight, font-black, font-extrabold, uppercase para labels",
+      "type": "general",
+      "tags": [
+        "general",
+        "ui",
+        "ux",
+        "modern",
+        "completed",
+        "colors",
+        "gradients"
+      ],
+      "timestamp": "2025-08-04T18:25:30.486Z",
+      "context": "Modern UI/UX implementation completed",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-04T18:25:30.486Z",
+      "lastVerified": "2025-08-04T18:25:30.486Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1754332429656_9jjiw3stn",
+      "content": "Sistema completo modernizado com nova identidade visual aplicada em todas as páginas:\n\nBARRA LATERAL (AppSidebar.tsx):\n- Largura aumentada: w-72 (expandida)\n- Background: gradient from-slate-50 to-white \n- Logo/header: gradient blue-indigo-purple com \"PSI Analytics\"\n- Menu items: gradientes blue-indigo para ativo, hover suave\n- Navegação: h-14, rounded-xl, font-bold\n\nPÁGINAS MODERNIZADAS:\n1. Dashboard: background gradient, header com ícone, seções com divisores coloridos, mini-charts, cards compactos\n2. Reinternações: header laranja-amber, cards coloridos por métrica (red, amber, blue, emerald), mesmo layout\n3. Tendências: header emerald-green, insights com gradientes rotativos, cards glassmorphism\n4. Index: landing page premium com cards grandes, headers centralizados\n5. SobreServico: seções com bullet points coloridos, cards informativos\n6. Exportar: cards de exportação com gradientes por opção, botões modernos\n\nPADRÃO VISUAL CONSISTENTE:\n- Background: from-slate-50 via-blue-50/30 to-emerald-50/20\n- Headers: text-4xl font-black tracking-tight\n- Cards: border-0 bg-gradient-to-br from-white to-slate-50/50 shadow-xl rounded-2xl\n- Ícones: gradientes em containers arredondados com sombras\n- Animações: hover:scale-[1.02] hover:shadow-2xl duration-300\n- Paleta: azul, verde, laranja, roxo com gradientes 3-stop\n\nBuild funciona: npm run build OK\nServidor: localhost:8081",
+      "type": "general",
+      "tags": [
+        "general",
+        "ui",
+        "complete",
+        "modernization",
+        "all-pages",
+        "consistent"
+      ],
+      "timestamp": "2025-08-04T18:33:49.656Z",
+      "context": "Complete UI modernization across all pages",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-04T18:33:49.656Z",
+      "lastVerified": "2025-08-04T18:33:49.656Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1754333087723_nxkxuz3qq",
+      "content": "Dashboard transformado com foco em gráficos ao invés de filtros:\n\nMUDANÇAS REALIZADAS:\n1. REMOVIDO FilterBar completamente do Dashboard\n2. CRIADO RadialChart component para gráficos radiais\n3. REMOVIDO filteredPatients - agora usa apenas patients (dados completos)\n4. REMOVIDO todas as funções de filtros (applyFilters, availableCaps, etc.)\n\nNOVOS GRÁFICOS ADICIONADOS:\n- CAPS Referência (RadialChart) - principais unidades\n- Procedência (MiniChart bar) - origem dos encaminhamentos  \n- Distribuição Racial (MiniChart pie + RadialChart) - cor/raça\n- Gênero × Diagnóstico (MiniChart bar) - combinações\n- Idade × Diagnóstico (MiniChart bar) - padrões por faixa etária\n\nLAYOUT REORGANIZADO:\n- Grid 4 colunas: Patologias, Gênero, Faixa Etária, CAPS Referência\n- Grid 3 colunas: Procedência, Distribuição Racial, Perfil Étnico\n- Grid 2 colunas: Combinações (Gênero×Diagnóstico, Idade×Diagnóstico)\n\nTIPOS DE GRÁFICOS:\n- MiniChart type=\"bar\": patologias, faixa etária, procedência, combinações\n- MiniChart type=\"pie\": gênero, distribuição racial\n- RadialChart: CAPS referência, perfil étnico\n\nBuild funciona: npm run build OK\nTodos os filtros transformados em visualizações gráficas",
+      "type": "general",
+      "tags": [
+        "general",
+        "dashboard",
+        "charts",
+        "no-filters",
+        "complete"
+      ],
+      "timestamp": "2025-08-04T18:44:47.723Z",
+      "context": "Dashboard transformation - filters to charts",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-04T18:44:47.723Z",
+      "lastVerified": "2025-08-04T18:44:47.723Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1754333277062_v58ozp5ly",
+      "content": "Gráficos de pizza e radial revisados e melhorados:\n\nMINICHART (gráficos de pizza):\n- Altura aumentada: h-24 para barras, h-36 para pizza (50% maior)\n- innerRadius: 25 (era 18)\n- outerRadius: 55 (era 38) \n- paddingAngle: 2 (era 3)\n- Muito mais visível e legível\n\nRADIALCHART (gráficos radiais):\n- Altura aumentada: h-40 (era h-32)\n- innerRadius: 45% (era 40%)\n- outerRadius: 80% (era 85%)\n- cornerRadius: 4 (era 6)\n- Número central: bg-white/90 backdrop-blur-sm com border\n- Posicionamento: rounded-full p-3 shadow-sm\n- pointer-events-none para evitar interferência\n- Cada barra radial usa cor individual do data.fill\n\nMELHORIAS VISUAIS:\n- Pizza charts 50% maiores e mais proporcionais\n- Radial charts com centro destacado e protegido\n- Números centrais não ficam mais cobertos\n- Cores individuais por segmento nos radiais\n- Build funcionando: npm run build OK\n\nGráficos agora são muito mais legíveis e visualmente atraentes",
+      "type": "general",
+      "tags": [
+        "general",
+        "charts",
+        "improvements",
+        "visual",
+        "pie",
+        "radial"
+      ],
+      "timestamp": "2025-08-04T18:47:57.062Z",
+      "context": "Chart improvements - pie and radial charts visual fixes",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-04T18:47:57.062Z",
+      "lastVerified": "2025-08-04T18:47:57.062Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1754339630223_kxxgf1fc1",
+      "content": "CAPS Referência gráfico corrigido e reorganizado:\n\nPROBLEMA IDENTIFICADO:\n- RadialChart não estava funcionando bem para múltiplas barras\n- Valor central mostrava apenas quantidade de CAPS ao invés de dados úteis\n- Visualização confusa e pouco informativa\n\nCORREÇÕES REALIZADAS:\n1. CAPS Referência principal (grid 4 colunas): mudou para MiniChart type=\"pie\"\n   - Mostra percentuais dos principais CAPS\n   - Cores específicas por CAPS\n   - Muito mais legível como pizza\n\n2. CAPS Principais (grid 3 colunas): manteve RadialChart melhorado\n   - Limitado a top 3 CAPS para melhor visualização\n   - Centro mostra total de pacientes dos 3 principais\n   - Título mais específico: \"CAPS Principais\"\n\n3. Removidos duplicações:\n   - Procedência não estava mais duplicada\n   - Layout organizado em 3 seções distintas\n\nLAYOUT FINAL:\n- Grid 4 colunas: Patologias (bar), Gênero (pie), Faixa Etária (bar), CAPS Referência (pie)\n- Grid 3 colunas: Distribuição Racial (pie), Procedência (bar), CAPS Principais (radial)\n- Grid 2 colunas: Gênero×Diagnóstico (bar), Idade×Diagnóstico (bar)\n\nBuild funcionando: npm run build OK\nCAPS agora bem visualizado em ambos os formatos",
+      "type": "general",
+      "tags": [
+        "general",
+        "caps",
+        "chart",
+        "fixed",
+        "reorganized"
+      ],
+      "timestamp": "2025-08-04T20:33:50.223Z",
+      "context": "CAPS chart fixed and reorganized",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-04T20:33:50.223Z",
+      "lastVerified": "2025-08-04T20:33:50.223Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1754340142250_zl63gnkgm",
+      "content": "User wants to improve bar charts: make them larger to better differentiate categories, expand to show all categories (remove .slice(0,5) limitations), and add hover tooltips showing numbers and category names",
+      "type": "general",
+      "tags": [
+        "general",
+        "dashboard",
+        "charts",
+        "bar-charts",
+        "tooltips",
+        "ui-improvement"
+      ],
+      "timestamp": "2025-08-04T20:42:22.250Z",
+      "context": "Continuing dashboard improvement after fixing CAPS reference chart",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-04T20:42:22.250Z",
+      "lastVerified": "2025-08-04T20:42:22.250Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1754340249538_ekj0xgjp0",
+      "content": "Successfully improved bar charts: increased height from h-24 to h-40, added comprehensive Tooltip with hover interactions showing values and category names, removed all .slice(0,5) limitations to show all categories, expanded color palettes to support more categories, and improved chart margins and labels. Build completed successfully.",
+      "type": "general",
+      "tags": [
+        "general",
+        "dashboard",
+        "charts",
+        "bar-charts",
+        "tooltips",
+        "completed"
+      ],
+      "timestamp": "2025-08-04T20:44:09.538Z",
+      "context": "Dashboard bar chart improvements completed",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-04T20:44:09.538Z",
+      "lastVerified": "2025-08-04T20:44:09.538Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1754340908182_5h3ngevx3",
+      "content": "Completed category name improvements: removed all text truncation (name.substring(...) + '...') from CAPS, procedência, gender+diagnosis, and age+diagnosis functions. Also removed 'Categoria:' prefix from tooltip labels. Now shows full category names without truncation and cleaner tooltip labels.",
+      "type": "general",
+      "tags": [
+        "general",
+        "dashboard",
+        "charts",
+        "category-names",
+        "tooltips",
+        "completed"
+      ],
+      "timestamp": "2025-08-04T20:55:08.182Z",
+      "context": "Dashboard category names improvement completed",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-04T20:55:08.182Z",
+      "lastVerified": "2025-08-04T20:55:08.182Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1754343821753_ocz5opbww",
+      "content": "Completed chart improvements: expanded category names in bottom legend (removed truncate max-w-24 class), added interactive pie chart highlighting with hover effects (stroke borders, opacity changes, cursor pointer), and added tooltips to pie charts with modern styling. Build successful.",
+      "type": "code",
+      "tags": [
+        "code",
+        "dashboard",
+        "charts",
+        "pie-charts",
+        "legend",
+        "interactivity",
+        "completed"
+      ],
+      "timestamp": "2025-08-04T21:43:41.753Z",
+      "context": "Dashboard chart legend and pie chart interactivity improvements",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-04T21:43:41.753Z",
+      "lastVerified": "2025-08-04T21:43:41.753Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1754344169840_g842t4t73",
+      "content": "Fixed two major issues: 1) Added expandable categories feature - charts now show button to expand/collapse additional categories beyond first 3, with smooth toggle. 2) Fixed gender distribution chart by adding filter for empty values and using consistent color format (#hex instead of hsl). Build completed successfully.",
+      "type": "solution",
+      "tags": [
+        "solution",
+        "dashboard",
+        "charts",
+        "expandable",
+        "gender-distribution",
+        "fix",
+        "completed"
+      ],
+      "timestamp": "2025-08-04T21:49:29.840Z",
+      "context": "Chart expandable categories and gender distribution fix",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-04T21:49:29.840Z",
+      "lastVerified": "2025-08-04T21:49:29.840Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1754346908686_3p8uble20",
+      "content": "User wants to change the Supabase project data source and needs explanation of how each page is structured and which tables they use",
+      "type": "general",
+      "tags": [
+        "general",
+        "supabase",
+        "database",
+        "migration",
+        "project-structure"
+      ],
+      "timestamp": "2025-08-04T22:35:08.686Z",
+      "context": "Database migration/change project request",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-04T22:35:08.686Z",
+      "lastVerified": "2025-08-04T22:35:08.686Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1754347146580_tyi687oh0",
+      "content": "User asking for the column names of the pacientes_planalto table from the database types",
+      "type": "general",
+      "tags": [
+        "general",
+        "database",
+        "columns",
+        "pacientes_planalto",
+        "structure"
+      ],
+      "timestamp": "2025-08-04T22:39:06.580Z",
+      "context": "Database structure inquiry",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-04T22:39:06.580Z",
+      "lastVerified": "2025-08-04T22:39:06.580Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1754348029574_awucj5dg4",
+      "content": "User changed Supabase project URL to adflbecauskrafqsdorq.supabase.co and updated the API key. Need to verify if the configuration is correct.",
+      "type": "config",
+      "tags": [
+        "config",
+        "api",
+        "supabase",
+        "migration",
+        "configuration",
+        "verification"
+      ],
+      "timestamp": "2025-08-04T22:53:49.574Z",
+      "context": "Supabase project migration verification",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-04T22:53:49.574Z",
+      "lastVerified": "2025-08-04T22:53:49.574Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1754348102722_czrdhqcch",
+      "content": "User needs to fix gender distribution chart to include MASC, FEM, and OUTROS categories instead of just MASC and FEM",
+      "type": "troubleshooting",
+      "tags": [
+        "troubleshooting",
+        "dashboard",
+        "gender-chart",
+        "bug-fix",
+        "categories"
+      ],
+      "timestamp": "2025-08-04T22:55:02.722Z",
+      "context": "Gender chart fix for all categories",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-04T22:55:02.722Z",
+      "lastVerified": "2025-08-04T22:55:02.722Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1754348138740_zpufxw4kq",
+      "content": "Fixed gender distribution chart to include all three categories: masc -> Masculino, fem -> Feminino, outros -> Outros. Updated to lowercase values and added orange color for 'Outros' category. Build successful.",
+      "type": "solution",
+      "tags": [
+        "solution",
+        "dashboard",
+        "gender-chart",
+        "fix",
+        "completed",
+        "categories"
+      ],
+      "timestamp": "2025-08-04T22:55:38.740Z",
+      "context": "Gender chart fix completed",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-04T22:55:38.740Z",
+      "lastVerified": "2025-08-04T22:55:38.740Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1754348308286_mnn28u4ha",
+      "content": "Fixed pie chart tooltips to properly show category names on hover. Improved tooltip configuration with active=true, better styling, wrapperStyle outline:none, and enhanced labelFormatter to display category names clearly when hovering over pie slices.",
+      "type": "config",
+      "tags": [
+        "config",
+        "dashboard",
+        "pie-charts",
+        "tooltips",
+        "hover",
+        "completed"
+      ],
+      "timestamp": "2025-08-04T22:58:28.286Z",
+      "context": "Pie chart tooltip improvement",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-04T22:58:28.286Z",
+      "lastVerified": "2025-08-04T22:58:28.286Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1754348407431_rjiind9vj",
+      "content": "Fixed bar chart colors to match legend by replacing fixed blue gradient with individual Cell components that use each entry's specific color. Now bar colors correspond exactly with legend colors.",
+      "type": "solution",
+      "tags": [
+        "solution",
+        "dashboard",
+        "bar-charts",
+        "colors",
+        "legend",
+        "fix",
+        "completed"
+      ],
+      "timestamp": "2025-08-04T23:00:07.431Z",
+      "context": "Bar chart color matching fix",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-04T23:00:07.431Z",
+      "lastVerified": "2025-08-04T23:00:07.431Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1754348507143_0mb3w0hzz",
+      "content": "Removed legend from bar charts due to long category names causing display issues. Now only pie charts show the expandable legend below, while bar charts rely on tooltips and X-axis labels for category identification.",
+      "type": "general",
+      "tags": [
+        "general",
+        "dashboard",
+        "bar-charts",
+        "legends",
+        "ui-improvement",
+        "completed"
+      ],
+      "timestamp": "2025-08-04T23:01:47.143Z",
+      "context": "Bar chart legend removal",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-04T23:01:47.143Z",
+      "lastVerified": "2025-08-04T23:01:47.143Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1754348640687_8jarzfo7c",
+      "content": "Fixed bar chart display by reverting legend removal and instead removing X-axis labels that were causing display issues with long category names. Now bar charts have clean axes (no labels) but retain the expandable legend below for category identification.",
+      "type": "solution",
+      "tags": [
+        "solution",
+        "dashboard",
+        "bar-charts",
+        "x-axis",
+        "labels",
+        "legends",
+        "fix",
+        "completed"
+      ],
+      "timestamp": "2025-08-04T23:04:00.687Z",
+      "context": "Bar chart labels removal fix",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-04T23:04:00.687Z",
+      "lastVerified": "2025-08-04T23:04:00.687Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1754348824913_o9tr7nxg4",
+      "content": "Successfully implemented expanded color palette with 20 diverse colors for multi-category charts and added capitalization function to all category names. Color palette includes blues, greens, oranges, purples, reds and various tones. All chart functions now capitalize first letter of category names for better presentation.",
+      "type": "code",
+      "tags": [
+        "code",
+        "dashboard",
+        "colors",
+        "capitalization",
+        "charts",
+        "palette",
+        "completed"
+      ],
+      "timestamp": "2025-08-04T23:07:04.913Z",
+      "context": "Color palette expansion and capitalization implementation",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-04T23:07:04.913Z",
+      "lastVerified": "2025-08-04T23:07:04.913Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1754348928713_89qyrfaof",
+      "content": "Changed tooltip styling from dark theme to light theme with white background, gray text, and added text wrapping properties for long category names. Tooltips now have maxWidth 250px with proper word wrapping and whiteSpace normal for better readability.",
+      "type": "general",
+      "tags": [
+        "general",
+        "dashboard",
+        "tooltips",
+        "styling",
+        "light-theme",
+        "text-wrapping",
+        "completed"
+      ],
+      "timestamp": "2025-08-04T23:08:48.713Z",
+      "context": "Tooltip styling improvement - light theme and text wrapping",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-04T23:08:48.713Z",
+      "lastVerified": "2025-08-04T23:08:48.713Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1754349093149_nhl4uuvrv",
+      "content": "Fixed CAPS Principais chart that was buggy by converting from RadialChart to MiniChart with pie type. The issue was using RadialChart component which had rendering problems, now uses consistent MiniChart with proper data transformation and percentage calculation.",
+      "type": "troubleshooting",
+      "tags": [
+        "troubleshooting",
+        "dashboard",
+        "caps-chart",
+        "bug-fix",
+        "pie-chart",
+        "radial-chart",
+        "completed"
+      ],
+      "timestamp": "2025-08-04T23:11:33.149Z",
+      "context": "CAPS Principais chart bug fix",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-04T23:11:33.149Z",
+      "lastVerified": "2025-08-04T23:11:33.149Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1754349181186_i6xud7eyx",
+      "content": "Added category name display on hover for pie charts. When hovering over pie slices, a centered label appears with the category name in a white rounded box with backdrop blur. This works in addition to the existing tooltips, providing immediate visual feedback.",
+      "type": "general",
+      "tags": [
+        "general",
+        "dashboard",
+        "pie-charts",
+        "hover",
+        "labels",
+        "category-names",
+        "completed"
+      ],
+      "timestamp": "2025-08-04T23:13:01.186Z",
+      "context": "Pie chart hover labels implementation",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-04T23:13:01.186Z",
+      "lastVerified": "2025-08-04T23:13:01.186Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1754349314369_8tf705liy",
+      "content": "Unified pie chart hover display by combining category name and percentage in single centered overlay. Removed separate tooltip component and now shows both name and percentage together in a clean white box with backdrop blur when hovering over pie slices.",
+      "type": "general",
+      "tags": [
+        "general",
+        "dashboard",
+        "pie-charts",
+        "hover",
+        "unified-display",
+        "tooltip",
+        "completed"
+      ],
+      "timestamp": "2025-08-04T23:15:14.369Z",
+      "context": "Unified pie chart hover display",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-04T23:15:14.369Z",
+      "lastVerified": "2025-08-04T23:15:14.369Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1754349421512_rg3su7y1s",
+      "content": "Implemented dynamic hover positioning for pie charts based on mouse position. Hover display now follows mouse cursor with intelligent positioning: appears to the right of cursor by default, flips to left when near right edge, and stays within chart boundaries to avoid covering the chart itself.",
+      "type": "warning",
+      "tags": [
+        "warning",
+        "dashboard",
+        "pie-charts",
+        "hover",
+        "dynamic-positioning",
+        "mouse-tracking",
+        "completed"
+      ],
+      "timestamp": "2025-08-04T23:17:01.512Z",
+      "context": "Dynamic hover positioning implementation",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-04T23:17:01.512Z",
+      "lastVerified": "2025-08-04T23:17:01.512Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1754349584909_ulhs42k47",
+      "content": "Need to capitalize first letter of person names and disorder names on the internações (hospitalizations) page",
+      "type": "general",
+      "tags": [
+        "general",
+        "formatting",
+        "internacoes",
+        "names",
+        "capitalize"
+      ],
+      "timestamp": "2025-08-04T23:19:44.909Z",
+      "context": "User request for PSI Analytics dashboard formatting",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-04T23:19:44.909Z",
+      "lastVerified": "2025-08-04T23:19:44.909Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1754349629459_tr0qp55cc",
+      "content": "Successfully implemented capitalization for patient names and disorder names in Reinternacoes.tsx. Added capitalizeWords function that capitalizes first letter of each word and applied it to patient.nome (line 347) and patient.admissions[0]?.cid_grupo (line 367)",
+      "type": "code",
+      "tags": [
+        "code",
+        "completed",
+        "capitalization",
+        "reinternacoes",
+        "formatting"
+      ],
+      "timestamp": "2025-08-04T23:20:29.459Z",
+      "context": "PSI Analytics dashboard formatting completed",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-04T23:20:29.459Z",
+      "lastVerified": "2025-08-04T23:20:29.459Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1754349700163_8lph5gj14",
+      "content": "Added capitalization to internation location (caps_referencia) in Reinternacoes.tsx at line 373. Now all three fields display with proper capitalization: patient names, disorder names, and internation locations.",
+      "type": "general",
+      "tags": [
+        "general",
+        "completed",
+        "capitalization",
+        "caps_referencia",
+        "location"
+      ],
+      "timestamp": "2025-08-04T23:21:40.163Z",
+      "context": "PSI Analytics dashboard formatting - caps_referencia capitalization completed",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-04T23:21:40.163Z",
+      "lastVerified": "2025-08-04T23:21:40.163Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1754349807143_tz4hfluzi",
+      "content": "Modified capitalizeWords function to keep standalone 'i' letters as uppercase 'I' for Roman numerals in location names. The function now checks if a word is exactly 'i' and converts it to 'I' while keeping normal capitalization for other words.",
+      "type": "code",
+      "tags": [
+        "code",
+        "completed",
+        "roman-numerals",
+        "capitalization",
+        "location-names"
+      ],
+      "timestamp": "2025-08-04T23:23:27.143Z",
+      "context": "PSI Analytics dashboard - Roman numeral formatting for location names",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-04T23:23:27.143Z",
+      "lastVerified": "2025-08-04T23:23:27.143Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1754349874486_2b4ybgyrf",
+      "content": "Updated capitalizeWords function to handle all Roman numerals (I, II, III, IV, V, VI, VII, VIII, IX, X, etc.) using regex pattern. Now Hospital II, Caps III, etc. will have the Roman numerals properly capitalized while keeping normal capitalization for other words.",
+      "type": "code",
+      "tags": [
+        "code",
+        "completed",
+        "roman-numerals",
+        "regex",
+        "capitalization",
+        "hospital-names"
+      ],
+      "timestamp": "2025-08-04T23:24:34.486Z",
+      "context": "PSI Analytics dashboard - Complete Roman numeral support for location names",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-04T23:24:34.486Z",
+      "lastVerified": "2025-08-04T23:24:34.486Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1754349969832_ie9g3qevy",
+      "content": "Created separate capitalization functions: capitalizeWords() for simple first-letter capitalization (used for names and diagnoses) and capitalizeLocation() for location names with Roman numeral support. Applied capitalizeLocation to caps_referencia field and kept capitalizeWords for patient names and diagnoses.",
+      "type": "general",
+      "tags": [
+        "general",
+        "completed",
+        "capitalization",
+        "functions",
+        "location",
+        "diagnosis"
+      ],
+      "timestamp": "2025-08-04T23:26:09.832Z",
+      "context": "PSI Analytics dashboard - Separate capitalization logic for different field types",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-04T23:26:09.832Z",
+      "lastVerified": "2025-08-04T23:26:09.832Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1754350058579_43azmrqzf",
+      "content": "Projeto PSI Analytics já tem suporte ao modo escuro configurado:\n- Tailwind configurado com darkMode: [\"class\"] \n- CSS em index.css tem variáveis para :root (claro) e .dark (escuro)\n- Paleta de cores completa para ambos os temas definida\n- Precisamos apenas criar contexto de tema e toggle de interface",
+      "type": "code",
+      "tags": [
+        "code",
+        "projeto-estrutura",
+        "modo-escuro",
+        "tailwind"
+      ],
+      "timestamp": "2025-08-04T23:27:38.579Z",
+      "context": "Análise da estrutura atual do projeto para implementar seletor de modo escuro",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-04T23:27:38.579Z",
+      "lastVerified": "2025-08-04T23:27:38.579Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1754350140080_750s8bofg",
+      "content": "Modo escuro implementado com sucesso para PSI Analytics:\n1. ThemeContext criado com localStorage e detecção de preferência do sistema\n2. ThemeToggle component com ícones de Sol/Lua \n3. Integrado no App.tsx e DashboardHeader.tsx\n4. Servidor roda na porta 8082 (8080 e 8081 ocupadas)\n5. Toggle funcional no header ao lado dos outros botões",
+      "type": "tip",
+      "tags": [
+        "tip",
+        "modo-escuro",
+        "implementado",
+        "theme-toggle",
+        "sucesso"
+      ],
+      "timestamp": "2025-08-04T23:29:00.080Z",
+      "context": "Implementação completa do sistema de modo escuro",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-04T23:29:00.080Z",
+      "lastVerified": "2025-08-04T23:29:00.080Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1754350251555_teuh58akd",
+      "content": "Ajustes de modo escuro na página Reinternações implementados:\n1. Fundo principal: dark:from-gray-950 dark:via-gray-900 dark:to-gray-800\n2. Títulos H1 e H2: dark:text-gray-100 \n3. Subtítulos: dark:text-gray-300\n4. Cards: dark:from-gray-900 dark:to-gray-800/50\n5. Bordas: dark:ring-gray-700/50\n6. Textos gerais: text-foreground (usa variáveis CSS automáticas)\n7. Nomes de pacientes e localizações: text-foreground",
+      "type": "general",
+      "tags": [
+        "general",
+        "reinternacoes",
+        "modo-escuro",
+        "cores",
+        "ajustes"
+      ],
+      "timestamp": "2025-08-04T23:30:51.555Z",
+      "context": "Ajustes de cores para modo escuro na página Reinternações",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-04T23:30:51.555Z",
+      "lastVerified": "2025-08-04T23:30:51.555Z",
+      "status": "fresh"
+    }
+  ],
+  "lastUpdated": "2025-08-04T23:30:51.555Z"
+}

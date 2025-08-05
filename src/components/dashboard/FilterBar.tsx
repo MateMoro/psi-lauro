@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Filter } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Filter, X, ChevronUp, ChevronDown } from "lucide-react";
 
 interface FilterBarProps {
   onFiltersChange: (filters: DashboardFilters) => void;
@@ -24,6 +25,7 @@ export interface DashboardFilters {
 
 export function FilterBar({ onFiltersChange, availableCaps, availableProcedencias, availableDiagnoses, availableCores }: FilterBarProps) {
   const [filters, setFilters] = useState<DashboardFilters>({});
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const updateFilters = (newFilters: Partial<DashboardFilters>) => {
     const updatedFilters = { ...filters, ...newFilters };
@@ -36,15 +38,86 @@ export function FilterBar({ onFiltersChange, availableCaps, availableProcedencia
     onFiltersChange({});
   };
 
+  const removeFilter = (filterKey: keyof DashboardFilters) => {
+    const updatedFilters = { ...filters };
+    delete updatedFilters[filterKey];
+    setFilters(updatedFilters);
+    onFiltersChange(updatedFilters);
+  };
+
+  // Count active filters
+  const activeFiltersCount = useMemo(() => {
+    return Object.values(filters).filter(value => value !== undefined && value !== "").length;
+  }, [filters]);
+
+  // Get filter display labels
+  const getFilterLabel = (key: keyof DashboardFilters, value: string) => {
+    switch (key) {
+      case 'genero':
+        return value === 'MASC' ? 'Masculino' : value === 'FEM' ? 'Feminino' : value;
+      case 'faixaEtaria':
+        return `${value} anos`;
+      case 'capsReferencia':
+        return `CAPS: ${value}`;
+      case 'procedencia':
+        return `Proc: ${value.length > 20 ? value.substring(0, 20) + '...' : value}`;
+      case 'patologia':
+        return `Pat: ${value.length > 20 ? value.substring(0, 20) + '...' : value}`;
+      case 'cor':
+        return `Cor: ${value}`;
+      default:
+        return value;
+    }
+  };
+
   return (
     <Card className="shadow-medium mb-6">
       <CardHeader className="pb-4">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <Filter className="h-5 w-5 text-primary" />
-          Filtros Dinâmicos
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Filter className="h-5 w-5 text-primary" />
+            Filtros Dinâmicos
+            {activeFiltersCount > 0 && (
+              <Badge variant="secondary" className="ml-2">
+                {activeFiltersCount} ativo{activeFiltersCount > 1 ? 's' : ''}
+              </Badge>
+            )}
+          </CardTitle>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="md:hidden"
+            onClick={() => setIsCollapsed(!isCollapsed)}
+          >
+            {isCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+          </Button>
+        </div>
+        
+        {/* Active Filters Display */}
+        {activeFiltersCount > 0 && (
+          <div className="flex flex-wrap gap-2 mt-3">
+            {Object.entries(filters).map(([key, value]) => {
+              if (!value) return null;
+              return (
+                <Badge
+                  key={key}
+                  variant="outline"
+                  className="flex items-center gap-1 px-2 py-1"
+                >
+                  {getFilterLabel(key as keyof DashboardFilters, value)}
+                  <button
+                    onClick={() => removeFilter(key as keyof DashboardFilters)}
+                    className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              );
+            })}
+          </div>
+        )}
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className={`space-y-4 ${isCollapsed ? 'hidden md:block' : ''}`}>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
           {/* CAPS Filter */}
           <div className="space-y-2">
@@ -185,7 +258,13 @@ export function FilterBar({ onFiltersChange, availableCaps, availableProcedencia
         </div>
 
         <div className="flex justify-end">
-          <Button variant="outline" onClick={clearFilters} className="text-sm">
+          <Button 
+            variant="outline" 
+            onClick={clearFilters} 
+            className="text-sm hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 transition-all duration-200"
+            disabled={activeFiltersCount === 0}
+          >
+            <X className="h-4 w-4 mr-2" />
             Limpar Filtros
           </Button>
         </div>

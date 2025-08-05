@@ -15,70 +15,93 @@ export default function Index() {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-background/95 flex items-center justify-center p-4 md:p-6 lg:p-8">
-      <div className="w-full max-w-2xl space-y-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-emerald-50/20 flex items-center justify-center p-6">
+      <div className="w-full max-w-6xl space-y-12">
+        
+        {/* Header Section */}
+        <div className="text-center mb-12">
+          <div className="flex items-center justify-center gap-4 mb-6">
+            <div className="p-4 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 rounded-3xl shadow-2xl shadow-blue-500/25">
+              <Stethoscope className="h-12 w-12 text-white drop-shadow-sm" />
+            </div>
+          </div>
+          <h1 className="text-5xl font-black text-slate-800 tracking-tight mb-4">
+            PSI Analytics
+          </h1>
+          <p className="text-xl text-slate-600 font-medium max-w-3xl mx-auto">
+            Sistema de análise de internações psiquiátricas do Hospital Planalto
+          </p>
+        </div>
+
         {/* Information Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto mb-8">
-          <Card className="group hover:shadow-large transition-all duration-300 border-2 hover:border-primary/30 bg-gradient-to-br from-card to-card/95">
-            <div className="p-6 space-y-4">
-              <div className="flex items-center space-x-3">
-                <span className="text-2xl">🧭</span>
-                <h3 className="text-xl font-bold text-primary">Objetivo do sistema</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <Card className="group transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl border-0 bg-gradient-to-br from-white to-slate-50/50 shadow-xl backdrop-blur-sm ring-1 ring-slate-200/50 rounded-2xl">
+            <div className="p-8 space-y-6">
+              <div className="flex items-center space-x-4">
+                <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-lg">
+                  <span className="text-2xl">📊</span>
+                </div>
+                <h3 className="text-2xl font-black text-slate-800 tracking-tight">Objetivo do Sistema</h3>
               </div>
-              <p className="text-muted-foreground leading-relaxed text-sm">
-                Este aplicativo foi desenvolvido para permitir o acompanhamento técnico e analítico das internações psiquiátricas do Hospital Planalto. Focado em indicadores clínico-administrativos, ele apoia a gestão da assistência, identifica padrões relevantes (como reinternações, tempo médio de internação e perfil clínico) e orienta melhorias em articulação com a Rede de Atenção Psicossocial (RAPS).
+              <p className="text-slate-600 leading-relaxed font-medium">
+                Acompanhamento técnico e analítico das internações psiquiátricas. Focado em indicadores clínico-administrativos, apoia a gestão da assistência e orienta melhorias em articulação com a Rede de Atenção Psicossocial (RAPS).
               </p>
             </div>
           </Card>
 
-          <Card className="group hover:shadow-large transition-all duration-300 border-2 hover:border-primary/30 bg-gradient-to-br from-card to-card/95">
-            <div className="p-6 space-y-4">
-              <div className="flex items-center space-x-3">
-                <span className="text-2xl">🧪</span>
-                <h3 className="text-xl font-bold text-primary">Metodologia e fonte dos dados</h3>
+          <Card className="group transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl border-0 bg-gradient-to-br from-white to-slate-50/50 shadow-xl backdrop-blur-sm ring-1 ring-slate-200/50 rounded-2xl">
+            <div className="p-8 space-y-6">
+              <div className="flex items-center space-x-4">
+                <div className="p-3 bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl shadow-lg">
+                  <span className="text-2xl">🔬</span>
+                </div>
+                <h3 className="text-2xl font-black text-slate-800 tracking-tight">Metodologia</h3>
               </div>
-              <p className="text-muted-foreground leading-relaxed text-sm">
-                Dados extraídos da base de internações da Enfermaria Psiquiátrica do Hospital Planalto. Seu foco é a análise institucional retroativa, com finalidade técnica e gerencial, oferecendo subsídios para qualificação do cuidado em saúde mental.
+              <p className="text-slate-600 leading-relaxed font-medium">
+                Dados extraídos da Enfermaria Psiquiátrica do Hospital Planalto. Análise institucional retroativa com finalidade técnica e gerencial para qualificação do cuidado em saúde mental.
               </p>
             </div>
           </Card>
 
-          <Card className="group hover:shadow-large transition-all duration-300 border-2 hover:border-primary/30 bg-gradient-to-br from-card to-card/95">
-            <div className="p-6 space-y-4">
-              <div className="flex items-center space-x-3">
-                <span className="text-2xl">📅</span>
-                <h3 className="text-xl font-bold text-primary">Período dos dados</h3>
+          <Card className="group transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl border-0 bg-gradient-to-br from-white to-slate-50/50 shadow-xl backdrop-blur-sm ring-1 ring-slate-200/50 rounded-2xl">
+            <div className="p-8 space-y-6">
+              <div className="flex items-center space-x-4">
+                <div className="p-3 bg-gradient-to-br from-orange-500 to-amber-600 rounded-2xl shadow-lg">
+                  <span className="text-2xl">📅</span>
+                </div>
+                <h3 className="text-2xl font-black text-slate-800 tracking-tight">Período dos Dados</h3>
               </div>
-              <p className="text-muted-foreground leading-relaxed text-sm">
-                O painel abrange internações entre 11/06/2024 e 24/07/2025.
+              <p className="text-slate-600 leading-relaxed font-medium">
+                Internações entre <strong>11/06/2024</strong> e <strong>24/07/2025</strong>
               </p>
             </div>
           </Card>
 
-          <Card className="group hover:shadow-large transition-all duration-300 border-2 hover:border-primary/30 bg-gradient-to-br from-card to-card/95">
-            <div className="p-6 space-y-4">
-              <div className="flex items-center space-x-3">
-                <span className="text-2xl">🔄</span>
-                <h3 className="text-xl font-bold text-primary">Versão do sistema</h3>
+          <Card className="group transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl border-0 bg-gradient-to-br from-white to-slate-50/50 shadow-xl backdrop-blur-sm ring-1 ring-slate-200/50 rounded-2xl">
+            <div className="p-8 space-y-6">
+              <div className="flex items-center space-x-4">
+                <div className="p-3 bg-gradient-to-br from-purple-500 to-violet-600 rounded-2xl shadow-lg">
+                  <span className="text-2xl">⚡</span>
+                </div>
+                <h3 className="text-2xl font-black text-slate-800 tracking-tight">Versão do Sistema</h3>
               </div>
-              <p className="text-muted-foreground leading-relaxed text-sm">
-                Versão 1.0<br />
-                Última atualização: 30/07/2025
+              <p className="text-slate-600 leading-relaxed font-medium">
+                <strong>Versão 1.0</strong><br />
+                Última atualização: <strong>30/07/2025</strong>
               </p>
             </div>
           </Card>
         </div>
 
-
         {/* Exit Button */}
-        <div className="flex justify-center pt-6">
+        <div className="flex justify-center pt-8">
           <Button 
             variant="outline" 
-            className="w-full max-w-sm text-muted-foreground border-muted-foreground/30 hover:bg-muted/20"
+            className="px-8 py-4 text-lg font-semibold text-slate-600 border-2 border-slate-300 hover:bg-slate-100 hover:border-slate-400 rounded-2xl transition-all duration-200 hover:scale-105"
             onClick={() => window.history.back()}
           >
-            <LogOut className="h-4 w-4 mr-2" />
-            Sair
+            <LogOut className="h-5 w-5 mr-3" />
+            Sair do Sistema
           </Button>
         </div>
       </div>

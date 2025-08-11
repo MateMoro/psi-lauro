@@ -1,4 +1,4 @@
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, PieChart, Pie, Cell, Tooltip, LineChart, Line, CartesianGrid } from 'recharts';
 import { Card, CardContent } from "@/components/ui/card";
 import { LucideIcon } from "lucide-react";
 import { useState } from 'react';
@@ -13,10 +13,14 @@ interface MiniChartProps {
   data: MiniChartData[];
   title: string;
   subtitle?: string;
-  type: 'bar' | 'pie';
+  type: 'bar' | 'pie' | 'line';
   icon?: LucideIcon;
   total?: number;
   className?: string;
+  showXAxisLabels?: boolean;
+  hideLegend?: boolean;
+  showGrid?: boolean;
+  showYAxis?: boolean;
 }
 
 export function MiniChart({ 
@@ -26,7 +30,11 @@ export function MiniChart({
   type, 
   icon: Icon,
   total,
-  className = ""
+  className = "",
+  showXAxisLabels = false,
+  hideLegend = false,
+  showGrid = false,
+  showYAxis = false
 }: MiniChartProps) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [showAllCategories, setShowAllCategories] = useState(false);
@@ -54,44 +62,44 @@ export function MiniChart({
     '#ea580c', // amber
   ];
 
-  // Helper function to capitalize first letter
-  const capitalizeFirst = (str: string): string => {
+  // Helper function to make text uppercase
+  const makeUppercase = (str: string): string => {
     if (!str) return str;
-    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+    return str.toUpperCase();
   };
 
   const chartData = data.map((item, index) => ({
     ...item,
-    name: capitalizeFirst(item.name),
+    name: makeUppercase(item.name),
     color: item.color || defaultColors[index % defaultColors.length]
   }));
 
   return (
-    <Card className={`transition-all duration-300 hover:shadow-xl hover:scale-[1.02] ${className} rounded-2xl border-0 bg-gradient-to-br from-slate-50 to-white shadow-lg backdrop-blur-sm ring-1 ring-slate-200/50`}>
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-3">
+    <Card className={`transition-all duration-300 lg:hover:shadow-xl lg:hover:scale-[1.02] ${className} rounded-xl lg:rounded-2xl border-0 bg-gradient-to-br from-slate-50 to-white shadow-lg backdrop-blur-sm ring-1 ring-slate-200/50`}>
+      <CardContent className="p-2 lg:p-3">
+        <div className="flex items-center justify-between mb-2 lg:mb-3">
+          <div className="flex items-center space-x-2 lg:space-x-3">
             {Icon && (
-              <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg">
-                <Icon className="h-4 w-4 text-white" />
+              <div className="p-1.5 lg:p-2 rounded-lg lg:rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg">
+                <Icon className="h-3 w-3 lg:h-4 lg:w-4 text-white" />
               </div>
             )}
             <div>
-              <h3 className="text-sm font-bold text-slate-800 tracking-wide">{title}</h3>
+              <h3 className="text-xs lg:text-sm font-bold text-slate-800 tracking-wide">{title}</h3>
               {subtitle && (
-                <p className="text-xs text-slate-500 font-medium">{subtitle}</p>
+                <p className="text-xs text-slate-500 font-medium hidden sm:block">{subtitle}</p>
               )}
             </div>
           </div>
           {total && (
             <div className="text-right">
-              <div className="text-2xl font-black text-slate-800 tracking-tight">{total}</div>
+              <div className="text-lg lg:text-2xl font-black text-slate-800 tracking-tight">{total}</div>
               <div className="text-xs text-slate-500 font-semibold uppercase tracking-wide">total</div>
             </div>
           )}
         </div>
         
-        <div className={`${type === 'pie' ? 'h-36' : 'h-40'} bg-gradient-to-r from-slate-50/50 to-white/50 rounded-xl p-2 backdrop-blur-sm relative`}
+        <div className={`${type === 'pie' ? 'h-36 lg:h-40' : hideLegend ? 'h-56 lg:h-72' : 'h-40 lg:h-48'} bg-gradient-to-r from-slate-50/50 to-white/50 rounded-lg lg:rounded-xl p-1 lg:p-1 backdrop-blur-sm relative`}
              onMouseMove={(e) => {
                if (type === 'pie' && hoveredData) {
                  const rect = e.currentTarget.getBoundingClientRect();
@@ -124,9 +132,9 @@ export function MiniChart({
               <BarChart data={chartData} margin={{ top: 10, right: 10, left: 10, bottom: 20 }}>
                 <XAxis 
                   dataKey="name" 
-                  tick={false}
+                  tick={showXAxisLabels ? { fontSize: 10, fill: '#64748b' } : false}
                   axisLine={false}
-                  height={0}
+                  height={showXAxisLabels ? 20 : 0}
                 />
                 <YAxis hide />
                 <Tooltip 
@@ -152,7 +160,7 @@ export function MiniChart({
                     maxWidth: '230px'
                   }}
                   formatter={(value: any, name: any) => [
-                    `${value}${typeof value === 'number' && value <= 100 ? '%' : ''}`, 
+                    `${value}${title.toLowerCase().includes('length of stay') || title.toLowerCase().includes('los') ? ' pacientes' : title.toLowerCase().includes('dia da semana') ? '' : (typeof value === 'number' && value <= 100 ? '%' : '')}`, 
                     'Valor'
                   ]}
                   labelFormatter={(label: any) => label}
@@ -166,6 +174,44 @@ export function MiniChart({
                   ))}
                 </Bar>
               </BarChart>
+            ) : type === 'line' ? (
+              <LineChart data={chartData} margin={{ top: 10, right: 15, left: 20, bottom: 20 }}>
+                {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />}
+                <XAxis 
+                  dataKey="name" 
+                  tick={{ fontSize: 10, fill: '#64748b' }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis 
+                  tick={showYAxis ? { fontSize: 10, fill: '#64748b' } : false}
+                  axisLine={false}
+                  tickLine={false}
+                  domain={['dataMin - 5', 'dataMax + 5']}
+                  tickFormatter={showYAxis ? (value) => `${value}%` : undefined}
+                />
+                <Tooltip 
+                  contentStyle={{
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    border: '1px solid rgba(148, 163, 184, 0.2)',
+                    borderRadius: '12px',
+                    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    color: '#1e293b',
+                    backdropFilter: 'blur(8px)'
+                  }}
+                  formatter={(value: any) => [`${value}%`, 'Taxa de Ocupação']}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="value" 
+                  stroke="#3b82f6" 
+                  strokeWidth={3}
+                  dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
+                  activeDot={{ r: 6, fill: '#1d4ed8' }}
+                />
+              </LineChart>
             ) : (
               <PieChart>
                 <Pie
@@ -208,31 +254,36 @@ export function MiniChart({
           </ResponsiveContainer>
         </div>
         
-        <div className="mt-4 space-y-2">
-          {(showAllCategories ? chartData : chartData.slice(0, 3)).map((item, index) => (
-            <div key={index} className="flex items-center justify-between p-2 rounded-lg bg-slate-50/50 backdrop-blur-sm">
-              <div className="flex items-center space-x-3">
-                <div 
-                  className="w-3 h-3 rounded-full shadow-sm ring-2 ring-white" 
-                  style={{ backgroundColor: item.color }}
-                />
-                <span className="text-xs font-semibold text-slate-700">{item.name}</span>
+        {!hideLegend && (
+          <div className="mt-2 space-y-1">
+            {(showAllCategories ? chartData : chartData.slice(0, 3)).map((item, index) => (
+              <div key={index} className="flex items-center justify-between p-2 rounded-lg bg-slate-50/50 backdrop-blur-sm">
+                <div className="flex items-center space-x-3">
+                  <div 
+                    className="w-3 h-3 rounded-full shadow-sm ring-2 ring-white" 
+                    style={{ backgroundColor: item.color }}
+                  />
+                  <span className="text-xs font-semibold text-slate-700">{item.name}</span>
+                </div>
+                <span className="text-sm font-bold text-slate-800">
+                  {typeof item.value === 'number' ? item.value.toFixed(1) : item.value}
+                  {title.toLowerCase().includes('length of stay') || title.toLowerCase().includes('los') ? ' pacientes' : title.toLowerCase().includes('dia da semana') ? '' : '%'}
+                </span>
               </div>
-              <span className="text-sm font-bold text-slate-800">{item.value}%</span>
-            </div>
-          ))}
-          {chartData.length > 3 && (
-            <button
-              onClick={() => setShowAllCategories(!showAllCategories)}
-              className="w-full text-xs text-slate-500 hover:text-slate-700 text-center font-medium pt-1 transition-colors duration-200 hover:bg-slate-100/50 rounded-lg py-2"
-            >
-              {showAllCategories 
-                ? `Mostrar menos` 
-                : `+${chartData.length - 3} categorias adicionais - clique para expandir`
-              }
-            </button>
-          )}
-        </div>
+            ))}
+            {chartData.length > 3 && (
+              <button
+                onClick={() => setShowAllCategories(!showAllCategories)}
+                className="w-full text-xs text-slate-500 hover:text-slate-700 text-center font-medium pt-1 transition-colors duration-200 hover:bg-slate-100/50 rounded-lg py-2"
+              >
+                {showAllCategories 
+                  ? `Mostrar menos` 
+                  : `+${chartData.length - 3} categorias adicionais - clique para expandir`
+                }
+              </button>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

@@ -69,34 +69,34 @@ export function MetricCard({
   const styles = getVariantStyles();
 
   return (
-    <Card className={`transition-all duration-300 hover:scale-[1.03] hover:-translate-y-1 ${styles.card} rounded-2xl overflow-hidden`}>
-      <CardContent className="p-6">
+    <Card className={`transition-all duration-300 lg:hover:scale-[1.03] lg:hover:-translate-y-1 ${styles.card} rounded-xl lg:rounded-2xl overflow-hidden`}>
+      <CardContent className="p-4 lg:p-6">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
-            <p className={`text-sm font-semibold tracking-wide uppercase truncate ${styles.title}`}>
+            <p className={`text-xs lg:text-sm font-semibold tracking-wide uppercase truncate ${styles.title}`}>
               {title}
             </p>
-            <div className={`text-3xl font-extrabold mt-2 tracking-tight ${styles.value}`}>
+            <div className={`text-xl sm:text-2xl lg:text-3xl font-extrabold mt-1 lg:mt-2 tracking-tight ${styles.value}`}>
               {value}
             </div>
             {description && (
-              <p className={`text-sm mt-2 font-medium ${styles.description}`}>
+              <p className={`text-xs lg:text-sm mt-1 lg:mt-2 font-medium ${styles.description}`}>
                 {description}
               </p>
             )}
             {trend && (
-              <div className={`flex items-center text-sm mt-3 ${
+              <div className={`flex items-center text-xs lg:text-sm mt-2 lg:mt-3 ${
                 trend.isPositive ? 'text-emerald-200' : 'text-red-200'
               }`}>
                 <span className="font-bold flex items-center">
                   {trend.isPositive ? '↗' : '↘'} {Math.abs(trend.value)}%
-                  <span className="ml-1 text-xs opacity-75">vs anterior</span>
+                  <span className="ml-1 text-xs opacity-75 hidden sm:inline">vs anterior</span>
                 </span>
               </div>
             )}
           </div>
-          <div className={`ml-4 p-3 rounded-xl ${variant !== 'default' ? 'bg-white/15 backdrop-blur-sm' : 'bg-slate-200'} ring-1 ring-white/10`}>
-            <Icon className={`h-6 w-6 ${styles.icon} drop-shadow-sm`} />
+          <div className={`ml-3 lg:ml-4 p-2 lg:p-3 rounded-lg lg:rounded-xl ${variant !== 'default' ? 'bg-white/15 backdrop-blur-sm' : 'bg-slate-200'} ring-1 ring-white/10`}>
+            <Icon className={`h-5 w-5 lg:h-6 lg:w-6 ${styles.icon} drop-shadow-sm`} />
           </div>
         </div>
       </CardContent>

@@ -1,5 +1,5 @@
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Bell, Settings, User } from "lucide-react";
+import { Bell, Settings, User, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -10,43 +10,23 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { ThemeToggle } from "@/components/ThemeToggle";
 export function DashboardHeader() {
   return (
-    <header className="h-18 sm:h-24 border-b border-border bg-card flex items-center justify-between px-2 sm:px-4 md:px-6 shadow-soft">
+    <header className="h-20 border-b border-slate-200/60 bg-gradient-to-r from-slate-50 to-white flex items-center justify-between px-6 shadow-sm sticky top-0 z-40 backdrop-blur-sm">
       <div className="flex items-center">
-        <SidebarTrigger className="text-muted-foreground hover:text-foreground mr-2 sm:mr-4" />
-      </div>
-      
-      <div className="text-center flex-1 px-1 sm:px-2 md:px-4 max-w-4xl">
-        <h1 className="font-bold text-primary tracking-tight leading-tight" 
-            style={{ fontSize: 'clamp(1.4rem, 3vw, 2rem)' }}>
-          <span className="block sm:inline">Painel de Internações Psiquiátricas</span>
-          <span className="hidden sm:inline"> – </span>
-          <span className="block sm:inline">Hospital Planalto</span>
-        </h1>
+        <SidebarTrigger className="text-slate-600 hover:text-slate-800 transition-colors" />
       </div>
 
-      <div className="flex items-center gap-1 sm:gap-2">
-        <ThemeToggle />
-        
-        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground h-7 w-7 sm:h-8 sm:w-8">
-          <Bell className="h-4 w-4" />
-        </Button>
-        
-        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground h-7 w-7 sm:h-8 sm:w-8">
-          <Settings className="h-4 w-4" />
-        </Button>
-
+      <div className="flex items-center gap-1 lg:gap-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="flex items-center gap-1 sm:gap-2 h-auto py-1 sm:py-2 px-2 sm:px-3">
-              <Avatar className="h-6 w-6 sm:h-8 sm:w-8">
-                <AvatarFallback className="bg-primary text-primary-foreground text-xs sm:text-sm">
+            <Button variant="ghost" size="sm" className="flex items-center gap-1 lg:gap-2 h-8 lg:h-10 px-2 lg:px-3">
+              <Avatar className="h-6 w-6 lg:h-8 lg:w-8">
+                <AvatarFallback className="bg-primary text-primary-foreground text-xs lg:text-sm">
                   U
                 </AvatarFallback>
               </Avatar>
-              <span className="text-xs sm:text-sm font-medium text-foreground hidden sm:inline">Usuário</span>
+              <span className="text-xs lg:text-sm font-medium text-foreground hidden sm:inline">Usuário</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">

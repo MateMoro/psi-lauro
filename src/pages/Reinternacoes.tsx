@@ -49,13 +49,13 @@ export default function Reinternacoes() {
 
       if (error) throw error;
 
-      // Group by patient name and identify readmissions
+      // Group by CNS instead of name to identify readmissions (fallback to name if CNS is null)
       const patientGroups = (data || []).reduce((acc, patient) => {
-        const name = patient.nome;
-        if (!acc[name]) {
-          acc[name] = [];
+        const identifier = patient.cns || patient.nome || 'unknown';
+        if (!acc[identifier]) {
+          acc[identifier] = [];
         }
-        acc[name].push({
+        acc[identifier].push({
           nome: patient.nome,
           caps_referencia: patient.caps_referencia,
           data_admissao: patient.data_admissao,
@@ -64,7 +64,7 @@ export default function Reinternacoes() {
           genero: patient.genero,
         });
         return acc;
-      }, {} as Record<string, PatientAdmission[]>);
+      }, {} as Record<string | number, PatientAdmission[]>);
 
       // Filter patients with multiple admissions and calculate intervals
       const readmissionData: ReadmissionPatient[] = Object.entries(patientGroups)
@@ -151,22 +151,43 @@ export default function Reinternacoes() {
   const calculateReadmissionRate = (days: number) => {
     if (readmissions.length === 0) return "0.0";
 
-    const totalPatients = readmissions.length;
+    // Calculate rate based on total discharges, not total patients
+    let totalDischarges = 0;
     let readmissionCount = 0;
 
     readmissions.forEach(patient => {
-      if (days === 31) { // > 30 days
-        if (patient.averageInterval > 30) {
-          readmissionCount++;
-        }
-      } else { // <= days
-        if (patient.averageInterval <= days && patient.averageInterval > 0) {
-          readmissionCount++;
+      // Count discharges for this patient
+      const discharges = patient.admissions.filter(adm => adm.data_alta).length;
+      totalDischarges += discharges;
+      
+      // Count readmissions based on the new criteria
+      const sortedAdmissions = patient.admissions.sort((a, b) => 
+        new Date(a.data_admissao).getTime() - new Date(b.data_admissao).getTime()
+      );
+      
+      const datas_alta = sortedAdmissions
+        .map(adm => adm.data_alta)
+        .filter(alta => alta !== null && alta !== undefined);
+      const datas_adm = sortedAdmissions.map(adm => adm.data_admissao);
+      
+      for (let i = 0; i < datas_alta.length - 1; i++) {
+        const altatTime = new Date(datas_alta[i]).getTime();
+        const nextAdmTime = new Date(datas_adm[i + 1]).getTime();
+        const daysBetween = (nextAdmTime - altatTime) / (1000 * 60 * 60 * 24);
+        
+        if (days === 31) { // > 30 days
+          if (daysBetween > 30) {
+            readmissionCount++;
+          }
+        } else { // <= days
+          if (daysBetween <= days && daysBetween > 0) {
+            readmissionCount++;
+          }
         }
       }
     });
 
-    const rate = (readmissionCount / totalPatients) * 100;
+    const rate = totalDischarges > 0 ? (readmissionCount / totalDischarges) * 100 : 0;
     return rate % 1 === 0 ? rate.toString() : rate.toFixed(1);
   };
 

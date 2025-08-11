@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Clock, Users, RefreshCw, Calendar, Filter, Database, MapPin, Building2, Palette, UserCheck } from "lucide-react";
+import { Clock, Users, RefreshCw, Calendar, Filter, Database, MapPin, Building2, Palette, UserCheck, Bed, RotateCcw, CalendarX2, Stethoscope, Timer, BarChart3 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { PatientSearch } from "@/components/dashboard/PatientSearch";
@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { CustomPieChart } from "@/components/dashboard/charts/PieChart";
 import { VerticalBarChart } from "@/components/dashboard/charts/VerticalBarChart";
 import { HorizontalBarChart } from "@/components/dashboard/charts/HorizontalBarChart";
+import { DischargesByWeekdayChart } from "@/components/dashboard/charts/DischargesByWeekdayChart";
 import { MiniChart } from "@/components/dashboard/MiniChart";
 import { RadialChart } from "@/components/dashboard/RadialChart";
 import { useToast } from "@/hooks/use-toast";
@@ -24,15 +25,19 @@ interface Patient {
   dias_internacao: number;
   procedencia: string;
   raca_cor: string;
+  transtorno_categoria: string;
+  dia_semana_alta?: number;
 }
 
 export default function Dashboard() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
+  const [weekdayDischarges, setWeekdayDischarges] = useState<Array<{name: string, value: number, percentage: number}>>([]);
   const { toast } = useToast();
 
   useEffect(() => {
     fetchPatients();
+    fetchWeekdayDischarges();
   }, []);
 
   const fetchPatients = async () => {
@@ -56,6 +61,47 @@ export default function Dashboard() {
     }
   };
 
+  const fetchWeekdayDischarges = async () => {
+    try {
+      const { data: rawData, error } = await supabase
+        .from('pacientes_planalto')
+        .select('dia_semana_alta')
+        .not('dia_semana_alta', 'is', null);
+
+      if (error) throw error;
+
+      // Mapear dias da semana em português - dia_semana_alta: 1=Segunda, 2=Terça, ..., 7=Domingo
+      const weekdayNames = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+      const counts = Array(7).fill(0);
+
+      rawData?.forEach(patient => {
+        const dayIndex = patient.dia_semana_alta - 1; // Converter de 1-7 para 0-6
+        if (dayIndex >= 0 && dayIndex < 7) {
+          counts[dayIndex]++;
+        }
+      });
+
+      const total = counts.reduce((sum, count) => sum + count, 0);
+      const result = weekdayNames.map((name, index) => ({
+        name,
+        value: counts[index],
+        percentage: total > 0 ? Math.round((counts[index] / total) * 100) : 0
+      }));
+
+      setWeekdayDischarges(result);
+      
+      // Debug log
+      console.log('Weekday discharge counts (using dia_semana_alta column):');
+      result.forEach(item => {
+        console.log(`${item.name}: ${item.value}`);
+      });
+      console.log('Expected: Segunda=91, Terça=68, Quarta=75, Quinta=61, Sexta=63, Sábado=20, Domingo=12');
+
+    } catch (error) {
+      console.error('Erro ao buscar dados por dia da semana:', error);
+    }
+  };
+
 
   // Calculate metrics
   const calculateMetrics = () => {
@@ -65,52 +111,56 @@ export default function Dashboard() {
     const avgStayDays = patients.reduce((acc, p) => 
       acc + (p.dias_internacao || 0), 0) / totalPatients || 0;
     
-    // Group patients by name to identify readmissions
+    // Calculate 30-day readmission rate using correct algorithm (same as Python reference)
+    let reinternacoes = 0;
+    let altas_total = 0;
+
+    // Group patients by CNS only (not name fallback)
     const patientGroups = patients.reduce((acc, patient) => {
-      const name = patient.nome;
-      if (!acc[name]) {
-        acc[name] = [];
+      if (!patient.cns) return acc; // Skip patients without CNS
+      const identifier = patient.cns.toString();
+      if (!acc[identifier]) {
+        acc[identifier] = [];
       }
-      acc[name].push(patient);
+      acc[identifier].push(patient);
       return acc;
     }, {} as Record<string, Patient[]>);
-    
-  // Calculate total readmission rate for dashboard
-    let totalReadmissionEvents = 0;
-    let totalPatientsWithDischarge = 0;
-    
+
     Object.values(patientGroups).forEach(admissions => {
       const sortedAdmissions = admissions.sort((a, b) => 
         new Date(a.data_admissao).getTime() - new Date(b.data_admissao).getTime()
       );
       
-      // Count patients with at least one discharge (eligible for readmission)
-      const hasDischarge = sortedAdmissions.some(admission => admission.data_alta);
-      if (hasDischarge) {
-        totalPatientsWithDischarge++;
+      // Get all discharge dates (excluding null/undefined)
+      const datas_alta = sortedAdmissions
+        .map(admission => admission.data_alta)
+        .filter(alta => alta !== null && alta !== undefined);
+      
+      const datas_adm = sortedAdmissions.map(admission => admission.data_admissao);
+      
+      // Count readmissions: for each discharge that has a next admission
+      for (let i = 0; i < datas_alta.length - 1; i++) {
+        altas_total += 1;
+        const dischargeDate = new Date(datas_alta[i]);
+        const nextAdmissionDate = new Date(datas_adm[i + 1]);
+        
+        const daysBetween = Math.floor(
+          (nextAdmissionDate.getTime() - dischargeDate.getTime()) / (1000 * 60 * 60 * 24)
+        );
+        
+        if (daysBetween > 0 && daysBetween <= 30) {
+          reinternacoes++;
+        }
       }
       
-      if (admissions.length > 1) {
-        // Check intervals between consecutive admissions
-        for (let i = 1; i < sortedAdmissions.length; i++) {
-          const prevDischarge = sortedAdmissions[i-1].data_alta;
-          const currentAdmission = sortedAdmissions[i].data_admissao;
-          
-          if (prevDischarge && currentAdmission) {
-            const daysBetween = Math.abs(
-              (new Date(currentAdmission).getTime() - new Date(prevDischarge).getTime()) / (1000 * 60 * 60 * 24)
-            );
-            
-            if (daysBetween >= 0) {
-              totalReadmissionEvents++;
-            }
-          }
-        }
+      // Add the last discharge to total (if exists)
+      if (datas_alta.length > 0) {
+        altas_total += 1;
       }
     });
 
     // Calculate overall readmission rate
-    const readmissionRate = totalPatientsWithDischarge > 0 ? (totalReadmissionEvents / totalPatientsWithDischarge * 100) : 0;
+    const readmissionRate = altas_total > 0 ? (reinternacoes / altas_total * 100) : 0;
 
     return {
       totalPatients,
@@ -120,7 +170,155 @@ export default function Dashboard() {
     };
   };
 
-  // Prepare chart data
+  // New Advanced Metrics
+  const calculateAdvancedMetrics = () => {
+    // Taxa de Ocupação - 16 leitos na enfermaria
+    const totalCapacity = 16;
+    const currentOccupancy = patients.filter(p => !p.data_alta).length;
+    const occupancyRate = totalCapacity > 0 ? (currentOccupancy / totalCapacity * 100) : 0;
+
+    // Taxa de reinternação por período específico (7, 15, 30 dias)
+    const calculateReadmissionsByPeriod = (days: number) => {
+      let readmissions = 0;
+      let eligiblePatients = 0;
+
+      const patientGroups = patients.reduce((acc, patient) => {
+        const name = patient.nome;
+        if (!acc[name]) {
+          acc[name] = [];
+        }
+        acc[name].push(patient);
+        return acc;
+      }, {} as Record<string, Patient[]>);
+
+      Object.values(patientGroups).forEach(admissions => {
+        const sortedAdmissions = admissions.sort((a, b) => 
+          new Date(a.data_admissao).getTime() - new Date(b.data_admissao).getTime()
+        );
+
+        if (admissions.length > 1) {
+          for (let i = 1; i < sortedAdmissions.length; i++) {
+            const prevDischarge = sortedAdmissions[i-1].data_alta;
+            const currentAdmission = sortedAdmissions[i].data_admissao;
+            
+            if (prevDischarge && currentAdmission) {
+              const daysBetween = Math.abs(
+                (new Date(currentAdmission).getTime() - new Date(prevDischarge).getTime()) / (1000 * 60 * 60 * 24)
+              );
+              
+              eligiblePatients++;
+              if (daysBetween <= days) {
+                readmissions++;
+              }
+            }
+          }
+        }
+      });
+
+      return eligiblePatients > 0 ? (readmissions / eligiblePatients * 100) : 0;
+    };
+
+    const readmission7Days = calculateReadmissionsByPeriod(7);
+    const readmission15Days = calculateReadmissionsByPeriod(15);
+    const readmission30Days = calculateReadmissionsByPeriod(30);
+
+    // % de altas no fim de semana
+    const weekendDischarges = patients.filter(p => {
+      if (!p.data_alta) return false;
+      const dischargeDate = new Date(p.data_alta);
+      const dayOfWeek = dischargeDate.getDay();
+      return dayOfWeek === 0 || dayOfWeek === 6; // Sunday = 0, Saturday = 6
+    }).length;
+
+    const totalDischarges = patients.filter(p => p.data_alta).length;
+    const weekendDischargeRate = totalDischarges > 0 ? (weekendDischarges / totalDischarges * 100) : 0;
+
+    // Volume de interconsultas (simulado - mês atual)
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    const currentMonthPatients = patients.filter(p => {
+      if (!p.data_admissao) return false;
+      const admissionDate = new Date(p.data_admissao);
+      return admissionDate.getMonth() === currentMonth && admissionDate.getFullYear() === currentYear;
+    }).length;
+    
+    // Simulando que 30% dos pacientes do mês geram interconsultas
+    const interconsultationsVolume = Math.round(currentMonthPatients * 0.3);
+
+    // Tempo de resposta (simulado)
+    const responseTime60min = Math.round(Math.random() * 20 + 60); // 60-80%
+    const responseTime120min = Math.round(Math.random() * 15 + 85); // 85-100%
+
+    return {
+      occupancyRate: occupancyRate.toFixed(1),
+      readmission7Days: readmission7Days.toFixed(1),
+      readmission15Days: readmission15Days.toFixed(1),
+      readmission30Days: readmission30Days.toFixed(1),
+      weekendDischargeRate: weekendDischargeRate.toFixed(1),
+      interconsultationsVolume,
+      responseTime60min,
+      responseTime120min,
+      currentOccupancy,
+      totalCapacity
+    };
+  };
+
+  // Prepare chart data for mental disorders classification
+  const getMentalDisorders = () => {
+    const disorderCount = patients.reduce((acc, p) => {
+      const categoria = p.transtorno_categoria;
+      
+      // Skip if no category or "outros"
+      if (!categoria || categoria === 'outros') {
+        return acc;
+      }
+      
+      // Map categories to display names
+      let displayName = '';
+      switch (categoria) {
+        case 'esquizofrenia':
+          displayName = 'Esquizofrenia';
+          break;
+        case 'transtorno_bipolar':
+          displayName = 'Transtorno Bipolar';
+          break;
+        case 'substancias':
+          displayName = 'Substâncias';
+          break;
+        case 'depressivo_unipolar':
+          displayName = 'Depressivo Unipolar';
+          break;
+        case 'personalidade':
+          displayName = 'Personalidade';
+          break;
+        default:
+          return acc;
+      }
+      
+      acc[displayName] = (acc[displayName] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const total = Object.values(disorderCount).reduce((sum, count) => sum + count, 0);
+    const chartColors = [
+      "#0ea5e9", // sky blue - Esquizofrenia
+      "#10b981", // emerald green - Transtorno Bipolar
+      "#f97316", // orange - Substâncias
+      "#6366f1", // indigo - Depressivo Unipolar
+      "#14b8a6", // teal - Personalidade
+    ];
+
+    return Object.entries(disorderCount)
+      .sort(([,a], [,b]) => b - a)
+      .map(([name, count], index) => ({ 
+        name, 
+        value: total > 0 ? Number(((count / total) * 100).toFixed(1)) : 0,
+        count: count,
+        color: chartColors[index % chartColors.length] || "#6b7280"
+      }));
+  };
+
+  // Keep original function for other charts
   const getTopDiagnoses = () => {
     const diagnosisCount = patients.reduce((acc, p) => {
       let diagnosis = p.cid_grupo || 'Não informado';
@@ -284,7 +482,25 @@ export default function Dashboard() {
 
   const getRaceDistribution = () => {
     const raceCount = patients.reduce((acc, p) => {
-      const race = p.raca_cor || 'Não informado';
+      let race = p.raca_cor || 'Não informado';
+      
+      // Normalizar variações de "branco/branca"
+      if (race.toLowerCase() === 'branca' || race.toLowerCase() === 'branco') {
+        race = 'Branca';
+      }
+      // Normalizar variações de "pardo/parda"
+      else if (race.toLowerCase() === 'pardo' || race.toLowerCase() === 'parda') {
+        race = 'Parda';
+      }
+      // Normalizar variações de "preto/preta"
+      else if (race.toLowerCase() === 'preto' || race.toLowerCase() === 'preta') {
+        race = 'Preta';
+      }
+      // Capitalizar primeira letra para outras categorias
+      else if (race !== 'Não informado') {
+        race = race.charAt(0).toUpperCase() + race.slice(1).toLowerCase();
+      }
+      
       acc[race] = (acc[race] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
@@ -292,6 +508,7 @@ export default function Dashboard() {
     const colors = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#84cc16', '#eab308'];
     return Object.entries(raceCount)
       .sort(([,a], [,b]) => b - a)
+      .slice(0, 6)
       .map(([name, value], index) => ({ 
         name, 
         value, 
@@ -346,7 +563,60 @@ export default function Dashboard() {
       }));
   };
 
+  // Timeseries data functions
+  const getOccupancyTimeseries = () => {
+    const monthlyOccupancy: Record<string, { admissions: number; discharges: number; occupancy: number }> = {};
+    const totalCapacity = 16;
+
+    // Get last 12 months
+    const months = [];
+    for (let i = 11; i >= 0; i--) {
+      const date = new Date();
+      date.setMonth(date.getMonth() - i);
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      const monthName = date.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+      months.push({ key: monthKey, name: monthName });
+      monthlyOccupancy[monthKey] = { admissions: 0, discharges: 0, occupancy: 0 };
+    }
+
+    // Count admissions and discharges by month
+    patients.forEach(patient => {
+      if (patient.data_admissao) {
+        const admissionDate = new Date(patient.data_admissao);
+        const monthKey = `${admissionDate.getFullYear()}-${String(admissionDate.getMonth() + 1).padStart(2, '0')}`;
+        if (monthlyOccupancy[monthKey] !== undefined) {
+          monthlyOccupancy[monthKey].admissions++;
+        }
+      }
+
+      if (patient.data_alta) {
+        const dischargeDate = new Date(patient.data_alta);
+        const monthKey = `${dischargeDate.getFullYear()}-${String(dischargeDate.getMonth() + 1).padStart(2, '0')}`;
+        if (monthlyOccupancy[monthKey] !== undefined) {
+          monthlyOccupancy[monthKey].discharges++;
+        }
+      }
+    });
+
+    // Calculate occupancy rate for each month (simplified calculation)
+    let runningOccupancy = 0;
+    return months.map(month => {
+      const data = monthlyOccupancy[month.key];
+      runningOccupancy += data.admissions - data.discharges;
+      const occupancyRate = Math.max(0, (runningOccupancy / totalCapacity) * 100);
+      
+      return {
+        name: month.name,
+        value: Math.round(occupancyRate),
+        admissions: data.admissions,
+        discharges: data.discharges
+      };
+    });
+  };
+
+
   const metrics = calculateMetrics();
+  const advancedMetrics = calculateAdvancedMetrics();
 
   if (loading) {
     return <DashboardSkeleton />;
@@ -369,154 +639,130 @@ export default function Dashboard() {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-emerald-50/20">
-      <div className="space-y-8 p-6">
+    <div className="min-h-screen bg-gray-100">
+      <div className="space-y-6 lg:space-y-8">
         
         {/* Header Section */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-black text-slate-800 tracking-tight mb-2">
-            Analytics Dashboard
-          </h1>
-          <p className="text-lg text-slate-600 font-medium">
-            Visão geral dos dados de pacientes psiquiátricos
-          </p>
+        <div className="mb-4 lg:mb-8">
+          <div className="flex items-center gap-3 lg:gap-4 mb-3">
+            <div className="p-2 lg:p-3 bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-700 rounded-xl lg:rounded-2xl shadow-xl shadow-blue-500/25">
+              <BarChart3 className="h-6 w-6 lg:h-8 lg:w-8 text-white drop-shadow-sm" />
+            </div>
+            <div>
+              <h1 className="text-2xl lg:text-4xl font-black text-slate-800 tracking-tight">
+                Visão Geral
+              </h1>
+              <p className="text-sm lg:text-lg text-slate-600 font-medium">
+                Dashboard principal com métricas gerais do serviço
+              </p>
+            </div>
+          </div>
         </div>
 
-        {/* Modern Compact Metrics */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Cards Superiores */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-6">
           <MetricCard
-            title="Tempo Médio"
+            title="Média de Permanência"
             value={metrics.avgStayDays}
-            description="dias de permanência"
+            description="dias de internação"
             icon={Clock}
             variant="primary"
           />
           <MetricCard
-            title="Pacientes"
-            value={metrics.totalPatients}
-            description="total no período"
-            icon={Users}
+            title="Taxa de Ocupação"
+            value={`${advancedMetrics.occupancyRate}%`}
+            description="capacidade utilizada"
+            icon={Bed}
             variant="success"
           />
           <MetricCard
-            title="Readmissões"
+            title="Taxa de Reinternação"
             value={`${metrics.readmissionRate}%`}
             description="taxa de retorno"
             icon={RefreshCw}
-            variant="info"
+            variant="warning"
           />
         </div>
 
-        {/* Analytics Section */}
-        <div className="space-y-6">
-          <div className="flex items-center space-x-3 mb-6">
-            <div className="w-1 h-8 bg-gradient-to-b from-blue-500 to-emerald-500 rounded-full"></div>
-            <h2 className="text-2xl font-bold text-slate-800 tracking-tight">
-              Análises Detalhadas
+        {/* Gráficos Principais */}
+        <div className="space-y-4 lg:space-y-6">
+          <div className="flex items-center space-x-3 mb-4 lg:mb-6">
+            <div className="w-1 h-6 lg:h-8 bg-gradient-to-b from-blue-500 to-emerald-500 rounded-full"></div>
+            <h2 className="text-lg lg:text-2xl font-bold text-slate-800 tracking-tight">
+              Principais Indicadores
             </h2>
           </div>
           
-          {/* Primary Charts */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <MiniChart
-              data={getTopDiagnoses()}
-              title="Principais Patologias"
-              subtitle="Todos os diagnósticos"
-              type="bar"
-              total={patients.length}
-            />
-            
+          {/* 4 Gráficos Solicitados */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
             <MiniChart
               data={getGenderDistribution().map(item => ({
                 name: item.name,
                 value: Math.round((item.value / patients.length) * 100),
                 color: item.color
               }))}
-              title="Distribuição de Gênero"
-              subtitle="Pacientes por sexo"
+              title="Distribuição por Gênero"
+              subtitle="Feminino, Masculino"
               type="pie"
+              icon={Users}
             />
             
             <MiniChart
               data={getAgeDistribution()}
-              title="Faixa Etária"
+              title="Faixa Etária de Idade"
               subtitle="Distribuição por idade"
               type="bar"
+              icon={Calendar}
+              showXAxisLabels={true}
             />
 
-            <MiniChart
-              data={getCapsDistribution().map(item => ({
-                name: item.name,
-                value: Math.round((item.value / patients.length) * 100),
-                color: item.fill
-              }))}
-              title="CAPS Referência"
-              subtitle="Principais unidades"
-              type="pie"
-              icon={Building2}
-            />
-          </div>
-
-          {/* Secondary Charts */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <MiniChart
               data={getRaceDistribution().map(item => ({
                 name: item.name,
                 value: Math.round((item.value / patients.length) * 100),
                 color: item.fill
               }))}
-              title="Distribuição Racial"
-              subtitle="Cor/raça declarada"
+              title="Distribuição por Cor"
+              subtitle="Parda, Branca, Preta"
               type="pie"
               icon={Palette}
             />
-
+            
             <MiniChart
-              data={getProcedenciaDistribution()}
-              title="Procedência"
-              subtitle="Origem dos encaminhamentos"
+              data={getMentalDisorders()}
+              title="Principais Patologias"
+              subtitle="Transtornos mentais"
               type="bar"
-              icon={MapPin}
-            />
-
-            <MiniChart
-              data={getCapsDistribution().slice(0, 3).map(item => ({
-                name: item.name,
-                value: Math.round((item.value / patients.length) * 100),
-                color: item.fill
-              }))}
-              title="CAPS Principais"
-              subtitle="Top 3 unidades"
-              type="pie"
-              icon={Building2}
+              icon={Stethoscope}
+              showXAxisLabels={false}
             />
           </div>
+        </div>
 
-          {/* Combination Charts */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <MiniChart
-              data={getGenderByDiagnosisData()}
-              title="Gênero × Diagnóstico"
-              subtitle="Combinações mais frequentes"
-              type="bar"
-              icon={Users}
-            />
 
-            <MiniChart
-              data={getAgeByDiagnosisData()}
-              title="Idade × Diagnóstico" 
-              subtitle="Padrões por faixa etária"
-              type="bar"
-              icon={Calendar}
+        {/* Gráfico de Altas por Dia da Semana */}
+        <div className="space-y-4 lg:space-y-6">
+          <div className="flex items-center space-x-3 mb-4 lg:mb-6">
+            <div className="w-1 h-6 lg:h-8 bg-gradient-to-b from-purple-500 to-pink-500 rounded-full"></div>
+            <h2 className="text-lg lg:text-2xl font-bold text-slate-800 tracking-tight">
+              Análise Temporal
+            </h2>
+          </div>
+          
+          <div className="grid grid-cols-1 gap-4 lg:gap-6">
+            <DischargesByWeekdayChart
+              data={weekdayDischarges}
+              title="Altas por Dia da Semana"
+              description="Distribuição das altas hospitalares por dia da semana"
             />
           </div>
         </div>
 
         {/* Patient Search Section */}
-        <div className="space-y-6">
-          <div className="flex items-center space-x-3 mb-6">
-            <div className="w-1 h-8 bg-gradient-to-b from-emerald-500 to-orange-500 rounded-full"></div>
-            <h2 className="text-2xl font-bold text-slate-800 tracking-tight">
+        <div className="space-y-4 lg:space-y-6">
+          <div className="flex items-center space-x-3 mb-4 lg:mb-6">
+            <div className="w-1 h-6 lg:h-8 bg-gradient-to-b from-emerald-500 to-orange-500 rounded-full"></div>
+            <h2 className="text-lg lg:text-2xl font-bold text-slate-800 tracking-tight">
               Busca de Pacientes
             </h2>
           </div>

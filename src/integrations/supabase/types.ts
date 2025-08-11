@@ -32,6 +32,7 @@ export type Database = {
           raca_cor: string | null
           tipo_alta: string | null
           transferencia_destino: string | null
+          transtorno_categoria: string | null
         }
         Insert: {
           caps_referencia?: string | null
@@ -50,6 +51,7 @@ export type Database = {
           raca_cor?: string | null
           tipo_alta?: string | null
           transferencia_destino?: string | null
+          transtorno_categoria?: string | null
         }
         Update: {
           caps_referencia?: string | null
@@ -68,6 +70,7 @@ export type Database = {
           raca_cor?: string | null
           tipo_alta?: string | null
           transferencia_destino?: string | null
+          transtorno_categoria?: string | null
         }
         Relationships: []
       }

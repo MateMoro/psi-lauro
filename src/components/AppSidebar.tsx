@@ -1,4 +1,4 @@
-import { Home, BarChart3, Users, RefreshCw, Activity, TrendingUp, Stethoscope, Download } from "lucide-react";
+import { Home, BarChart3, Users, RefreshCw, Activity, TrendingUp, Stethoscope, Download, MapPin, MessageCircle, Building2 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -14,40 +14,46 @@ import {
 
 const navigationItems = [
   { 
-    title: "Início", 
-    url: "/", 
-    icon: Home,
-    description: "Tela inicial do sistema"
-  },
-  { 
-    title: "Dashboard", 
+    title: "Visão Geral", 
     url: "/dashboard", 
     icon: BarChart3,
-    description: "Visão geral dos dados e indicadores"
+    description: "Dashboard principal com métricas gerais"
   },
   { 
-    title: "Reinternações", 
-    url: "/reinternacoes", 
-    icon: RefreshCw,
-    description: "Análise de pacientes com múltiplas internações"
+    title: "Indicadores Assistenciais", 
+    url: "/indicadores-assistenciais", 
+    icon: Activity,
+    description: "Métricas de qualidade e desempenho"
   },
   { 
-    title: "Tendências", 
-    url: "/tendencias", 
-    icon: TrendingUp,
-    description: "Insights automáticos e análises clínicas"
+    title: "Perfil Epidemiológico", 
+    url: "/perfil-epidemiologico", 
+    icon: Users,
+    description: "Características demográficas dos pacientes"
   },
   { 
-    title: "Sobre o Serviço", 
+    title: "Procedência", 
+    url: "/procedencia", 
+    icon: MapPin,
+    description: "Origem e encaminhamentos dos pacientes"
+  },
+  { 
+    title: "Interconsultas", 
+    url: "/interconsultas", 
+    icon: MessageCircle,
+    description: "Volume e análise de interconsultas"
+  },
+  { 
+    title: "Institucional", 
     url: "/sobre-servico", 
-    icon: Stethoscope,
-    description: "Informações institucionais e contexto"
+    icon: Building2,
+    description: "Informações sobre o serviço"
   },
   { 
     title: "Exportar", 
     url: "/exportar", 
     icon: Download,
-    description: "Gerar relatórios para download"
+    description: "Gerar relatórios em PDF"
   },
 ];
 
@@ -64,17 +70,20 @@ export function AppSidebar() {
       : "hover:bg-gradient-to-r hover:from-slate-100 hover:to-blue-50 text-slate-700 hover:text-slate-900 rounded-xl transition-all duration-200 hover:shadow-md";
 
   return (
-    <Sidebar className={collapsed ? "w-16" : "w-72"} collapsible="icon">
-      <SidebarContent className="bg-gradient-to-b from-slate-50 to-white border-r border-slate-200/60 backdrop-blur-sm">
+    <Sidebar 
+      className={`${collapsed ? "w-16" : "w-72"} hidden lg:flex`} 
+      collapsible="icon"
+    >
+      <SidebarContent className="bg-gradient-to-b from-slate-50 to-white border-r border-slate-200/60 backdrop-blur-sm h-full">
         <div className="p-6 border-b border-slate-200/60">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 rounded-2xl shadow-xl shadow-blue-500/25 backdrop-blur-sm">
               <Activity className="h-7 w-7 text-white drop-shadow-sm" />
             </div>
             {!collapsed && (
-              <div>
-                <h2 className="text-xl font-black text-slate-800 tracking-tight">PSI Analytics</h2>
-                <p className="text-sm text-slate-600 font-semibold">Hospital Planalto</p>
+              <div className="flex flex-col">
+                <h2 className="text-xl font-black text-slate-800 tracking-tight leading-tight">PSI Analytics</h2>
+                <p className="text-sm text-slate-600 font-semibold mt-0.5">Hospital Planalto</p>
               </div>
             )}
           </div>
@@ -82,7 +91,7 @@ export function AppSidebar() {
 
         <SidebarGroup className="px-4 py-6">
           <SidebarGroupLabel className="text-slate-500 font-bold text-xs uppercase tracking-wider mb-4">
-            {!collapsed && "Navegação Principal"}
+            {!collapsed && "NAVEGAÇÃO PRINCIPAL"}
           </SidebarGroupLabel>
           
           <SidebarGroupContent>
@@ -99,8 +108,8 @@ export function AppSidebar() {
                         <item.icon className="h-6 w-6 flex-shrink-0" />
                         {!collapsed && (
                           <div className="flex flex-col items-start flex-1 min-w-0">
-                            <span className="font-bold text-sm tracking-wide">{item.title}</span>
-                            <span className="text-xs opacity-75 truncate w-full">
+                            <span className="font-bold text-sm tracking-wide leading-tight">{item.title}</span>
+                            <span className="text-xs opacity-75 truncate w-full mt-0.5">
                               {item.description}
                             </span>
                           </div>

@@ -17,34 +17,34 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 213 27% 12%;
 
-    --primary: 218 45% 25%;
+    --primary: 220 70% 35%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 20% 88%;
-    --secondary-foreground: 218 45% 25%;
+    --secondary: 213 27% 96%;
+    --secondary-foreground: 213 27% 12%;
 
-    --muted: 220 20% 92%;
-    --muted-foreground: 218 20% 45%;
+    --muted: 213 27% 96%;
+    --muted-foreground: 213 9% 46%;
 
-    --accent: 220 20% 88%;
-    --accent-foreground: 218 45% 25%;
+    --accent: 213 27% 96%;
+    --accent-foreground: 213 27% 12%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 220 20% 85%;
-    --input: 220 20% 85%;
-    --ring: 218 45% 55%;
+    --border: 213 27% 91%;
+    --input: 213 27% 91%;
+    --ring: 213 94% 68%;
 
     /* Dashboard specific colors - Professional healthcare palette */
-    --chart-1: 218 45% 35%;     /* Dark Blue */
-    --chart-2: 218 35% 45%;     /* Medium Blue */
-    --chart-3: 210 30% 55%;     /* Light Blue */
-    --chart-4: 200 25% 45%;     /* Blue Gray */
-    --chart-5: 220 20% 35%;     /* Dark Blue Gray */
-    --chart-6: 215 25% 50%;     /* Muted Blue */
-    --chart-7: 205 30% 60%;     /* Soft Blue */
-    --chart-8: 225 20% 40%;     /* Deep Blue */
+    --chart-1: 210 83% 53%;     /* Primary Blue */
+    --chart-2: 160 76% 36%;     /* Teal Green */
+    --chart-3: 340 82% 52%;     /* Rose Red */
+    --chart-4: 260 85% 58%;     /* Purple */
+    --chart-5: 35 91% 62%;      /* Orange */
+    --chart-6: 190 71% 47%;     /* Cyan */
+    --chart-7: 50 98% 64%;      /* Yellow */
+    --chart-8: 310 87% 63%;     /* Magenta */
 
     --success: 142 76% 36%;
     --success-foreground: 0 0% 100%;
@@ -78,9 +78,9 @@ All colors MUST be HSL.
 
     --radius: 0.5rem;
 
-    --sidebar-background: 218 45% 18%;
+    --sidebar-background: 0 0% 98%;
 
-    --sidebar-foreground: 0 0% 95%;
+    --sidebar-foreground: 240 5.3% 26.1%;
 
     --sidebar-primary: 240 5.9% 10%;
 

@@ -1,4 +1,4 @@
-import { Home, BarChart3, Users, RefreshCw, Activity, TrendingUp, Stethoscope, Download, MapPin, MessageCircle, Building2 } from "lucide-react";
+import { Home, BarChart3, Users, RefreshCw, Activity, TrendingUp, Stethoscope, MapPin, MessageCircle, Building2 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -49,12 +49,6 @@ const navigationItems = [
     icon: Building2,
     description: "Informações sobre o serviço"
   },
-  { 
-    title: "Exportar", 
-    url: "/exportar", 
-    icon: Download,
-    description: "Gerar relatórios em PDF"
-  },
 ];
 
 export function AppSidebar() {
@@ -82,8 +76,7 @@ export function AppSidebar() {
             </div>
             {!collapsed && (
               <div className="flex flex-col">
-                <h2 className="text-xl font-black text-slate-800 tracking-tight leading-tight">PSI Analytics</h2>
-                <p className="text-sm text-slate-600 font-semibold mt-0.5">Hospital Planalto</p>
+                <h2 className="text-lg font-black text-slate-800 tracking-tight leading-tight">Hospital Planalto</h2>
               </div>
             )}
           </div>

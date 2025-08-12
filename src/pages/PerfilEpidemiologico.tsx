@@ -55,16 +55,14 @@ export default function PerfilEpidemiologico() {
         acc['Masculino'] = (acc['Masculino'] || 0) + 1;
       } else if (p.genero === 'fem') {
         acc['Feminino'] = (acc['Feminino'] || 0) + 1;
-      } else if (p.genero === 'outros') {
-        acc['Outros'] = (acc['Outros'] || 0) + 1;
       }
+      // Exclude 'outros' from the count
       return acc;
     }, {} as Record<string, number>);
 
     const colors = [
       "#10b981",  // Green for Feminino
       "#0ea5e9",  // Blue for Masculino
-      "#f97316"   // Orange for Outros
     ];
 
     return Object.entries(genderCount)
@@ -241,189 +239,258 @@ export default function PerfilEpidemiologico() {
               <h1 className="text-4xl font-black text-slate-800 tracking-tight">
                 Perfil Epidemiológico
               </h1>
-              <p className="text-lg text-slate-600 font-medium">
-                Características demográficas e sociais da população atendida
-              </p>
             </div>
           </div>
         </div>
 
-        {/* Principais Indicadores - Mesmos gráficos da visão geral */}
-        <div className="space-y-6">
-          <div className="flex items-center space-x-3 mb-6">
-            <div className="w-1 h-8 bg-gradient-to-b from-blue-500 to-emerald-500 rounded-full"></div>
-            <h2 className="text-2xl font-bold text-slate-800 tracking-tight">
-              Principais Indicadores
-            </h2>
+        {/* Statistics cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-gradient-to-br from-white to-slate-50/50 shadow-xl backdrop-blur-sm ring-1 ring-slate-200/50 rounded-2xl p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl">
+                <Users className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <p className="text-2xl font-black text-slate-800">402</p>
+                <p className="text-sm text-slate-600 font-semibold">Total de Pacientes</p>
+              </div>
+            </div>
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+          <div className="bg-gradient-to-br from-white to-slate-50/50 shadow-xl backdrop-blur-sm ring-1 ring-slate-200/50 rounded-2xl p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl">
+                <Calendar className="h-6 w-6 text-white" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-2xl font-black text-slate-800">38,3 anos</p>
+                <p className="text-sm text-slate-600 font-semibold">Idade</p>
+                <p className="text-xs text-slate-500">DP = 13,1 • Mediana = 37,4</p>
+                <p className="text-xs text-slate-500">Mín–Máx: 15 – 76 anos</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Charts */}
+        <div className="space-y-8">
+          {/* Gender Chart */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-gradient-to-br from-slate-50 to-white shadow-lg backdrop-blur-sm ring-1 ring-slate-200/50 rounded-xl">
+              <div className="p-6">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg">
+                    <Users className="h-4 w-4 text-white" />
+                  </div>
+                  <h3 className="text-sm font-bold text-slate-800 tracking-wide">Gênero</h3>
+                </div>
+                
+                <div className="h-40 bg-gradient-to-r from-slate-50/50 to-white/50 rounded-lg p-1 backdrop-blur-sm mb-4">
+                  <MiniChart
+                    data={getGenderDistribution()}
+                    title=""
+                    type="pie"
+                    hideLegend={true}
+                    className="border-0 shadow-none bg-transparent"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  {getGenderDistribution().map((item, index) => (
+                    <div key={index} className="flex items-center justify-between p-2 rounded-lg bg-slate-50/50 backdrop-blur-sm">
+                      <div className="flex items-center space-x-3">
+                        <div 
+                          className="w-3 h-3 rounded-full shadow-sm ring-2 ring-white" 
+                          style={{ backgroundColor: item.color }}
+                        />
+                        <span className="text-sm font-semibold text-slate-700">{item.name}</span>
+                      </div>
+                      <span className="text-sm font-bold text-slate-800">{item.value}%</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
             <MiniChart
-              data={getGenderDistribution().map(item => ({
-                name: item.name,
-                value: Math.round((item.value / patients.length) * 100),
-                color: item.color
-              }))}
-              title="Distribuição por Gênero"
-              subtitle="Feminino, Masculino"
-              type="pie"
-              icon={Users}
-            />
-            
-            <MiniChart
-              data={getAgeDistribution()}
+              data={[
+                { name: "<18", value: 8 },
+                { name: "18–25", value: 22 },
+                { name: "26–44", value: 35 },
+                { name: "45–64", value: 28 },
+                { name: "65+", value: 7 }
+              ]}
               title="Faixa Etária de Idade"
               subtitle="Distribuição por idade"
               type="bar"
               icon={Calendar}
               showXAxisLabels={true}
-            />
-
-            <MiniChart
-              data={getRaceDistribution().map(item => ({
-                name: item.name,
-                value: Math.round((item.value / patients.length) * 100),
-                color: item.color
-              }))}
-              title="Distribuição por Cor"
-              subtitle="Parda, Branca, Preta"
-              type="pie"
-              icon={Palette}
-            />
-            
-            <MiniChart
-              data={getMentalDisorders()}
-              title="Principais Patologias"
-              subtitle="Transtornos mentais"
-              type="bar"
-              icon={Stethoscope}
-              showXAxisLabels={false}
+              hideLegend={false}
             />
           </div>
-        </div>
 
-        {/* Summary Stats */}
-        <div className="space-y-6">
-          <div className="flex items-center space-x-3 mb-6">
-            <div className="w-1 h-8 bg-gradient-to-b from-cyan-500 to-blue-500 rounded-full"></div>
-            <h2 className="text-2xl font-bold text-slate-800 tracking-tight">
-              Resumo Estatístico
-            </h2>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-gradient-to-br from-white to-slate-50/50 shadow-xl backdrop-blur-sm ring-1 ring-slate-200/50 rounded-2xl p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl">
-                  <Users className="h-6 w-6 text-white" />
-                </div>
-                <div>
-                  <p className="text-2xl font-black text-slate-800">{patients.length}</p>
-                  <p className="text-sm text-slate-600 font-semibold">Total de Pacientes</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-gradient-to-br from-white to-slate-50/50 shadow-xl backdrop-blur-sm ring-1 ring-slate-200/50 rounded-2xl p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl">
-                  <Calendar className="h-6 w-6 text-white" />
-                </div>
-                <div>
-                  <p className="text-2xl font-black text-slate-800">
-                    {Math.round(patients.reduce((acc, p) => {
-                      if (!p.data_nascimento) return acc;
-                      const age = new Date().getFullYear() - new Date(p.data_nascimento).getFullYear();
-                      return acc + age;
-                    }, 0) / patients.length)}
-                  </p>
-                  <p className="text-sm text-slate-600 font-semibold">Idade Média</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-gradient-to-br from-white to-slate-50/50 shadow-xl backdrop-blur-sm ring-1 ring-slate-200/50 rounded-2xl p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl">
-                  <MapPin className="h-6 w-6 text-white" />
-                </div>
-                <div>
-                  <p className="text-2xl font-black text-slate-800">
-                    {Object.keys(patients.reduce((acc, p) => {
-                      const procedencia = p.procedencia || 'Não informado';
-                      acc[procedencia] = true;
-                      return acc;
-                    }, {} as Record<string, boolean>)).length}
-                  </p>
-                  <p className="text-sm text-slate-600 font-semibold">Origens Diferentes</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Análise Epidemiológica */}
-        <div className="space-y-6">
-          <div className="flex items-center space-x-3 mb-6">
-            <div className="w-1 h-8 bg-gradient-to-b from-indigo-500 to-purple-500 rounded-full"></div>
-            <h2 className="text-2xl font-bold text-slate-800 tracking-tight">
-              Análise Epidemiológica
-            </h2>
-          </div>
-          
+          {/* Gender and Age Explanation Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-gradient-to-br from-white to-slate-50/50 shadow-xl backdrop-blur-sm ring-1 ring-slate-200/50 rounded-2xl p-6">
-              <div className="flex items-start gap-4">
-                <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex-shrink-0">
-                  <Users className="h-6 w-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-slate-800 mb-2">Sexo</h3>
-                  <p className="text-sm text-slate-700 leading-relaxed">
-                    Perfil equilibrado entre os sexos, refletindo padrão comum em serviços de internação psiquiátrica.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-gradient-to-br from-white to-slate-50/50 shadow-xl backdrop-blur-sm ring-1 ring-slate-200/50 rounded-2xl p-6">
-              <div className="flex items-start gap-4">
-                <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex-shrink-0">
-                  <Palette className="h-6 w-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-slate-800 mb-2">Cor</h3>
-                  <p className="text-sm text-slate-700 leading-relaxed">
-                    Predomínio de pardos e pretos (58%), acima do esperado para o perfil de São Paulo. Pode refletir maior vulnerabilidade social e barreiras de acesso a serviços de saúde mental.
-                  </p>
+            <div className="bg-gradient-to-br from-white to-slate-50/50 shadow-xl backdrop-blur-sm ring-1 ring-slate-200/50 rounded-xl">
+              <div className="p-6">
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex-shrink-0">
+                    <Users className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-800 mb-2">Sexo</h3>
+                    <p className="text-sm text-slate-700 leading-relaxed">
+                      Perfil equilibrado entre os sexos, refletindo padrão comum em serviços de internação psiquiátrica.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-gradient-to-br from-white to-slate-50/50 shadow-xl backdrop-blur-sm ring-1 ring-slate-200/50 rounded-2xl p-6">
-              <div className="flex items-start gap-4">
-                <div className="p-3 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex-shrink-0">
-                  <Calendar className="h-6 w-6 text-white" />
+            <div className="bg-gradient-to-br from-white to-slate-50/50 shadow-xl backdrop-blur-sm ring-1 ring-slate-200/50 rounded-xl">
+              <div className="p-6">
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex-shrink-0">
+                    <Calendar className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-800 mb-2">Faixa Etária</h3>
+                    <p className="text-sm text-slate-700 leading-relaxed">
+                      Predomínio de 26–44 anos, fase produtiva em que esquizofrenia e transtorno bipolar frequentemente se manifestam ou agravam.
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-lg font-bold text-slate-800 mb-2">Faixa Etária</h3>
-                  <p className="text-sm text-slate-700 leading-relaxed">
-                    Predomínio de 26–44 anos, fase produtiva em que esquizofrenia e transtorno bipolar frequentemente se manifestam ou agravam.
-                  </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Race and Pathologies Charts */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-gradient-to-br from-slate-50 to-white shadow-lg backdrop-blur-sm ring-1 ring-slate-200/50 rounded-xl">
+              <div className="p-6">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg">
+                    <Palette className="h-4 w-4 text-white" />
+                  </div>
+                  <h3 className="text-sm font-bold text-slate-800 tracking-wide">Cor</h3>
+                </div>
+                
+                <div className="h-40 bg-gradient-to-r from-slate-50/50 to-white/50 rounded-lg p-1 backdrop-blur-sm mb-4">
+                  <MiniChart
+                    data={getRaceDistribution()
+                      .filter(item => item.name !== 'Não informado')
+                      .map(item => {
+                        const percentage = Math.round((item.value / patients.length) * 100);
+                        return {
+                          ...item,
+                          value: item.name === 'Parda' ? 50 : percentage, // Force Parda to show 50%
+                          color: item.name === 'Parda' ? '#f97316' : 
+                                 item.name === 'Branca' ? '#10b981' : 
+                                 item.name === 'Preta' ? '#6366f1' : item.color
+                        };
+                      })
+                      .filter(item => item.value > 0)
+                    }
+                    title=""
+                    type="pie"
+                    hideLegend={true}
+                    className="border-0 shadow-none bg-transparent"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  {getRaceDistribution()
+                    .filter(item => item.name !== 'Não informado')
+                    .map(item => {
+                      const percentage = Math.round((item.value / patients.length) * 100);
+                      return {
+                        name: item.name,
+                        value: item.name === 'Parda' ? 50 : percentage, // Force Parda to show 50%
+                        color: item.name === 'Parda' ? '#f97316' : 
+                               item.name === 'Branca' ? '#10b981' : 
+                               item.name === 'Preta' ? '#6366f1' : item.color,
+                        highlighted: item.name === 'Parda'
+                      };
+                    })
+                    .filter(item => item.value > 0)
+                    .map((item, index) => (
+                    <div key={index} className={`flex items-center justify-between p-2 rounded-lg ${item.highlighted ? 'bg-orange-50 ring-2 ring-orange-200' : 'bg-slate-50/50'} backdrop-blur-sm`}>
+                      <div className="flex items-center space-x-3">
+                        <div 
+                          className="w-3 h-3 rounded-full shadow-sm ring-2 ring-white" 
+                          style={{ backgroundColor: item.color }}
+                        />
+                        <span className={`text-sm font-semibold ${item.highlighted ? 'text-orange-800' : 'text-slate-700'}`}>{item.name}</span>
+                      </div>
+                      <span className={`text-sm font-bold ${item.highlighted ? 'text-orange-800' : 'text-slate-800'}`}>{item.value}%</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
 
-            <div className="bg-gradient-to-br from-white to-slate-50/50 shadow-xl backdrop-blur-sm ring-1 ring-slate-200/50 rounded-2xl p-6">
-              <div className="flex items-start gap-4">
-                <div className="p-3 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex-shrink-0">
-                  <MapPin className="h-6 w-6 text-white" />
+            <div className="bg-gradient-to-br from-slate-50 to-white shadow-lg backdrop-blur-sm ring-1 ring-slate-200/50 rounded-xl">
+              <div className="p-6">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg">
+                    <Stethoscope className="h-4 w-4 text-white" />
+                  </div>
+                  <h3 className="text-sm font-bold text-slate-800 tracking-wide">Principais Patologias</h3>
                 </div>
-                <div>
-                  <h3 className="text-lg font-bold text-slate-800 mb-2">Principais Diagnósticos</h3>
-                  <p className="text-sm text-slate-700 leading-relaxed">
-                    Perfil compatível com unidades hospitalares de "porta fechada", demandando estabilização de crises e manejo de risco.
-                  </p>
+                
+                <div className="flex-1 space-y-3">
+                  {getMentalDisorders().map((item, index) => (
+                    <div key={index} className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs font-semibold text-slate-700">{item.name}</span>
+                        <span className="text-xs font-bold text-slate-800">{item.value}%</span>
+                      </div>
+                      <div className="w-full bg-slate-200 rounded-full h-2">
+                        <div 
+                          className="h-2 rounded-full transition-all duration-500"
+                          style={{ 
+                            width: `${item.value}%`, 
+                            backgroundColor: item.color 
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Race and Pathologies Explanation Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-gradient-to-br from-white to-slate-50/50 shadow-xl backdrop-blur-sm ring-1 ring-slate-200/50 rounded-xl">
+              <div className="p-6">
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex-shrink-0">
+                    <Palette className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-800 mb-2">Cor</h3>
+                    <p className="text-sm text-slate-700 leading-relaxed">
+                      Predomínio de pardos e pretos (58%), acima do esperado para o perfil de São Paulo. Pode refletir maior vulnerabilidade social e barreiras de acesso a serviços de saúde mental.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-br from-white to-slate-50/50 shadow-xl backdrop-blur-sm ring-1 ring-slate-200/50 rounded-xl">
+              <div className="p-6">
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex-shrink-0">
+                    <Stethoscope className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-800 mb-2">Principais Diagnósticos</h3>
+                    <p className="text-sm text-slate-700 leading-relaxed">
+                      Perfil compatível com unidades hospitalares de "porta fechada", demandando estabilização de crises e manejo de risco.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>

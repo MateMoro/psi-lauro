@@ -159,10 +159,19 @@ export function MiniChart({
                     whiteSpace: 'normal',
                     maxWidth: '230px'
                   }}
-                  formatter={(value: any, name: any) => [
-                    `${value}${title.toLowerCase().includes('length of stay') || title.toLowerCase().includes('los') ? ' pacientes' : title.toLowerCase().includes('dia da semana') ? '' : (typeof value === 'number' && value <= 100 ? '%' : '')}`, 
-                    'Valor'
-                  ]}
+                  formatter={(value: any, name: any, props: any) => {
+                    if (title.toLowerCase().includes('dia da semana')) {
+                      const percentage = props.payload?.percentage;
+                      return [
+                        `${value} altas${percentage !== undefined ? ` (${percentage}%)` : ''}`,
+                        'Valor'
+                      ];
+                    }
+                    return [
+                      `${value}${title.toLowerCase().includes('length of stay') || title.toLowerCase().includes('los') ? ' pacientes' : (typeof value === 'number' && value <= 100 ? '%' : '')}`, 
+                      'Valor'
+                    ];
+                  }}
                   labelFormatter={(label: any) => label}
                 />
                 <Bar 
@@ -256,7 +265,7 @@ export function MiniChart({
         
         {!hideLegend && (
           <div className="mt-2 space-y-1">
-            {(showAllCategories ? chartData : chartData.slice(0, 3)).map((item, index) => (
+            {chartData.map((item, index) => (
               <div key={index} className="flex items-center justify-between p-2 rounded-lg bg-slate-50/50 backdrop-blur-sm">
                 <div className="flex items-center space-x-3">
                   <div 
@@ -271,17 +280,6 @@ export function MiniChart({
                 </span>
               </div>
             ))}
-            {chartData.length > 3 && (
-              <button
-                onClick={() => setShowAllCategories(!showAllCategories)}
-                className="w-full text-xs text-slate-500 hover:text-slate-700 text-center font-medium pt-1 transition-colors duration-200 hover:bg-slate-100/50 rounded-lg py-2"
-              >
-                {showAllCategories 
-                  ? `Mostrar menos` 
-                  : `+${chartData.length - 3} categorias adicionais - clique para expandir`
-                }
-              </button>
-            )}
           </div>
         )}
       </CardContent>

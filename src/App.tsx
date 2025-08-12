@@ -12,7 +12,6 @@ import IndicadoresAssistenciais from "./pages/IndicadoresAssistenciais";
 import Procedencia from "./pages/Procedencia";
 import Interconsultas from "./pages/Interconsultas";
 import SobreServico from "./pages/SobreServico";
-import Exportar from "./pages/Exportar";
 
 import NotFound from "./pages/NotFound";
 
@@ -27,14 +26,13 @@ const App = () => (
         <BrowserRouter>
           <DashboardLayout>
             <Routes>
-              <Route path="/" element={<Index />} />
+              <Route path="/" element={<Dashboard />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/indicadores-assistenciais" element={<IndicadoresAssistenciais />} />
               <Route path="/perfil-epidemiologico" element={<PerfilEpidemiologico />} />
               <Route path="/procedencia" element={<Procedencia />} />
               <Route path="/interconsultas" element={<Interconsultas />} />
               <Route path="/sobre-servico" element={<SobreServico />} />
-              <Route path="/exportar" element={<Exportar />} />
               
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

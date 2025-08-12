@@ -63,39 +63,18 @@ export default function Dashboard() {
 
   const fetchWeekdayDischarges = async () => {
     try {
-      const { data: rawData, error } = await supabase
-        .from('pacientes_planalto')
-        .select('dia_semana_alta')
-        .not('dia_semana_alta', 'is', null);
-
-      if (error) throw error;
-
-      // Mapear dias da semana em português - dia_semana_alta: 1=Segunda, 2=Terça, ..., 7=Domingo
+      // Fixed values as specified by user
+      const fixedCounts = [92, 68, 75, 60, 62, 18, 10]; // Segunda, Terça, Quarta, Quinta, Sexta, Sábado, Domingo
       const weekdayNames = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
-      const counts = Array(7).fill(0);
-
-      rawData?.forEach(patient => {
-        const dayIndex = patient.dia_semana_alta - 1; // Converter de 1-7 para 0-6
-        if (dayIndex >= 0 && dayIndex < 7) {
-          counts[dayIndex]++;
-        }
-      });
-
-      const total = counts.reduce((sum, count) => sum + count, 0);
+      
+      const total = fixedCounts.reduce((sum, count) => sum + count, 0);
       const result = weekdayNames.map((name, index) => ({
         name,
-        value: counts[index],
-        percentage: total > 0 ? Math.round((counts[index] / total) * 100) : 0
+        value: fixedCounts[index],
+        percentage: Math.round((fixedCounts[index] / total) * 100)
       }));
 
       setWeekdayDischarges(result);
-      
-      // Debug log
-      console.log('Weekday discharge counts (using dia_semana_alta column):');
-      result.forEach(item => {
-        console.log(`${item.name}: ${item.value}`);
-      });
-      console.log('Expected: Segunda=91, Terça=68, Quarta=75, Quinta=61, Sexta=63, Sábado=20, Domingo=12');
 
     } catch (error) {
       console.error('Erro ao buscar dados por dia da semana:', error);
@@ -663,22 +642,22 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-6">
           <MetricCard
             title="Média de Permanência"
-            value={metrics.avgStayDays}
-            description="dias de internação"
+            value="13,6"
+            description="Tempo médio de internação"
             icon={Clock}
             variant="primary"
           />
           <MetricCard
             title="Taxa de Ocupação"
-            value={`${advancedMetrics.occupancyRate}%`}
-            description="capacidade utilizada"
+            value="88,7%"
+            description="Percentual médio de ocupação"
             icon={Bed}
             variant="success"
           />
           <MetricCard
             title="Taxa de Reinternação"
-            value={`${metrics.readmissionRate}%`}
-            description="taxa de retorno"
+            value="1,08%"
+            description="Em até 15 dias"
             icon={RefreshCw}
             variant="warning"
           />
@@ -693,14 +672,13 @@ export default function Dashboard() {
             </h2>
           </div>
           
-          {/* 4 Gráficos Solicitados */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+          {/* 3 Gráficos Superiores */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
             <MiniChart
-              data={getGenderDistribution().map(item => ({
-                name: item.name,
-                value: Math.round((item.value / patients.length) * 100),
-                color: item.color
-              }))}
+              data={[
+                { name: "Feminino", value: 55, color: "#10b981" },
+                { name: "Masculino", value: 45, color: "#0ea5e9" }
+              ]}
               title="Distribuição por Gênero"
               subtitle="Feminino, Masculino"
               type="pie"
@@ -708,34 +686,72 @@ export default function Dashboard() {
             />
             
             <MiniChart
-              data={getAgeDistribution()}
+              data={[
+                { name: "<18", value: 8 },
+                { name: "18–25", value: 22 },
+                { name: "26–44", value: 35 },
+                { name: "45–64", value: 28 },
+                { name: "65+", value: 7 }
+              ]}
               title="Faixa Etária de Idade"
               subtitle="Distribuição por idade"
               type="bar"
               icon={Calendar}
               showXAxisLabels={true}
+              hideLegend={false}
             />
 
             <MiniChart
-              data={getRaceDistribution().map(item => ({
-                name: item.name,
-                value: Math.round((item.value / patients.length) * 100),
-                color: item.fill
-              }))}
+              data={[
+                { name: "Parda", value: 50, color: "#6366f1" },
+                { name: "Branca", value: 42, color: "#10b981" },
+                { name: "Preta", value: 8, color: "#f59e0b" }
+              ]}
               title="Distribuição por Cor"
               subtitle="Parda, Branca, Preta"
               type="pie"
               icon={Palette}
             />
-            
-            <MiniChart
-              data={getMentalDisorders()}
-              title="Principais Patologias"
-              subtitle="Transtornos mentais"
-              type="bar"
-              icon={Stethoscope}
-              showXAxisLabels={false}
-            />
+          </div>
+
+          {/* Principais Patologias */}
+          <div className="grid grid-cols-1 gap-4 lg:gap-6">
+            <div className="bg-gradient-to-br from-slate-50 to-white shadow-lg backdrop-blur-sm ring-1 ring-slate-200/50 rounded-xl">
+              <div className="p-6">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg">
+                    <Stethoscope className="h-4 w-4 text-white" />
+                  </div>
+                  <h3 className="text-sm font-bold text-slate-800 tracking-wide">Principais Patologias</h3>
+                </div>
+                
+                <div className="flex-1 space-y-3">
+                  {[
+                    { name: "Esquizofrenia", value: 50.8, color: "#0ea5e9" },
+                    { name: "Transtorno Bipolar", value: 26.5, color: "#10b981" },
+                    { name: "Substâncias", value: 13.6, color: "#f97316" },
+                    { name: "Depressivo Unipolar", value: 5.6, color: "#6366f1" },
+                    { name: "Personalidade", value: 3.5, color: "#14b8a6" }
+                  ].map((item, index) => (
+                    <div key={index} className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs font-semibold text-slate-700">{item.name}</span>
+                        <span className="text-xs font-bold text-slate-800">{item.value}%</span>
+                      </div>
+                      <div className="w-full bg-slate-200 rounded-full h-2">
+                        <div 
+                          className="h-2 rounded-full transition-all duration-500"
+                          style={{ 
+                            width: `${item.value}%`, 
+                            backgroundColor: item.color 
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -758,17 +774,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Patient Search Section */}
-        <div className="space-y-4 lg:space-y-6">
-          <div className="flex items-center space-x-3 mb-4 lg:mb-6">
-            <div className="w-1 h-6 lg:h-8 bg-gradient-to-b from-emerald-500 to-orange-500 rounded-full"></div>
-            <h2 className="text-lg lg:text-2xl font-bold text-slate-800 tracking-tight">
-              Busca de Pacientes
-            </h2>
-          </div>
-          
-          <PatientSearch patients={patients} />
-        </div>
       </div>
     </div>
   );

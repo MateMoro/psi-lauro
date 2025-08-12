@@ -1,4 +1,4 @@
-import { BarChart3, Users, Activity, MapPin, MessageCircle, MoreHorizontal, Building2, Download } from "lucide-react";
+import { BarChart3, Users, Activity, MapPin, MessageCircle, MoreHorizontal, Building2 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -43,11 +43,6 @@ const secondaryNavItems = [
     url: "/sobre-servico", 
     icon: Building2
   },
-  { 
-    title: "Exportar", 
-    url: "/exportar", 
-    icon: Download
-  }
 ];
 
 export function MobileNavigation() {

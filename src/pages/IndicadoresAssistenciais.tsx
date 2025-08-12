@@ -228,104 +228,23 @@ export default function IndicadoresAssistenciais() {
   };
 
   const getOccupancyTimeseries = () => {
-    const totalCapacity = 16;
-    const periodStart = new Date('2024-08-01');
-    const periodEnd = new Date('2025-07-31');
-    
-    // Filter patients within the period
-    const filteredPatients = patients.filter(p => {
-      const admissionDate = new Date(p.data_admissao);
-      const dischargeDate = p.data_alta ? new Date(p.data_alta) : null;
-      
-      // Patient was admitted before period end and (no discharge or discharged after period start)
-      return admissionDate <= periodEnd && (!dischargeDate || dischargeDate >= periodStart);
-    });
+    // Fixed monthly values as specified: jul/24 to jun/25
+    const monthlyData = [
+      { name: '07/24', value: 88.7 },
+      { name: '08/24', value: 83.3 },
+      { name: '09/24', value: 87.1 },
+      { name: '10/24', value: 92.1 },
+      { name: '11/24', value: 83.3 },
+      { name: '12/24', value: 87.8 },
+      { name: '01/25', value: 86.9 },
+      { name: '02/25', value: 92.7 },
+      { name: '03/25', value: 91.3 },
+      { name: '04/25', value: 93.1 },
+      { name: '05/25', value: 88.5 },
+      { name: '06/25', value: 89.8 }
+    ];
 
-    // Generate months from Aug 2024 to Jul 2025
-    const months = [];
-    const startDate = new Date(2024, 7, 1); // August 2024
-    
-    for (let i = 0; i < 12; i++) {
-      const monthDate = new Date(startDate);
-      monthDate.setMonth(startDate.getMonth() + i);
-      
-      const monthKey = `${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, '0')}`;
-      const monthName = `${String(monthDate.getMonth() + 1).padStart(2, '0')}/${String(monthDate.getFullYear()).slice(-2)}`;
-      
-      months.push({
-        key: monthKey,
-        name: monthName,
-        date: new Date(monthDate)
-      });
-    }
-
-    return months.map(month => {
-      const monthStart = new Date(month.date.getFullYear(), month.date.getMonth(), 1);
-      const monthEnd = new Date(month.date.getFullYear(), month.date.getMonth() + 1, 0);
-      
-      // Generate all days in the month
-      const days = [];
-      const currentDay = new Date(monthStart);
-      while (currentDay <= monthEnd) {
-        days.push(new Date(currentDay));
-        currentDay.setDate(currentDay.getDate() + 1);
-      }
-
-      const dailyRates: number[] = [];
-      let admissions = 0;
-      let discharges = 0;
-      
-      days.forEach(day => {
-        // Count unique patients by CNS who were hospitalized on this day
-        const patientsOnDay = filteredPatients.filter(p => {
-          const admissionDate = new Date(p.data_admissao);
-          const dischargeDate = p.data_alta ? new Date(p.data_alta) : null;
-          
-          return admissionDate <= day && (!dischargeDate || dischargeDate > day);
-        });
-
-        // Get unique patients by CNS (or nome if CNS not available)
-        const uniquePatients = new Set();
-        patientsOnDay.forEach(p => {
-          const identifier = p.cns || p.nome;
-          uniquePatients.add(identifier);
-        });
-
-        const dailyRate = uniquePatients.size / totalCapacity;
-        dailyRates.push(dailyRate);
-      });
-
-      // Count admissions and discharges for this month
-      filteredPatients.forEach(patient => {
-        const admissionDate = new Date(patient.data_admissao);
-        const dischargeDate = patient.data_alta ? new Date(patient.data_alta) : null;
-
-        // Count admissions
-        if (admissionDate >= monthStart && admissionDate <= monthEnd) {
-          admissions++;
-        }
-
-        // Count discharges  
-        if (dischargeDate && dischargeDate >= monthStart && dischargeDate <= monthEnd) {
-          discharges++;
-        }
-      });
-
-      // Calculate average for this month (mean of daily rates)
-      const monthlyAverage = dailyRates.length > 0 
-        ? dailyRates.reduce((sum, rate) => sum + rate, 0) / dailyRates.length 
-        : 0;
-      
-      const occupancyPercentage = monthlyAverage * 100;
-      
-      return {
-        name: month.name,
-        value: Math.round(occupancyPercentage * 100) / 100,
-        admissions,
-        discharges,
-        patientDays: Math.round(monthlyAverage * totalCapacity * days.length)
-      };
-    });
+    return monthlyData;
   };
 
   const getLengthOfStayDistribution = () => {
@@ -426,12 +345,12 @@ export default function IndicadoresAssistenciais() {
         </div>
 
         {/* Key Metrics with Descriptions */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           <div className="space-y-3">
             <MetricCard
-              title="Tempo Médio"
-              value={metrics.avgStayDays}
-              description="dias de permanência"
+              title="Média de Permanência"
+              value="13,6"
+              description="Tempo médio de internação"
               icon={Clock}
               variant="primary"
             />
@@ -444,22 +363,22 @@ export default function IndicadoresAssistenciais() {
           <div className="space-y-3">
             <MetricCard
               title="Taxa de Ocupação"
-              value={`${metrics.occupancyRate}%`}
-              description="capacidade utilizada"
+              value="88,7%"
+              description="Percentual médio de ocupação"
               icon={Bed}
               variant="success"
             />
             <div className="bg-white/70 backdrop-blur-sm rounded-lg border border-slate-200/50 p-4 shadow-sm">
               <p className="text-sm text-slate-700 leading-relaxed">
-                Ocupação consistentemente elevada, próxima ao limite físico da unidade, com alguns picos acima de 100% quando incluídos no cálculo pacientes da estabilização aguardando transferência para a enfermaria. O cenário evidencia pressão contínua sobre a capacidade instalada, mesmo em um serviço de porta fechada.
+                Taxa de ocupação elevada e estável ao longo dos meses, evidenciando uso intenso da capacidade instalada e necessidade de gestão eficiente de leitos para manter a rotatividade.
               </p>
             </div>
           </div>
           <div className="space-y-3">
             <MetricCard
-              title="Reinternação 30d"
-              value={`${metrics.readmission30Days}%`}
-              description="taxa de retorno"
+              title="Taxa de Reinternação"
+              value="1,08%"
+              description="Em até 15 dias"
               icon={RotateCcw}
               variant="warning"
             />
@@ -469,36 +388,15 @@ export default function IndicadoresAssistenciais() {
               </p>
             </div>
           </div>
-          <div className="space-y-3">
-            <MetricCard
-              title="Altas Fim de Semana"
-              value={`${metrics.weekendDischargeRate}%`}
-              description="altas não úteis"
-              icon={CalendarX2}
-              variant="info"
-            />
-            <div className="bg-white/70 backdrop-blur-sm rounded-lg border border-slate-200/50 p-4 shadow-sm">
-              <p className="text-sm text-slate-700 leading-relaxed">
-                Apenas 8% das altas ocorrem aos finais de semana, em contraste com 92% nos dias úteis. Esse padrão possivelmente se relaciona à ausência de médico diarista, permanecendo apenas o plantonista, o que reduz a agilidade no processo de alta e impacta diretamente a rotatividade dos leitos.
-              </p>
-            </div>
-          </div>
         </div>
 
         {/* Charts Section */}
         <div className="space-y-6">
-          <div className="flex items-center space-x-3 mb-6">
-            <div className="w-1 h-8 bg-gradient-to-b from-blue-500 to-indigo-500 rounded-full"></div>
-            <h2 className="text-2xl font-bold text-slate-800 tracking-tight">
-              Indicadores Temporais
-            </h2>
-          </div>
-          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <MiniChart
               data={getOccupancyTimeseries()}
               title="Taxa de Ocupação Mensal"
-              subtitle="01/08/2024 a 31/07/2025"
+              subtitle="jul/24 a jun/25"
               type="line"
               icon={Bed}
               hideLegend={true}
@@ -516,49 +414,18 @@ export default function IndicadoresAssistenciais() {
               hideLegend={true}
             />
           </div>
-        </div>
 
-        {/* Quality Indicators */}
-        <div className="space-y-6">
-          <div className="flex items-center space-x-3 mb-6">
-            <div className="w-1 h-8 bg-gradient-to-b from-indigo-500 to-purple-500 rounded-full"></div>
-            <h2 className="text-2xl font-bold text-slate-800 tracking-tight">
-              Indicadores de Qualidade
-            </h2>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 gap-6">
             <MiniChart
               data={[
                 { name: "7 dias", value: parseFloat(metrics.readmission7Days), color: "#ef4444" },
-                { name: "15 dias", value: parseFloat(metrics.readmission15Days), color: "#f97316" },
+                { name: "15 dias", value: 1.08, color: "#f97316" },
                 { name: "30 dias", value: parseFloat(metrics.readmission30Days), color: "#eab308" }
               ]}
               title="Taxa de Reinternação"
               subtitle="Por período de retorno (%)"
               type="bar"
               icon={RotateCcw}
-              showXAxisLabels={true}
-            />
-
-            <MiniChart
-              data={[
-                { name: "≤60 min", value: metrics.responseTime60min, color: "#10b981" },
-                { name: "≤120 min", value: metrics.responseTime120min, color: "#3b82f6" }
-              ]}
-              title="Tempo de Resposta"
-              subtitle="Percentual dentro do prazo"
-              type="bar"
-              icon={Timer}
-              showXAxisLabels={true}
-            />
-
-            <MiniChart
-              data={getLengthOfStayDistribution()}
-              title="Length of Stay (LOS)"
-              subtitle="Distribuição por tempo de permanência"
-              type="bar"
-              icon={Clock}
               showXAxisLabels={true}
             />
           </div>

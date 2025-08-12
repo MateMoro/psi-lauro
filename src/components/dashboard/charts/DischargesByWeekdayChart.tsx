@@ -47,16 +47,22 @@ export function DischargesByWeekdayChart({ data, title, description }: Discharge
               }}
             />
             <Tooltip 
-              formatter={(value) => [
-                `${value} altas`, 
-                'Total'
-              ]}
-              labelFormatter={(label) => `Dia da semana: ${label}`}
-              contentStyle={{
-                backgroundColor: 'hsl(var(--card))',
-                border: '1px solid hsl(var(--border))',
-                borderRadius: '8px',
-                fontSize: '12px'
+              content={({ active, payload, label }) => {
+                if (active && payload && payload.length) {
+                  const data = payload[0].payload;
+                  return (
+                    <div className="bg-card border border-border rounded-lg shadow-lg p-3">
+                      <p className="font-medium text-foreground">{label}</p>
+                      <p className="text-sm text-muted-foreground">
+                        Altas: <span className="font-medium text-foreground">{data.value}</span>
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Percentual: <span className="font-medium text-foreground">{data.percentage}%</span>
+                      </p>
+                    </div>
+                  );
+                }
+                return null;
               }}
             />
             <Bar 

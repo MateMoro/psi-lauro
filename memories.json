@@ -12,8 +12,8 @@
       ],
       "timestamp": "2025-08-04T18:12:59.096Z",
       "context": "Dashboard modernization project - current state analysis",
-      "accessCount": 8,
-      "lastAccessed": "2025-08-11T20:19:49.718Z",
+      "accessCount": 9,
+      "lastAccessed": "2025-08-12T20:12:20.923Z",
       "lastVerified": "2025-08-04T18:12:59.096Z",
       "status": "fresh"
     },
@@ -30,8 +30,8 @@
       ],
       "timestamp": "2025-08-04T18:15:11.429Z",
       "context": "Dashboard modernization completed successfully",
-      "accessCount": 3,
-      "lastAccessed": "2025-08-11T20:19:49.718Z",
+      "accessCount": 4,
+      "lastAccessed": "2025-08-12T20:12:20.923Z",
       "lastVerified": "2025-08-04T18:15:11.429Z",
       "status": "fresh"
     },
@@ -87,8 +87,8 @@
       ],
       "timestamp": "2025-08-04T18:44:47.723Z",
       "context": "Dashboard transformation - filters to charts",
-      "accessCount": 6,
-      "lastAccessed": "2025-08-11T20:19:49.718Z",
+      "accessCount": 7,
+      "lastAccessed": "2025-08-12T20:12:20.923Z",
       "lastVerified": "2025-08-04T18:44:47.723Z",
       "status": "fresh"
     },
@@ -746,8 +746,8 @@
       ],
       "timestamp": "2025-08-10T19:02:44.817Z",
       "context": "Planejando novos gráficos para o dashboard",
-      "accessCount": 8,
-      "lastAccessed": "2025-08-11T20:19:49.718Z",
+      "accessCount": 9,
+      "lastAccessed": "2025-08-12T20:12:20.923Z",
       "lastVerified": "2025-08-10T19:02:44.817Z",
       "status": "fresh"
     },
@@ -764,8 +764,8 @@
       ],
       "timestamp": "2025-08-10T19:04:19.991Z",
       "context": "Implementação concluída dos novos gráficos do dashboard",
-      "accessCount": 8,
-      "lastAccessed": "2025-08-11T20:19:49.718Z",
+      "accessCount": 9,
+      "lastAccessed": "2025-08-12T20:12:20.923Z",
       "lastVerified": "2025-08-10T19:04:19.991Z",
       "status": "fresh"
     },
@@ -782,8 +782,8 @@
       ],
       "timestamp": "2025-08-10T19:05:22.536Z",
       "context": "Finalização da implementação dos novos gráficos do dashboard",
-      "accessCount": 8,
-      "lastAccessed": "2025-08-11T20:19:49.718Z",
+      "accessCount": 9,
+      "lastAccessed": "2025-08-12T20:12:20.923Z",
       "lastVerified": "2025-08-10T19:05:22.536Z",
       "status": "fresh"
     },
@@ -800,8 +800,8 @@
       ],
       "timestamp": "2025-08-10T19:12:54.509Z",
       "context": "Modificações dos gráficos para timeseries concluídas",
-      "accessCount": 7,
-      "lastAccessed": "2025-08-11T20:19:49.718Z",
+      "accessCount": 8,
+      "lastAccessed": "2025-08-12T20:12:20.923Z",
       "lastVerified": "2025-08-10T19:12:54.509Z",
       "status": "fresh"
     },
@@ -837,8 +837,8 @@
       ],
       "timestamp": "2025-08-10T19:34:35.003Z",
       "context": "Finalização da implementação das abas laterais",
-      "accessCount": 8,
-      "lastAccessed": "2025-08-11T19:56:34.987Z",
+      "accessCount": 10,
+      "lastAccessed": "2025-08-12T21:38:09.516Z",
       "lastVerified": "2025-08-10T19:34:35.003Z",
       "status": "fresh"
     },
@@ -855,8 +855,8 @@
       ],
       "timestamp": "2025-08-10T20:16:46.695Z",
       "context": "Reorganização da aba Visão Geral concluída",
-      "accessCount": 8,
-      "lastAccessed": "2025-08-11T19:56:34.987Z",
+      "accessCount": 9,
+      "lastAccessed": "2025-08-12T20:12:20.923Z",
       "lastVerified": "2025-08-10T20:16:46.695Z",
       "status": "fresh"
     },
@@ -1188,8 +1188,8 @@
       ],
       "timestamp": "2025-08-11T01:14:04.229Z",
       "context": "Modificação na página de Perfil Epidemiológico do PSI Analytics",
-      "accessCount": 0,
-      "lastAccessed": "2025-08-11T01:14:04.229Z",
+      "accessCount": 1,
+      "lastAccessed": "2025-08-12T21:38:09.516Z",
       "lastVerified": "2025-08-11T01:14:04.229Z",
       "status": "fresh"
     },
@@ -1206,8 +1206,8 @@
       ],
       "timestamp": "2025-08-11T01:23:57.149Z",
       "context": "Sincronização de gráficos entre Dashboard e Perfil Epidemiológico",
-      "accessCount": 3,
-      "lastAccessed": "2025-08-11T20:19:49.718Z",
+      "accessCount": 4,
+      "lastAccessed": "2025-08-12T21:38:09.516Z",
       "lastVerified": "2025-08-11T01:23:57.149Z",
       "status": "fresh"
     },
@@ -1223,8 +1223,8 @@
       ],
       "timestamp": "2025-08-11T01:26:36.134Z",
       "context": "Correção de normalização de dados de cor/raça",
-      "accessCount": 1,
-      "lastAccessed": "2025-08-11T01:43:54.347Z",
+      "accessCount": 2,
+      "lastAccessed": "2025-08-12T21:38:09.516Z",
       "lastVerified": "2025-08-11T01:26:36.134Z",
       "status": "fresh"
     },
@@ -1240,8 +1240,8 @@
       ],
       "timestamp": "2025-08-11T01:27:14.945Z",
       "context": "Correção de cálculo de percentual no gráfico de cor/raça",
-      "accessCount": 2,
-      "lastAccessed": "2025-08-11T13:42:53.171Z",
+      "accessCount": 3,
+      "lastAccessed": "2025-08-12T21:38:09.516Z",
       "lastVerified": "2025-08-11T01:27:14.945Z",
       "status": "fresh"
     },
@@ -1258,8 +1258,8 @@
       ],
       "timestamp": "2025-08-11T01:28:12.736Z",
       "context": "Sincronização das correções de cor/raça entre Dashboard e PerfilEpidemiologico",
-      "accessCount": 1,
-      "lastAccessed": "2025-08-11T01:54:48.932Z",
+      "accessCount": 2,
+      "lastAccessed": "2025-08-12T21:38:09.516Z",
       "lastVerified": "2025-08-11T01:28:12.736Z",
       "status": "fresh"
     },
@@ -1311,8 +1311,8 @@
       ],
       "timestamp": "2025-08-11T01:42:04.484Z",
       "context": "Recálculo da taxa de ocupação para abas Dashboard e Indicadores Assistenciais",
-      "accessCount": 7,
-      "lastAccessed": "2025-08-11T18:20:02.914Z",
+      "accessCount": 8,
+      "lastAccessed": "2025-08-12T20:12:20.923Z",
       "lastVerified": "2025-08-11T01:42:04.484Z",
       "status": "fresh"
     },
@@ -2668,7 +2668,356 @@
       "lastAccessed": "2025-08-11T20:32:16.591Z",
       "lastVerified": "2025-08-11T20:32:16.591Z",
       "status": "fresh"
+    },
+    {
+      "id": "mem_1755029741600_uwtxd20a9",
+      "content": "Successfully implemented all PSI Analytics dashboard modifications:\n\n✅ COMPLETED MODIFICATIONS:\n1. **Title Updated**: Changed to \"Panorama Assistencial e Estratégico – Psiquiatria\" in all tabs, removed \"PSI Analytics\" text\n2. **Default Route**: Set Visão Geral as default opening tab (App.tsx route \"/\" now points to Dashboard)\n3. **Fixed Top Cards**: \n   - Média de Permanência: 13,6 (Tempo médio de internação)\n   - Taxa de Ocupação: 88,7% (Percentual médio de ocupação) \n   - Taxa de Reinternação: 1,08% (Em até 15 dias)\n4. **Gender Chart**: Fixed data showing only Feminino (55%) and Masculino (45%) with percentages in list\n5. **Age Chart**: Fixed ranges <18, 18-25, 26-44, 45-64, 65+ (always expanded, no \"mostrar mais\")\n6. **Color Chart**: Fixed Parda 50%, Branca 42%, Preta 8% (hides 0% categories, highlights Parda)\n7. **Pathologies Chart**: Exact labels - Espectro da Esquizofrenia, Transtorno Bipolar, Transtornos por Uso de Substâncias, Transtorno de Personalidade, Transtorno Depressivo Unipolar\n8. **Altas por Dia da Semana**: Uses fixed absolute values (Segunda 92, Terça 68, Quarta 75, Quinta 60, Sexta 62, Sábado 18, Domingo 10) with calculated percentages, tooltip shows day + count + %\n9. **Patient Search Removed**: Completely removed \"Busca de Pacientes\" block from end of Visão Geral tab\n\nAll changes use fixed/hardcoded values instead of Supabase connections as requested. Dashboard now opens directly without splash screen.",
+      "type": "tip",
+      "tags": [
+        "tip",
+        "dashboard",
+        "psi-analytics",
+        "modifications",
+        "completed",
+        "fixed-values"
+      ],
+      "timestamp": "2025-08-12T20:15:41.600Z",
+      "context": "PSI Analytics dashboard modernization project completion",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-12T20:15:41.600Z",
+      "lastVerified": "2025-08-12T20:15:41.600Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1755030193359_jkj0tcnbw",
+      "content": "Implementadas as modificações adicionais no dashboard PSI Analytics:\n\n✅ AJUSTES FINAIS IMPLEMENTADOS:\n1. **Cards sempre expandidos**: Removida opção \"mostrar mais\" do componente MiniChart - todos os gráficos agora mostram todas as categorias sempre expandidas\n2. **Principais Patologias horizontal**: Alterado de MiniChart vertical para HorizontalBarChart - gráfico agora exibe barras horizontais para melhor visualização dos nomes das patologias\n3. **Tooltip melhorado**: DischargesByWeekdayChart agora mostra tooltip com:\n   - Dia da semana\n   - Número de altas \n   - Percentual\n\nO gráfico \"Altas por Dia da Semana\" já estava usando os valores corretos fornecidos (Segunda 92, Terça 68, Quarta 75, Quinta 60, Sexta 62, Sábado 18, Domingo 10) e calculando percentuais automaticamente.\n\nDashboard final: Visão Geral com dados fixos, cards sempre expandidos, patologias em barras horizontais e tooltips completos.",
+      "type": "general",
+      "tags": [
+        "general",
+        "dashboard",
+        "final-adjustments",
+        "horizontal-bars",
+        "tooltips",
+        "expanded-cards"
+      ],
+      "timestamp": "2025-08-12T20:23:13.359Z",
+      "context": "PSI Analytics dashboard final adjustments",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-12T20:23:13.359Z",
+      "lastVerified": "2025-08-12T20:23:13.359Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1755031397447_qet2ltk9y",
+      "content": "Found the Visão Geral cards in Dashboard.tsx:\n- \"Média de Permanência\": 13,6 with description \"Tempo médio de internação\"\n- \"Taxa de Ocupação\": 88,7% with description \"Percentual médio de ocupação\" \n- \"Taxa de Reinternação\": 1,08% with description \"Em até 15 dias\"\n\nThese values and legends need to be replicated in IndicadoresAssistenciais.tsx with standardized descriptions.",
+      "type": "general",
+      "tags": [
+        "general",
+        "dashboard",
+        "cards",
+        "values",
+        "legends"
+      ],
+      "timestamp": "2025-08-12T20:43:17.447Z",
+      "context": "Updating Indicadores Assistenciais tab to match Visão Geral card values and legends",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-12T20:43:17.447Z",
+      "lastVerified": "2025-08-12T20:43:17.447Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1755032955881_ho36g5msb",
+      "content": "Task: Modify \"Procedência\" tab in PSI Analytics dashboard - keep only line chart with 3 series (Porta, Hospital Cidade Tiradentes, Hospital JD IVA), update title, add explanatory text below chart, remove cards, CAPS panel, ranking, and pie chart",
+      "type": "general",
+      "tags": [
+        "general",
+        "dashboard",
+        "procedencia",
+        "charts",
+        "healthcare-analytics"
+      ],
+      "timestamp": "2025-08-12T21:09:15.881Z",
+      "context": "Working on healthcare analytics dashboard built with React + Supabase",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-12T21:09:15.881Z",
+      "lastVerified": "2025-08-12T21:09:15.881Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1755033108112_hrktflwqq",
+      "content": "Successfully modified Procedência tab in PSI Analytics dashboard. Changes implemented: 1) Kept only line chart with 3 series (Porta, Hospital Cidade Tiradentes, Hospital JD IVA), 2) Updated chart title to \"Procedência das Admissões — Set/2024 a Jul/2025\", 3) Added explanatory text below chart, 4) Removed all top cards, CAPS panel, ranking, and pie chart, 5) Updated subtitle to \"Origem dos pacientes\", 6) Cleaned up unused functions and imports",
+      "type": "general",
+      "tags": [
+        "general",
+        "dashboard",
+        "procedencia",
+        "completed",
+        "healthcare-analytics"
+      ],
+      "timestamp": "2025-08-12T21:11:48.112Z",
+      "context": "Completed dashboard modification task for healthcare analytics",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-12T21:11:48.112Z",
+      "lastVerified": "2025-08-12T21:11:48.112Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1755033649709_extu1iouy",
+      "content": "Need to update Procedência tab mapping: \"Porta (demanda + SAMU + Bombeiro)\" should include sum of SAMU + \"HOSPITAL WALDOMIRO DE PAULA - PS\" data",
+      "type": "tip",
+      "tags": [
+        "tip",
+        "dashboard",
+        "procedencia",
+        "data-mapping",
+        "porta"
+      ],
+      "timestamp": "2025-08-12T21:20:49.709Z",
+      "context": "Updating data mapping for PSI Analytics dashboard procedência chart",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-12T21:20:49.709Z",
+      "lastVerified": "2025-08-12T21:20:49.709Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1755034537608_cmyraoj4z",
+      "content": "Successfully removed \"Exportar\" tab from PSI Analytics application. Removed from: App.tsx routing, AppSidebar.tsx navigation, MobileNavigation.tsx menu. Build completed successfully.",
+      "type": "general",
+      "tags": [
+        "general",
+        "psi-analytics",
+        "navigation",
+        "ui-removal",
+        "react"
+      ],
+      "timestamp": "2025-08-12T21:35:37.608Z",
+      "context": "PSI Analytics dashboard modification - removing export functionality",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-12T21:35:37.608Z",
+      "lastVerified": "2025-08-12T21:35:37.608Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1755034721193_mg0ou7qmm",
+      "content": "Fixed the epidemiological profile race distribution tooltip to show 50% for \"Parda\" instead of 49%. Changed from hardcoded array to dynamic calculation using getRaceDistribution() with a forced 50% value for \"Parda\" specifically in the tooltip section.",
+      "type": "solution",
+      "tags": [
+        "solution",
+        "tooltip",
+        "epidemiologia",
+        "parda",
+        "percentual"
+      ],
+      "timestamp": "2025-08-12T21:38:41.193Z",
+      "context": "PerfilEpidemiologico.tsx tooltip fix for race distribution",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-12T21:38:41.193Z",
+      "lastVerified": "2025-08-12T21:38:41.193Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1755034850193_v8daca9yb",
+      "content": "Updated both the chart data and tooltip for race distribution in PerfilEpidemiologico.tsx to force \"Parda\" to display 50% instead of the calculated 49%. Both the pie chart and the legend/tooltip below it now consistently show 50% for \"Parda\".",
+      "type": "general",
+      "tags": [
+        "general",
+        "parda",
+        "50%",
+        "tooltip",
+        "chart",
+        "epidemiologia",
+        "fix"
+      ],
+      "timestamp": "2025-08-12T21:40:50.193Z",
+      "context": "Final fix for Parda percentage in epidemiological profile",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-12T21:40:50.193Z",
+      "lastVerified": "2025-08-12T21:40:50.193Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1755034917147_im84n4wz5",
+      "content": "Removed 'Outros' from gender distribution legend in PerfilEpidemiologico.tsx. Modified getGenderDistribution() to exclude 'outros' gender from the count and updated colors array to only include Feminino and Masculino.",
+      "type": "general",
+      "tags": [
+        "general",
+        "gender",
+        "outros",
+        "legend",
+        "epidemiologia",
+        "cleanup"
+      ],
+      "timestamp": "2025-08-12T21:41:57.147Z",
+      "context": "Gender distribution legend cleanup",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-12T21:41:57.147Z",
+      "lastVerified": "2025-08-12T21:41:57.147Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1755034999785_4d6x0ycfw",
+      "content": "Expanded both gender and age charts in PerfilEpidemiologico.tsx by increasing height from h-40 to h-60 and converting the age chart from MiniChart component to a full card layout matching the gender chart style for better visual consistency.",
+      "type": "general",
+      "tags": [
+        "general",
+        "charts",
+        "expansion",
+        "height",
+        "layout",
+        "epidemiologia"
+      ],
+      "timestamp": "2025-08-12T21:43:19.785Z",
+      "context": "Chart expansion for better card utilization",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-12T21:43:19.785Z",
+      "lastVerified": "2025-08-12T21:43:19.785Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1755035059004_ztut3jbi5",
+      "content": "Combined chart and legend for both gender and age charts in PerfilEpidemiologico.tsx by setting hideLegend={false} for both MiniChart components. Removed the separate legend section for gender chart that was below the chart area.",
+      "type": "config",
+      "tags": [
+        "config",
+        "charts",
+        "legend",
+        "integration",
+        "epidemiologia",
+        "layout"
+      ],
+      "timestamp": "2025-08-12T21:44:19.004Z",
+      "context": "Chart and legend integration",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-12T21:44:19.004Z",
+      "lastVerified": "2025-08-12T21:44:19.004Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1755035103813_uano35ppk",
+      "content": "Reverted gender and age charts back to previous state: gender chart has separate legend below the chart area, age chart has hideLegend=true. Restored the mb-4 margin and separate legend section for gender chart.",
+      "type": "general",
+      "tags": [
+        "general",
+        "revert",
+        "charts",
+        "legend",
+        "epidemiologia",
+        "layout"
+      ],
+      "timestamp": "2025-08-12T21:45:03.813Z",
+      "context": "Chart reversion to previous state",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-12T21:45:03.813Z",
+      "lastVerified": "2025-08-12T21:45:03.813Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1755035174812_ijjfp0w00",
+      "content": "Fully reverted gender and age charts to original state: gender chart back to h-40 height with separate legend, age chart reverted to simple MiniChart component with title, subtitle, icon, and hideLegend=false - exactly as it was before any space adjustments.",
+      "type": "general",
+      "tags": [
+        "general",
+        "revert",
+        "original",
+        "charts",
+        "epidemiologia",
+        "h-40"
+      ],
+      "timestamp": "2025-08-12T21:46:14.812Z",
+      "context": "Complete chart reversion to original state",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-12T21:46:14.812Z",
+      "lastVerified": "2025-08-12T21:46:14.812Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1755035251937_ma3xtopf9",
+      "content": "User wants to increase the gender pie chart size in the epidemiological profile tab, keeping legend and chart in the same card but better utilizing the card space",
+      "type": "general",
+      "tags": [
+        "general"
+      ],
+      "timestamp": "2025-08-12T21:47:31.937Z",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-12T21:47:31.937Z",
+      "lastVerified": "2025-08-12T21:47:31.937Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1755035295601_6p9v46ix6",
+      "content": "Successfully increased gender pie chart size in epidemiological profile page by: 1) Increasing container height from h-40 to h-60 in PerfilEpidemiologico.tsx:288, 2) Increasing pie chart innerRadius from 25 to 35 and outerRadius from 55 to 80 in MiniChart.tsx:230-231",
+      "type": "general",
+      "tags": [
+        "general",
+        "chart-sizing",
+        "ui-improvement",
+        "epidemiological-profile"
+      ],
+      "timestamp": "2025-08-12T21:48:15.601Z",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-12T21:48:15.601Z",
+      "lastVerified": "2025-08-12T21:48:15.601Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1755035572847_6x2ylac7j",
+      "content": "User wants to revert the gender chart changes - the increased size created unwanted division between graph and legend",
+      "type": "general",
+      "tags": [
+        "general",
+        "revert",
+        "chart-sizing"
+      ],
+      "timestamp": "2025-08-12T21:52:52.847Z",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-12T21:52:52.847Z",
+      "lastVerified": "2025-08-12T21:52:52.847Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1755035597926_qkyg50033",
+      "content": "Reverted gender pie chart changes back to original size: container height back to h-40 and chart radius back to innerRadius=25, outerRadius=55 due to unwanted visual division",
+      "type": "general",
+      "tags": [
+        "general",
+        "revert",
+        "chart-sizing",
+        "ui-fix"
+      ],
+      "timestamp": "2025-08-12T21:53:17.926Z",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-12T21:53:17.926Z",
+      "lastVerified": "2025-08-12T21:53:17.926Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1755035729249_nk9r6c05e",
+      "content": "Usuário quer ajustar o gráfico de principais patologias na aba visão geral para ficar igual ao da imagem mostrada - formato de barras horizontais com percentuais",
+      "type": "general",
+      "tags": [
+        "general"
+      ],
+      "timestamp": "2025-08-12T21:55:29.249Z",
+      "context": "Dashboard PSI Analytics - ajuste visual do gráfico",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-12T21:55:29.249Z",
+      "lastVerified": "2025-08-12T21:55:29.249Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1755035817774_pv5qmyf0r",
+      "content": "Ajustei o gráfico de principais patologias na aba visão geral do Dashboard.tsx para usar o mesmo formato do perfil epidemiológico - barras horizontais com percentuais exibidos, removendo o componente HorizontalBarChart e implementando diretamente no JSX",
+      "type": "general",
+      "tags": [
+        "general"
+      ],
+      "timestamp": "2025-08-12T21:56:57.774Z",
+      "context": "Dashboard PSI Analytics - ajuste visual concluído",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-12T21:56:57.774Z",
+      "lastVerified": "2025-08-12T21:56:57.774Z",
+      "status": "fresh"
     }
   ],
-  "lastUpdated": "2025-08-11T20:32:16.591Z"
+  "lastUpdated": "2025-08-12T21:56:57.774Z"
 }

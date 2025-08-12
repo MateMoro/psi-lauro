@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
-import { MapPin, Building2, Route, Users } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { DashboardSkeleton } from "@/components/dashboard/LoadingSkeletons";
 import { EmptyState } from "@/components/ui/empty-state";
-import { MiniChart } from "@/components/dashboard/MiniChart";
 import { MultiLineChart } from "@/components/dashboard/charts/MultiLineChart";
 import { useToast } from "@/hooks/use-toast";
 
@@ -49,62 +48,25 @@ export default function Procedencia() {
     }
   };
 
-  const getProcedenciaDistribution = () => {
-    const procedenciaCount = patients.reduce((acc, p) => {
-      const procedencia = p.procedencia || 'Não informado';
-      acc[procedencia] = (acc[procedencia] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-
-    const colors = [
-      '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', 
-      '#06b6d4', '#84cc16', '#eab308', '#f97316', '#ec4899'
-    ];
-
-    return Object.entries(procedenciaCount)
-      .sort(([,a], [,b]) => b - a)
-      .map(([name, value], index) => ({ 
-        name: name.toUpperCase(),
-        value: Math.round((value / patients.length) * 100),
-        count: value,
-        color: colors[index % colors.length] || '#6b7280'
-      }));
-  };
-
-  const getCapsDistribution = () => {
-    const capsCount = patients.reduce((acc, p) => {
-      const caps = p.caps_referencia || 'Não informado';
-      acc[caps] = (acc[caps] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-
-    const colors = [
-      '#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
-      '#06b6d4', '#84cc16', '#eab308', '#f97316', '#ec4899'
-    ];
-
-    return Object.entries(capsCount)
-      .sort(([,a], [,b]) => b - a)
-      .map(([name, value], index) => ({ 
-        name: name.toUpperCase(), 
-        value: Math.round((value / patients.length) * 100),
-        count: value,
-        color: colors[index % colors.length] || '#6b7280'
-      }));
-  };
 
   const getProcedenciaTimeseries = () => {
     const monthlyProcedencia: Record<string, Record<string, number>> = {};
     
-    // Get last 12 months
+    // Get 12 months from Sep/2024 to Jul/2025
     const months = [];
-    for (let i = 11; i >= 0; i--) {
-      const date = new Date();
-      date.setMonth(date.getMonth() - i);
+    const startDate = new Date(2024, 8, 1); // September 2024 (month is 0-indexed)
+    
+    for (let i = 0; i < 12; i++) {
+      const date = new Date(startDate);
+      date.setMonth(startDate.getMonth() + i);
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
       const monthName = date.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
       months.push({ key: monthKey, name: monthName });
-      monthlyProcedencia[monthKey] = {};
+      monthlyProcedencia[monthKey] = {
+        'Porta': 0,
+        'Hospital Cidade Tiradentes': 0,
+        'Hospital JD IVA': 0
+      };
     }
 
     // Count procedencias by month
@@ -112,44 +74,30 @@ export default function Procedencia() {
       if (patient.data_admissao) {
         const admissionDate = new Date(patient.data_admissao);
         const monthKey = `${admissionDate.getFullYear()}-${String(admissionDate.getMonth() + 1).padStart(2, '0')}`;
-        const procedencia = patient.procedencia || 'Não informado';
         
         if (monthlyProcedencia[monthKey] !== undefined) {
-          monthlyProcedencia[monthKey][procedencia] = (monthlyProcedencia[monthKey][procedencia] || 0) + 1;
+          const procedencia = patient.procedencia || '';
+          
+          // Map procedencias to the 3 required categories
+          if (procedencia.includes('SAMU') || procedencia.includes('Bombeiro')) {
+            monthlyProcedencia[monthKey]['Porta']++;
+          } else if (procedencia.includes('TIRADENTES')) {
+            monthlyProcedencia[monthKey]['Hospital Cidade Tiradentes']++;
+          } else if (procedencia.includes('Hospital JD IVA') || procedencia.includes('JD IVA')) {
+            monthlyProcedencia[monthKey]['Hospital JD IVA']++;
+          }
         }
       }
     });
-
-    // Get top 3 procedencias
-    const topProcedencias = getTopProcedencias().slice(0, 3);
     
-    return months.map(month => {
-      const monthData: any = { month: month.name };
-      
-      topProcedencias.forEach(proc => {
-        monthData[proc.name] = monthlyProcedencia[month.key][proc.name] || 0;
-      });
-      
-      return monthData;
-    });
+    return months.map(month => ({
+      month: month.name,
+      'Porta': monthlyProcedencia[month.key]['Porta'],
+      'Hospital Cidade Tiradentes': monthlyProcedencia[month.key]['Hospital Cidade Tiradentes'],
+      'Hospital JD IVA': monthlyProcedencia[month.key]['Hospital JD IVA']
+    }));
   };
 
-  const getTopProcedencias = () => {
-    const procedenciaCount = patients.reduce((acc, p) => {
-      const procedencia = p.procedencia || 'Não informado';
-      acc[procedencia] = (acc[procedencia] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-
-    return Object.entries(procedenciaCount)
-      .sort(([,a], [,b]) => b - a)
-      .slice(0, 10)
-      .map(([name, value]) => ({ 
-        name, 
-        value,
-        percentage: Math.round((value / patients.length) * 100)
-      }));
-  };
 
   if (loading) {
     return <DashboardSkeleton />;
@@ -169,9 +117,6 @@ export default function Procedencia() {
     );
   }
 
-  const procedenciaData = getProcedenciaDistribution();
-  const capsData = getCapsDistribution();
-  const topProcedencias = getTopProcedencias();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-emerald-50/20">
@@ -188,61 +133,8 @@ export default function Procedencia() {
                 Análise de Procedência
               </h1>
               <p className="text-lg text-slate-600 font-medium">
-                Origem e fluxo de encaminhamentos dos pacientes
+                Origem dos pacientes
               </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Summary Statistics */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-gradient-to-br from-white to-slate-50/50 shadow-xl backdrop-blur-sm ring-1 ring-slate-200/50 rounded-2xl p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-gradient-to-br from-orange-500 to-amber-600 rounded-xl">
-                <MapPin className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <p className="text-2xl font-black text-slate-800">{procedenciaData.length}</p>
-                <p className="text-sm text-slate-600 font-semibold">Origens Diferentes</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-br from-white to-slate-50/50 shadow-xl backdrop-blur-sm ring-1 ring-slate-200/50 rounded-2xl p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl">
-                <Building2 className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <p className="text-2xl font-black text-slate-800">{capsData.length}</p>
-                <p className="text-sm text-slate-600 font-semibold">CAPS Referência</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-br from-white to-slate-50/50 shadow-xl backdrop-blur-sm ring-1 ring-slate-200/50 rounded-2xl p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl">
-                <Route className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <p className="text-2xl font-black text-slate-800">
-                  {topProcedencias[0]?.percentage || 0}%
-                </p>
-                <p className="text-sm text-slate-600 font-semibold">Principal Origem</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-br from-white to-slate-50/50 shadow-xl backdrop-blur-sm ring-1 ring-slate-200/50 rounded-2xl p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl">
-                <Users className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <p className="text-2xl font-black text-slate-800">{patients.length}</p>
-                <p className="text-sm text-slate-600 font-semibold">Total Pacientes</p>
-              </div>
             </div>
           </div>
         </div>
@@ -252,95 +144,38 @@ export default function Procedencia() {
           <div className="flex items-center space-x-3 mb-6">
             <div className="w-1 h-8 bg-gradient-to-b from-amber-500 to-orange-500 rounded-full"></div>
             <h2 className="text-2xl font-bold text-slate-800 tracking-tight">
-              Procedência das Admissões - Últimos 12 meses
+              Procedência das Admissões — Set/2024 a Jul/2025
             </h2>
           </div>
           
           <MultiLineChart
             data={getProcedenciaTimeseries()}
-            title="Evolução Temporal das Principais Procedências"
-            description="Comparação mensal entre as 3 principais origens de encaminhamento"
+            title="Procedência das Admissões — Set/2024 a Jul/2025"
+            description=""
             lines={[
               {
-                dataKey: topProcedencias[0]?.name || 'Porta',
-                name: topProcedencias[0]?.name || 'Porta',
+                dataKey: 'Porta',
+                name: 'Porta (Demanda + SAMU + Bombeiro)',
                 color: '#1e40af'
               },
               {
-                dataKey: topProcedencias[1]?.name || 'Hospital',
-                name: topProcedencias[1]?.name || 'Hospital',
+                dataKey: 'Hospital Cidade Tiradentes',
+                name: 'Hospital Cidade Tiradentes',
                 color: '#6b7280'
               },
               {
-                dataKey: topProcedencias[2]?.name || 'CAPS',
-                name: topProcedencias[2]?.name || 'CAPS',
+                dataKey: 'Hospital JD IVA',
+                name: 'Hospital JD IVA',
                 color: '#059669'
               }
             ]}
           />
-        </div>
-
-        {/* Distribution Charts */}
-        <div className="space-y-6">
-          <div className="flex items-center space-x-3 mb-6">
-            <div className="w-1 h-8 bg-gradient-to-b from-orange-500 to-amber-500 rounded-full"></div>
-            <h2 className="text-2xl font-bold text-slate-800 tracking-tight uppercase">
-              DISTRIBUIÇÃO POR ORIGEM
-            </h2>
-          </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="h-[600px]">
-              <MiniChart
-                data={procedenciaData.slice(0, 8)}
-                title="PRINCIPAIS PROCEDÊNCIAS"
-                subtitle="TOP 8 ORIGENS DE ENCAMINHAMENTO"
-                type="pie"
-                icon={MapPin}
-              />
-            </div>
-
-            <div className="h-[600px]">
-              <MiniChart
-                data={capsData.slice(0, 8)}
-                title="CAPS DE REFERÊNCIA"
-                subtitle="PRINCIPAIS UNIDADES"
-                type="pie"
-                icon={Building2}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Detailed Table */}
-        <div className="space-y-6">
-          <div className="flex items-center space-x-3 mb-6">
-            <div className="w-1 h-8 bg-gradient-to-b from-yellow-500 to-orange-500 rounded-full"></div>
-            <h2 className="text-2xl font-bold text-slate-800 tracking-tight">
-              Ranking Detalhado
-            </h2>
-          </div>
-          
-          <div className="bg-gradient-to-br from-white to-slate-50/50 shadow-xl backdrop-blur-sm ring-1 ring-slate-200/50 rounded-2xl p-6">
-            <div className="space-y-4">
-              <h3 className="text-lg font-bold text-slate-800 mb-4">Top 10 Procedências</h3>
-              <div className="grid gap-3">
-                {topProcedencias.map((item, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-amber-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
-                        {index + 1}
-                      </div>
-                      <span className="font-semibold text-slate-800">{item.name}</span>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-lg font-black text-slate-800">{item.value}</span>
-                      <span className="text-sm text-slate-600 ml-2">({item.percentage}%)</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+          {/* Explanatory text */}
+          <div className="bg-gradient-to-br from-white to-slate-50/50 shadow-xl backdrop-blur-sm ring-1 ring-slate-200/50 rounded-2xl p-6 mt-6">
+            <p className="text-sm text-slate-700 leading-relaxed">
+              Nos últimos três meses, observou-se uma inversão marcante no perfil de admissões: a porta (demanda espontânea + SAMU + Bombeiro) superou os casos regulados pelo SIRESP — cenário incompatível com a vocação do serviço como unidade de "porta fechada". Essa mudança pressiona o pronto-socorro e compromete a previsibilidade assistencial.
+            </p>
           </div>
         </div>
       </div>

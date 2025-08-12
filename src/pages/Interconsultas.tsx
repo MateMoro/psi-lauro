@@ -1,23 +1,29 @@
 import { MessageCircle, Clock, TrendingUp } from "lucide-react";
 import { MultiLineChart } from "@/components/dashboard/charts/MultiLineChart";
 import { Card, CardContent } from "@/components/ui/card";
-import { MiniChart } from "@/components/dashboard/MiniChart";
 
 export default function Interconsultas() {
   const getInterconsultationData = () => {
     return [
-      { month: 'Janeiro', interconsultas2024: 31, interconsultas2025: 102 },
-      { month: 'Fevereiro', interconsultas2024: 23, interconsultas2025: 103 },
-      { month: 'Março', interconsultas2024: 22, interconsultas2025: 93 },
-      { month: 'Abril', interconsultas2024: 31, interconsultas2025: 86 },
-      { month: 'Maio', interconsultas2024: 30, interconsultas2025: 97 },
-      { month: 'Junho', interconsultas2024: 25, interconsultas2025: 103 },
-      { month: 'Julho', interconsultas2024: 50, interconsultas2025: null },
-      { month: 'Agosto', interconsultas2024: 45, interconsultas2025: null },
-      { month: 'Setembro', interconsultas2024: 51, interconsultas2025: null },
-      { month: 'Outubro', interconsultas2024: 48, interconsultas2025: null },
-      { month: 'Novembro', interconsultas2024: 38, interconsultas2025: null },
-      { month: 'Dezembro', interconsultas2024: 58, interconsultas2025: null }
+      { month: 'Jan/2024', interconsultas: 31 },
+      { month: 'Fev/2024', interconsultas: 23 },
+      { month: 'Mar/2024', interconsultas: 22 },
+      { month: 'Abr/2024', interconsultas: 31 },
+      { month: 'Mai/2024', interconsultas: 30 },
+      { month: 'Jun/2024', interconsultas: 25 },
+      { month: 'Jul/2024', interconsultas: 50 },
+      { month: 'Ago/2024', interconsultas: 45 },
+      { month: 'Set/2024', interconsultas: 51 },
+      { month: 'Out/2024', interconsultas: 48 },
+      { month: 'Nov/2024', interconsultas: 38 },
+      { month: 'Dez/2024', interconsultas: 58 },
+      { month: 'Jan/2025', interconsultas: 102 },
+      { month: 'Fev/2025', interconsultas: 103 },
+      { month: 'Mar/2025', interconsultas: 93 },
+      { month: 'Abr/2025', interconsultas: 86 },
+      { month: 'Mai/2025', interconsultas: 97 },
+      { month: 'Jun/2025', interconsultas: 103 },
+      { month: 'Jul/2025', interconsultas: null }
     ];
   };
 
@@ -55,17 +61,12 @@ export default function Interconsultas() {
           <MultiLineChart
             data={getInterconsultationData()}
             title="Pedidos de Interconsultas por Mês"
-            description="Comparação entre 2024 e 2025"
+            description="Evolução temporal jan/2024 → jul/2025"
             lines={[
               {
-                dataKey: "interconsultas2024",
-                name: "Interconsultas (2024)",
+                dataKey: "interconsultas",
+                name: "Pedidos de Interconsultas",
                 color: "#3b82f6"
-              },
-              {
-                dataKey: "interconsultas2025", 
-                name: "Interconsultas (2025)",
-                color: "#10b981"
               }
             ]}
           />
@@ -89,15 +90,40 @@ export default function Interconsultas() {
           </Card>
 
           {/* Response Time Chart */}
-          <MiniChart
-            data={getResponseTimeData()}
-            title="Tempo de Resposta"
-            subtitle="Percentual cumprido por tempo limite"
-            type="bar"
-            icon={Clock}
-            showXAxisLabels={true}
-            hideLegend={true}
-          />
+          <Card className="bg-gradient-to-br from-white to-slate-50/50 shadow-xl backdrop-blur-sm ring-1 ring-slate-200/50 rounded-2xl">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg">
+                  <Clock className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-800">Tempo de Resposta</h3>
+                  <p className="text-sm text-slate-600">Percentual cumprido por tempo limite</p>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                {getResponseTimeData().map((item) => (
+                  <div key={item.name} className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-slate-700">{item.name}</span>
+                      <span className="text-sm font-bold text-slate-800">{item.value}%</span>
+                    </div>
+                    <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
+                      <div 
+                        className="h-full rounded-full transition-all duration-500 ease-out"
+                        style={{ 
+                          width: `${item.value}%`, 
+                          backgroundColor: item.color,
+                          background: `linear-gradient(90deg, ${item.color}, ${item.color}dd)`
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

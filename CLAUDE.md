@@ -70,4 +70,3 @@ All routes are wrapped in `DashboardLayout` component:
 - Uses `@` alias for `./src` imports
 - Vite development server runs on port 8080
 - TypeScript configuration allows some flexibility (noImplicitAny: false, strictNullChecks: false)
-- Project originally created with Lovable platform integration

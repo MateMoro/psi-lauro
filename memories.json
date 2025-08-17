@@ -3130,7 +3130,25 @@
       "lastAccessed": "2025-08-17T21:02:09.477Z",
       "lastVerified": "2025-08-17T21:02:09.477Z",
       "status": "fresh"
+    },
+    {
+      "id": "mem_1755470607388_0d2qjwqfg",
+      "content": "Removidas todas as menções ao Lovable do projeto PSI Analytics: index.html (metadados e og:image), vite.config.ts (lovable-tagger import e plugin), package.json (dependência lovable-tagger), CLAUDE.md (linha sobre platform integration), e README.md (reescrito completamente). Projeto agora está limpo de referências externas.",
+      "type": "config",
+      "tags": [
+        "config",
+        "lovable",
+        "cleanup",
+        "psi-analytics",
+        "project-maintenance"
+      ],
+      "timestamp": "2025-08-17T22:43:27.388Z",
+      "context": "Limpeza de referências do Lovable no projeto de dashboard psiquiátrico",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-17T22:43:27.388Z",
+      "lastVerified": "2025-08-17T22:43:27.388Z",
+      "status": "fresh"
     }
   ],
-  "lastUpdated": "2025-08-17T21:02:09.477Z"
+  "lastUpdated": "2025-08-17T22:43:27.388Z"
 }

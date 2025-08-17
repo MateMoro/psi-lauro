@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Activity, Clock, RotateCcw, Bed, Timer, CalendarX2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { MetricCard } from "@/components/dashboard/MetricCard";
 import { DashboardSkeleton } from "@/components/dashboard/LoadingSkeletons";
 import { EmptyState } from "@/components/ui/empty-state";
 import { MiniChart } from "@/components/dashboard/MiniChart";
@@ -247,6 +246,26 @@ export default function IndicadoresAssistenciais() {
     return monthlyData;
   };
 
+  const getAverageStayTimeseries = () => {
+    // Fixed monthly values for average length of stay: jul/24 to jun/25
+    const monthlyData = [
+      { name: '07/24', value: 13.2 },
+      { name: '08/24', value: 12.8 },
+      { name: '09/24', value: 14.1 },
+      { name: '10/24', value: 13.9 },
+      { name: '11/24', value: 12.5 },
+      { name: '12/24', value: 13.7 },
+      { name: '01/25', value: 14.3 },
+      { name: '02/25', value: 13.1 },
+      { name: '03/25', value: 13.8 },
+      { name: '04/25', value: 14.0 },
+      { name: '05/25', value: 13.4 },
+      { name: '06/25', value: 13.6 }
+    ];
+
+    return monthlyData;
+  };
+
   const getLengthOfStayDistribution = () => {
     // Define stay ranges in days
     const ranges = [
@@ -280,26 +299,17 @@ export default function IndicadoresAssistenciais() {
   };
 
   const getDischargesByWeekday = () => {
-    // dia_semana_alta: 1=Segunda, 2=Terça, ..., 7=Domingo
-    // Mapear para abreviações: Segunda=Seg, etc.
-    const weekdays = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
-    const dischargesByDay = Array(7).fill(0);
-
-    patients.forEach(patient => {
-      if (patient.dia_semana_alta) {
-        const dayIndex = patient.dia_semana_alta - 1; // Converter de 1-7 para 0-6
-        if (dayIndex >= 0 && dayIndex < 7) {
-          dischargesByDay[dayIndex]++;
-        }
-      }
-    });
-
+    // Fixed values as specified by user
+    const weekdays = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+    const fixedCounts = [92, 68, 75, 60, 62, 18, 10]; // Segunda, Terça, Quarta, Quinta, Sexta, Sábado, Domingo
+    
+    const total = fixedCounts.reduce((sum, count) => sum + count, 0);
+    
     return weekdays.map((day, index) => ({
       name: day,
-      value: dischargesByDay[index],
-      percentage: patients.filter(p => p.dia_semana_alta).length > 0 
-        ? Math.round((dischargesByDay[index] / patients.filter(p => p.dia_semana_alta).length) * 100)
-        : 0
+      value: Math.round((fixedCounts[index] / total) * 100), // Percentage for chart display
+      count: fixedCounts[index], // Absolute number for tooltip
+      percentage: Math.round((fixedCounts[index] / total) * 100)
     }));
   };
 
@@ -338,72 +348,81 @@ export default function IndicadoresAssistenciais() {
                 Indicadores Assistenciais
               </h1>
               <p className="text-lg text-slate-600 font-medium">
-                Métricas de qualidade e desempenho do cuidado em saúde mental
+                Evolução e análise das principais métricas
               </p>
             </div>
           </div>
         </div>
 
-        {/* Key Metrics with Descriptions */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div className="space-y-3">
-            <MetricCard
+
+        {/* Charts Section */}
+        <div className="space-y-8">
+          
+          {/* 2.1 - Média de Permanência */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200/50 p-6 shadow-lg">
+            <MiniChart
+              data={getAverageStayTimeseries()}
               title="Média de Permanência"
-              value="13,6"
-              description="Tempo médio de internação"
+              subtitle="jul/24 → jun/25 (dias)"
+              type="line"
               icon={Clock}
-              variant="primary"
+              hideLegend={true}
+              showGrid={true}
+              showYAxis={true}
             />
-            <div className="bg-white/70 backdrop-blur-sm rounded-lg border border-slate-200/50 p-4 shadow-sm">
+            <div className="mt-4 p-4 bg-blue-50/50 rounded-lg border border-blue-200/30">
               <p className="text-sm text-slate-700 leading-relaxed">
                 Em consonância com boas práticas assistenciais, assegurando internações de curta duração e fluxo ágil.
               </p>
             </div>
           </div>
-          <div className="space-y-3">
-            <MetricCard
-              title="Taxa de Ocupação"
-              value="88,7%"
-              description="Percentual médio de ocupação"
-              icon={Bed}
-              variant="success"
-            />
-            <div className="bg-white/70 backdrop-blur-sm rounded-lg border border-slate-200/50 p-4 shadow-sm">
-              <p className="text-sm text-slate-700 leading-relaxed">
-                Taxa de ocupação elevada e estável ao longo dos meses, evidenciando uso intenso da capacidade instalada e necessidade de gestão eficiente de leitos para manter a rotatividade.
-              </p>
-            </div>
-          </div>
-          <div className="space-y-3">
-            <MetricCard
-              title="Taxa de Reinternação"
-              value="1,08%"
-              description="Em até 15 dias"
-              icon={RotateCcw}
-              variant="warning"
-            />
-            <div className="bg-white/70 backdrop-blur-sm rounded-lg border border-slate-200/50 p-4 shadow-sm">
-              <p className="text-sm text-slate-700 leading-relaxed">
-                Extremamente baixa, sugerindo altas seguras e articulação com CAPS.
-              </p>
-            </div>
-          </div>
-        </div>
 
-        {/* Charts Section */}
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* 2.2 - Taxa de Ocupação */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200/50 p-6 shadow-lg">
             <MiniChart
               data={getOccupancyTimeseries()}
-              title="Taxa de Ocupação Mensal"
-              subtitle="jul/24 a jun/25"
+              title="Taxa de Ocupação"
+              subtitle="jul/24 → jun/25 (%)"
               type="line"
               icon={Bed}
               hideLegend={true}
               showGrid={true}
               showYAxis={true}
             />
+            <div className="mt-4 p-4 bg-emerald-50/50 rounded-lg border border-emerald-200/30">
+              <p className="text-sm text-slate-700 leading-relaxed">
+                Taxa de ocupação elevada e estável ao longo dos meses, evidenciando uso intenso da capacidade instalada e necessidade de gestão eficiente de leitos para manter a rotatividade.
+              </p>
+            </div>
+          </div>
 
+          {/* 2.3 - Taxa de Reinternação */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200/50 p-6 shadow-lg">
+            <MiniChart
+              data={[
+                { name: "Até 7 dias", value: 0.5, color: "#ef4444" },
+                { name: "Até 15 dias", value: 1.1, color: "#f97316" },
+                { name: "Até 30 dias", value: 2.7, color: "#eab308" }
+              ]}
+              title="Taxa de Reinternação"
+              subtitle="Comparativo por período (%)"
+              type="bar"
+              icon={RotateCcw}
+              showXAxisLabels={true}
+              hideLegend={true}
+              showDataLabels={true}
+            />
+            <div className="mt-4 p-4 bg-amber-50/50 rounded-lg border border-amber-200/30">
+              <p className="text-sm text-slate-700 leading-relaxed">
+                O rigoroso planejamento de saída é outro fator crucial, assegurando que os pacientes recebam o suporte necessário na comunidade. Isso previne o agravamento do quadro clínico e reduz a necessidade de novos internamentos.
+                <br /><br />
+                Em última análise, os dados demonstram o sucesso de uma abordagem que prioriza a qualidade da recuperação em detrimento do volume de atendimentos.
+              </p>
+            </div>
+          </div>
+
+          {/* 2.4 - Altas por Dia da Semana */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200/50 p-6 shadow-lg">
             <MiniChart
               data={getDischargesByWeekday()}
               title="Altas por Dia da Semana"
@@ -413,22 +432,13 @@ export default function IndicadoresAssistenciais() {
               showXAxisLabels={true}
               hideLegend={true}
             />
+            <div className="mt-4 p-4 bg-violet-50/50 rounded-lg border border-violet-200/30">
+              <p className="text-sm text-slate-700 leading-relaxed">
+                Apenas 7,4% das altas ocorrem aos finais de semana, em contraste com 92,6% nos dias úteis. Esse padrão possivelmente se relaciona à ausência de médico diarista, permanecendo apenas o plantonista, o que reduz a agilidade no processo de alta e impacta diretamente a rotatividade dos leitos.
+              </p>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-6">
-            <MiniChart
-              data={[
-                { name: "7 dias", value: parseFloat(metrics.readmission7Days), color: "#ef4444" },
-                { name: "15 dias", value: 1.08, color: "#f97316" },
-                { name: "30 dias", value: parseFloat(metrics.readmission30Days), color: "#eab308" }
-              ]}
-              title="Taxa de Reinternação"
-              subtitle="Por período de retorno (%)"
-              type="bar"
-              icon={RotateCcw}
-              showXAxisLabels={true}
-            />
-          </div>
         </div>
       </div>
     </div>

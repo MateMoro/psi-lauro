@@ -3017,7 +3017,100 @@
       "lastAccessed": "2025-08-12T21:56:57.774Z",
       "lastVerified": "2025-08-12T21:56:57.774Z",
       "status": "fresh"
+    },
+    {
+      "id": "mem_1755445022724_1dv0pa0ou",
+      "content": "IndicadoresAssistenciais.tsx restructuring requirements:\n1. Remove 3 top cards: M\\u00e9dia de Perman\\u00eancia, Taxa de Ocupa\\u00e7\\u00e3o, Taxa de Reinterna\\u00e7\\u00e3o\n2. Remove text boxes below cards\n3. New structure order:\n   - M\\u00e9dia de Perman\\u00eancia (Line Chart) jul/2024 → jun/2025 + explanatory text\n   - Taxa de Ocupa\\u00e7\\u00e3o (maintain) + new explanatory text\n   - Taxa de Reinterna\\u00e7\\u00e3o (Comparative Bar Chart 7,15,30 days) + explanatory text\n   - Altas por Dia da Semana (maintain) + new explanatory text",
+      "type": "general",
+      "tags": [
+        "general",
+        "healthcare",
+        "dashboard",
+        "indicators",
+        "restructure"
+      ],
+      "timestamp": "2025-08-17T15:37:02.724Z",
+      "context": "Restructuring healthcare analytics dashboard",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-17T15:37:02.724Z",
+      "lastVerified": "2025-08-17T15:37:02.724Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1755448494511_54qnymlar",
+      "content": "Updated Procedência tab with all requested changes: header changed to \"Procedência - Origem das admissões — Ago/2024 a Jul/2025\", removed chart title, updated data period to Aug/2024→Jul/2025, updated category names to exact specifications including \"Porta (SAMU + demanda espontânea)\", \"Hospital Jardim IVA\", and added \"Outros\" category, and replaced explanatory text with new provided text about the inversion in admission profile over the last four months.",
+      "type": "general",
+      "tags": [
+        "general",
+        "procedencia",
+        "update",
+        "dashboard",
+        "psi-lauro"
+      ],
+      "timestamp": "2025-08-17T16:34:54.511Z",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-17T16:34:54.511Z",
+      "lastVerified": "2025-08-17T16:34:54.511Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1755448614496_3f13a1lp6",
+      "content": "Updated Interconsultas page title from \"Pedidos de Interconsultas\" to \"Interconsultas – Volume e tempo de resposta\" and subtitle from \"Evolução mensal dos pedidos de interconsulta 2024-2025\" to \"Análise do volume de pedidos e eficiência do tempo de resposta\" in /Users/mateusmorotorres/Documents/repos/psi-lauro/src/pages/Interconsultas.tsx",
+      "type": "general",
+      "tags": [
+        "general",
+        "interconsultas",
+        "ui-update",
+        "title-change",
+        "psi-lauro"
+      ],
+      "timestamp": "2025-08-17T16:36:54.496Z",
+      "context": "PSI Lauro healthcare analytics dashboard update",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-17T16:36:54.496Z",
+      "lastVerified": "2025-08-17T16:36:54.496Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1755448800882_wx77t3tox",
+      "content": "Nova aba \"Qualidade e Satisfação\" CORRIGIDA E FINALIZADA para PSI Analytics. Agora segue 100% o padrão das outras páginas:\n\nLAYOUT CORRETO (igual às outras páginas):\n1. Background: min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-emerald-50/20\n2. Container: space-y-8 p-6\n3. Header: ícone gradient yellow-orange-amber com shadow, h1 text-4xl font-black text-slate-800 tracking-tight\n4. Subtítulo: text-lg text-slate-600 font-medium\n5. Layout: grid 2 colunas com MiniChart + card de métricas\n6. Analysis card: gradient com ícone blue-indigo e texto detalhado\n\nFUNCIONALIDADES:\n1. Gráfico de linha (MiniChart): Mai/25 (96.9%), Jun/25 (90.25%), Jul/25 (96.25%)\n2. Card métricas: média (94.5%), maior (96.9% Mai), menor (90.25% Jun)\n3. Análise crítica: texto completo sobre oscilação e recuperação\n4. Navegação: sidebar com ícone Star\n5. Rota: '/qualidade-satisfacao'\n\nCORREÇÕES APLICADAS:\n- Header agora igual às outras páginas (ícone + título + subtítulo)\n- Background gradient aplicado\n- Indentação e espaçamento corrigidos\n- Estilo 100% consistente com PerfilEpidemiologico, IndicadoresAssistenciais\n\nServidor: http://localhost:8085/",
+      "type": "general",
+      "tags": [
+        "general",
+        "react",
+        "healthcare",
+        "dashboard",
+        "satisfacao",
+        "qualidade",
+        "charts"
+      ],
+      "timestamp": "2025-08-17T16:40:00.882Z",
+      "context": "PSI Analytics - Hospital Planalto dashboard healthcare",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-17T16:40:00.882Z",
+      "lastVerified": "2025-08-17T16:40:00.882Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1755449296149_020pqp9ld",
+      "content": "Nova aba \"Qualidade e Satisfação\" commitada e enviada para GitHub:\n\nCOMMIT: 30adec9 - \"Add new Quality and Satisfaction tab\"\n- Criou página QualidadeSatisfacao.tsx com gráfico de linha de satisfação\n- Dados: Mai/25 (96.9%), Jun/25 (90.25%), Jul/25 (96.25%)\n- Adicionou navegação no sidebar com ícone Star\n- Configurou rota '/qualidade-satisfacao' no App.tsx\n- Design consistente com outras páginas do dashboard\n\nARQUIVOS COMMITADOS:\n- src/pages/QualidadeSatisfacao.tsx (novo)\n- src/App.tsx (rota adicionada)\n- src/components/AppSidebar.tsx (navegação adicionada)\n\nSTATUS: Pushed para origin/main com sucesso\nBRANCH: main",
+      "type": "general",
+      "tags": [
+        "general",
+        "git",
+        "commit",
+        "github",
+        "qualidade",
+        "satisfacao",
+        "dashboard"
+      ],
+      "timestamp": "2025-08-17T16:48:16.149Z",
+      "context": "PSI Analytics commit GitHub",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-17T16:48:16.149Z",
+      "lastVerified": "2025-08-17T16:48:16.149Z",
+      "status": "fresh"
     }
   ],
-  "lastUpdated": "2025-08-12T21:56:57.774Z"
+  "lastUpdated": "2025-08-17T16:48:16.149Z"
 }

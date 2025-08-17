@@ -47,10 +47,10 @@ export default function Interconsultas() {
             </div>
             <div>
               <h1 className="text-4xl font-black text-slate-800 tracking-tight">
-                Pedidos de Interconsultas
+                Interconsultas – Volume e tempo de resposta
               </h1>
               <p className="text-lg text-slate-600 font-medium">
-                Evolução mensal dos pedidos de interconsulta 2024-2025
+                Análise do volume de pedidos e eficiência do tempo de resposta
               </p>
             </div>
           </div>

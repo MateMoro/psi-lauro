@@ -1,4 +1,4 @@
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, PieChart, Pie, Cell, Tooltip, LineChart, Line, CartesianGrid } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, PieChart, Pie, Cell, Tooltip, LineChart, Line, CartesianGrid, LabelList } from 'recharts';
 import { Card, CardContent } from "@/components/ui/card";
 import { LucideIcon } from "lucide-react";
 import { useState } from 'react';
@@ -21,6 +21,7 @@ interface MiniChartProps {
   hideLegend?: boolean;
   showGrid?: boolean;
   showYAxis?: boolean;
+  showDataLabels?: boolean;
 }
 
 export function MiniChart({ 
@@ -34,7 +35,8 @@ export function MiniChart({
   showXAxisLabels = false,
   hideLegend = false,
   showGrid = false,
-  showYAxis = false
+  showYAxis = false,
+  showDataLabels = false
 }: MiniChartProps) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [showAllCategories, setShowAllCategories] = useState(false);
@@ -161,9 +163,10 @@ export function MiniChart({
                   }}
                   formatter={(value: any, name: any, props: any) => {
                     if (title.toLowerCase().includes('dia da semana')) {
+                      const count = props.payload?.count;
                       const percentage = props.payload?.percentage;
                       return [
-                        `${value} altas${percentage !== undefined ? ` (${percentage}%)` : ''}`,
+                        `${count !== undefined ? count : value} altas${percentage !== undefined ? ` (${percentage}%)` : ''}`,
                         'Valor'
                       ];
                     }
@@ -181,6 +184,18 @@ export function MiniChart({
                   {chartData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
+                  {showDataLabels && (
+                    <LabelList 
+                      dataKey="value" 
+                      position="top" 
+                      formatter={(value: any) => `${value}%`}
+                      style={{
+                        fill: '#1e293b',
+                        fontSize: '12px',
+                        fontWeight: 'bold'
+                      }}
+                    />
+                  )}
                 </Bar>
               </BarChart>
             ) : type === 'line' ? (

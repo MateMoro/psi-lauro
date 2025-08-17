@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Clock, Users, RefreshCw, Calendar, Filter, Database, MapPin, Building2, Palette, UserCheck, Bed, RotateCcw, CalendarX2, Stethoscope, Timer, BarChart3 } from "lucide-react";
+import { Clock, Users, RefreshCw, Calendar, Filter, Database, MapPin, Building2, Palette, UserCheck, Bed, RotateCcw, CalendarX2, Stethoscope, Timer, BarChart3, Heart, Activity } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { PatientSearch } from "@/components/dashboard/PatientSearch";
@@ -632,14 +632,14 @@ export default function Dashboard() {
                 Visão Geral
               </h1>
               <p className="text-sm lg:text-lg text-slate-600 font-medium">
-                Dashboard principal com métricas gerais do serviço
+                Panorama das principais métricas assistenciais
               </p>
             </div>
           </div>
         </div>
 
         {/* Cards Superiores */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 lg:gap-4">
           <MetricCard
             title="Média de Permanência"
             value="13,6"
@@ -656,63 +656,29 @@ export default function Dashboard() {
           />
           <MetricCard
             title="Taxa de Reinternação"
-            value="1,08%"
-            description="Em até 15 dias"
+            value="2,7%"
+            description="Em até 30 dias"
             icon={RefreshCw}
             variant="warning"
+          />
+          <MetricCard
+            title="Número Total de Internações"
+            value="402"
+            description="Período: 01/07/2024 a 30/06/2025"
+            icon={Users}
+            variant="info"
+          />
+          <MetricCard
+            title="Satisfação Geral"
+            value="94,5%"
+            description="Pacientes/Familiares – mai–jul 2025"
+            icon={Heart}
+            variant="success"
           />
         </div>
 
         {/* Gráficos Principais */}
         <div className="space-y-4 lg:space-y-6">
-          <div className="flex items-center space-x-3 mb-4 lg:mb-6">
-            <div className="w-1 h-6 lg:h-8 bg-gradient-to-b from-blue-500 to-emerald-500 rounded-full"></div>
-            <h2 className="text-lg lg:text-2xl font-bold text-slate-800 tracking-tight">
-              Principais Indicadores
-            </h2>
-          </div>
-          
-          {/* 3 Gráficos Superiores */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
-            <MiniChart
-              data={[
-                { name: "Feminino", value: 55, color: "#10b981" },
-                { name: "Masculino", value: 45, color: "#0ea5e9" }
-              ]}
-              title="Distribuição por Gênero"
-              subtitle="Feminino, Masculino"
-              type="pie"
-              icon={Users}
-            />
-            
-            <MiniChart
-              data={[
-                { name: "<18", value: 8 },
-                { name: "18–25", value: 22 },
-                { name: "26–44", value: 35 },
-                { name: "45–64", value: 28 },
-                { name: "65+", value: 7 }
-              ]}
-              title="Faixa Etária de Idade"
-              subtitle="Distribuição por idade"
-              type="bar"
-              icon={Calendar}
-              showXAxisLabels={true}
-              hideLegend={false}
-            />
-
-            <MiniChart
-              data={[
-                { name: "Parda", value: 50, color: "#6366f1" },
-                { name: "Branca", value: 42, color: "#10b981" },
-                { name: "Preta", value: 8, color: "#f59e0b" }
-              ]}
-              title="Distribuição por Cor"
-              subtitle="Parda, Branca, Preta"
-              type="pie"
-              icon={Palette}
-            />
-          </div>
 
           {/* Principais Patologias */}
           <div className="grid grid-cols-1 gap-4 lg:gap-6">
@@ -727,11 +693,11 @@ export default function Dashboard() {
                 
                 <div className="flex-1 space-y-3">
                   {[
-                    { name: "Esquizofrenia", value: 50.8, color: "#0ea5e9" },
-                    { name: "Transtorno Bipolar", value: 26.5, color: "#10b981" },
-                    { name: "Substâncias", value: 13.6, color: "#f97316" },
-                    { name: "Depressivo Unipolar", value: 5.6, color: "#6366f1" },
-                    { name: "Personalidade", value: 3.5, color: "#14b8a6" }
+                    { name: "Espectro da esquizofrenia", value: 35, color: "#0ea5e9" },
+                    { name: "Transtorno bipolar", value: 26, color: "#10b981" },
+                    { name: "Transtornos por drogas", value: 12.3, color: "#f97316" },
+                    { name: "Transtorno depressivo", value: 6.4, color: "#6366f1" },
+                    { name: "Transtorno de personalidade", value: 4.4, color: "#14b8a6" }
                   ].map((item, index) => (
                     <div key={index} className="space-y-2">
                       <div className="flex justify-between items-center">
@@ -753,23 +719,20 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-        </div>
 
-
-        {/* Gráfico de Altas por Dia da Semana */}
-        <div className="space-y-4 lg:space-y-6">
-          <div className="flex items-center space-x-3 mb-4 lg:mb-6">
-            <div className="w-1 h-6 lg:h-8 bg-gradient-to-b from-purple-500 to-pink-500 rounded-full"></div>
-            <h2 className="text-lg lg:text-2xl font-bold text-slate-800 tracking-tight">
-              Análise Temporal
-            </h2>
-          </div>
-          
+          {/* Procedência Chart */}
           <div className="grid grid-cols-1 gap-4 lg:gap-6">
-            <DischargesByWeekdayChart
-              data={weekdayDischarges}
-              title="Altas por Dia da Semana"
-              description="Distribuição das altas hospitalares por dia da semana"
+            <MiniChart
+              data={[
+                { name: "Porta (SAMU e demanda espontânea)", value: 53.4, color: "#0ea5e9" },
+                { name: "Hospital Cidade Tiradentes", value: 29.5, color: "#10b981" },
+                { name: "Hospital Jardim IVA", value: 11.8, color: "#f97316" },
+                { name: "Outros", value: 5.3, color: "#6366f1" }
+              ]}
+              title="Procedência"
+              subtitle="Origem dos pacientes"
+              type="pie"
+              icon={MapPin}
             />
           </div>
         </div>

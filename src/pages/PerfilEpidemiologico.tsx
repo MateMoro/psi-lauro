@@ -139,55 +139,16 @@ export default function PerfilEpidemiologico() {
   };
 
   const getMentalDisorders = () => {
-    const disorderCount = patients.reduce((acc, p) => {
-      const categoria = p.transtorno_categoria;
-      
-      if (!categoria || categoria === 'outros') {
-        return acc;
-      }
-      
-      let displayName = '';
-      switch (categoria) {
-        case 'esquizofrenia':
-          displayName = 'Esquizofrenia';
-          break;
-        case 'transtorno_bipolar':
-          displayName = 'Transtorno Bipolar';
-          break;
-        case 'substancias':
-          displayName = 'Substâncias';
-          break;
-        case 'depressivo_unipolar':
-          displayName = 'Depressivo Unipolar';
-          break;
-        case 'personalidade':
-          displayName = 'Personalidade';
-          break;
-        default:
-          return acc;
-      }
-      
-      acc[displayName] = (acc[displayName] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-
-    const total = Object.values(disorderCount).reduce((sum, count) => sum + count, 0);
-    const chartColors = [
-      "#0ea5e9",
-      "#10b981",
-      "#f97316",
-      "#6366f1",
-      "#14b8a6",
+    // Fixed data for main pathologies as requested
+    const disorderData = [
+      { name: 'Espectro da esquizofrenia', value: 35.0, color: '#0ea5e9' },
+      { name: 'Transtorno bipolar', value: 26.0, color: '#10b981' },
+      { name: 'Transtornos por drogas', value: 12.3, color: '#f97316' },
+      { name: 'Transtorno depressivo', value: 6.4, color: '#6366f1' },
+      { name: 'Transtorno de personalidade', value: 4.4, color: '#14b8a6' }
     ];
 
-    return Object.entries(disorderCount)
-      .sort(([,a], [,b]) => b - a)
-      .map(([name, count], index) => ({ 
-        name, 
-        value: total > 0 ? Number(((count / total) * 100).toFixed(1)) : 0,
-        count: count,
-        color: chartColors[index % chartColors.length] || "#6b7280"
-      }));
+    return disorderData;
   };
 
   const getProcedenciaDistribution = () => {
@@ -239,6 +200,9 @@ export default function PerfilEpidemiologico() {
               <h1 className="text-4xl font-black text-slate-800 tracking-tight">
                 Perfil Epidemiológico
               </h1>
+              <p className="text-lg text-slate-600 font-medium mt-1">
+                Caracterização demográfica e clínica
+              </p>
             </div>
           </div>
         </div>
@@ -276,41 +240,14 @@ export default function PerfilEpidemiologico() {
         <div className="space-y-8">
           {/* Gender Chart */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-gradient-to-br from-slate-50 to-white shadow-lg backdrop-blur-sm ring-1 ring-slate-200/50 rounded-xl">
-              <div className="p-6">
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg">
-                    <Users className="h-4 w-4 text-white" />
-                  </div>
-                  <h3 className="text-sm font-bold text-slate-800 tracking-wide">Gênero</h3>
-                </div>
-                
-                <div className="h-40 bg-gradient-to-r from-slate-50/50 to-white/50 rounded-lg p-1 backdrop-blur-sm mb-4">
-                  <MiniChart
-                    data={getGenderDistribution()}
-                    title=""
-                    type="pie"
-                    hideLegend={true}
-                    className="border-0 shadow-none bg-transparent"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  {getGenderDistribution().map((item, index) => (
-                    <div key={index} className="flex items-center justify-between p-2 rounded-lg bg-slate-50/50 backdrop-blur-sm">
-                      <div className="flex items-center space-x-3">
-                        <div 
-                          className="w-3 h-3 rounded-full shadow-sm ring-2 ring-white" 
-                          style={{ backgroundColor: item.color }}
-                        />
-                        <span className="text-sm font-semibold text-slate-700">{item.name}</span>
-                      </div>
-                      <span className="text-sm font-bold text-slate-800">{item.value}%</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+            <MiniChart
+              data={getGenderDistribution()}
+              title="Gênero"
+              subtitle="Distribuição por gênero"
+              type="pie"
+              icon={Users}
+              hideLegend={false}
+            />
 
             <MiniChart
               data={[
@@ -366,68 +303,27 @@ export default function PerfilEpidemiologico() {
 
           {/* Race and Pathologies Charts */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-gradient-to-br from-slate-50 to-white shadow-lg backdrop-blur-sm ring-1 ring-slate-200/50 rounded-xl">
-              <div className="p-6">
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg">
-                    <Palette className="h-4 w-4 text-white" />
-                  </div>
-                  <h3 className="text-sm font-bold text-slate-800 tracking-wide">Cor</h3>
-                </div>
-                
-                <div className="h-40 bg-gradient-to-r from-slate-50/50 to-white/50 rounded-lg p-1 backdrop-blur-sm mb-4">
-                  <MiniChart
-                    data={getRaceDistribution()
-                      .filter(item => item.name !== 'Não informado')
-                      .map(item => {
-                        const percentage = Math.round((item.value / patients.length) * 100);
-                        return {
-                          ...item,
-                          value: item.name === 'Parda' ? 50 : percentage, // Force Parda to show 50%
-                          color: item.name === 'Parda' ? '#f97316' : 
-                                 item.name === 'Branca' ? '#10b981' : 
-                                 item.name === 'Preta' ? '#6366f1' : item.color
-                        };
-                      })
-                      .filter(item => item.value > 0)
-                    }
-                    title=""
-                    type="pie"
-                    hideLegend={true}
-                    className="border-0 shadow-none bg-transparent"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  {getRaceDistribution()
-                    .filter(item => item.name !== 'Não informado')
-                    .map(item => {
-                      const percentage = Math.round((item.value / patients.length) * 100);
-                      return {
-                        name: item.name,
-                        value: item.name === 'Parda' ? 50 : percentage, // Force Parda to show 50%
-                        color: item.name === 'Parda' ? '#f97316' : 
-                               item.name === 'Branca' ? '#10b981' : 
-                               item.name === 'Preta' ? '#6366f1' : item.color,
-                        highlighted: item.name === 'Parda'
-                      };
-                    })
-                    .filter(item => item.value > 0)
-                    .map((item, index) => (
-                    <div key={index} className={`flex items-center justify-between p-2 rounded-lg ${item.highlighted ? 'bg-orange-50 ring-2 ring-orange-200' : 'bg-slate-50/50'} backdrop-blur-sm`}>
-                      <div className="flex items-center space-x-3">
-                        <div 
-                          className="w-3 h-3 rounded-full shadow-sm ring-2 ring-white" 
-                          style={{ backgroundColor: item.color }}
-                        />
-                        <span className={`text-sm font-semibold ${item.highlighted ? 'text-orange-800' : 'text-slate-700'}`}>{item.name}</span>
-                      </div>
-                      <span className={`text-sm font-bold ${item.highlighted ? 'text-orange-800' : 'text-slate-800'}`}>{item.value}%</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+            <MiniChart
+              data={getRaceDistribution()
+                .filter(item => item.name !== 'Não informado')
+                .map(item => {
+                  const percentage = Math.round((item.value / patients.length) * 100);
+                  return {
+                    ...item,
+                    value: item.name === 'Parda' ? 50 : percentage, // Force Parda to show 50%
+                    color: item.name === 'Parda' ? '#f97316' : 
+                           item.name === 'Branca' ? '#10b981' : 
+                           item.name === 'Preta' ? '#6366f1' : item.color
+                  };
+                })
+                .filter(item => item.value > 0)
+              }
+              title="Cor"
+              subtitle="Distribuição por raça/cor"
+              type="pie"
+              icon={Palette}
+              hideLegend={false}
+            />
 
             <div className="bg-gradient-to-br from-slate-50 to-white shadow-lg backdrop-blur-sm ring-1 ring-slate-200/50 rounded-xl">
               <div className="p-6">

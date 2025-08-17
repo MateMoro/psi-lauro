@@ -52,9 +52,9 @@ export default function Procedencia() {
   const getProcedenciaTimeseries = () => {
     const monthlyProcedencia: Record<string, Record<string, number>> = {};
     
-    // Get 12 months from Sep/2024 to Jul/2025
+    // Get 12 months from Aug/2024 to Jul/2025
     const months = [];
-    const startDate = new Date(2024, 8, 1); // September 2024 (month is 0-indexed)
+    const startDate = new Date(2024, 7, 1); // August 2024 (month is 0-indexed)
     
     for (let i = 0; i < 12; i++) {
       const date = new Date(startDate);
@@ -65,7 +65,8 @@ export default function Procedencia() {
       monthlyProcedencia[monthKey] = {
         'Porta': 0,
         'Hospital Cidade Tiradentes': 0,
-        'Hospital JD IVA': 0
+        'Hospital Jardim IVA': 0,
+        'Outros': 0
       };
     }
 
@@ -78,13 +79,15 @@ export default function Procedencia() {
         if (monthlyProcedencia[monthKey] !== undefined) {
           const procedencia = patient.procedencia || '';
           
-          // Map procedencias to the 3 required categories
-          if (procedencia.includes('SAMU') || procedencia.includes('Bombeiro')) {
+          // Map procedencias to the 4 required categories
+          if (procedencia.includes('SAMU') || procedencia.includes('Bombeiro') || procedencia.toLowerCase().includes('demanda espon')) {
             monthlyProcedencia[monthKey]['Porta']++;
           } else if (procedencia.includes('TIRADENTES')) {
             monthlyProcedencia[monthKey]['Hospital Cidade Tiradentes']++;
-          } else if (procedencia.includes('Hospital JD IVA') || procedencia.includes('JD IVA')) {
-            monthlyProcedencia[monthKey]['Hospital JD IVA']++;
+          } else if (procedencia.includes('Hospital JD IVA') || procedencia.includes('JD IVA') || procedencia.includes('Jardim IVA')) {
+            monthlyProcedencia[monthKey]['Hospital Jardim IVA']++;
+          } else {
+            monthlyProcedencia[monthKey]['Outros']++;
           }
         }
       }
@@ -94,7 +97,8 @@ export default function Procedencia() {
       month: month.name,
       'Porta': monthlyProcedencia[month.key]['Porta'],
       'Hospital Cidade Tiradentes': monthlyProcedencia[month.key]['Hospital Cidade Tiradentes'],
-      'Hospital JD IVA': monthlyProcedencia[month.key]['Hospital JD IVA']
+      'Hospital Jardim IVA': monthlyProcedencia[month.key]['Hospital Jardim IVA'],
+      'Outros': monthlyProcedencia[month.key]['Outros']
     }));
   };
 
@@ -130,10 +134,10 @@ export default function Procedencia() {
             </div>
             <div>
               <h1 className="text-4xl font-black text-slate-800 tracking-tight">
-                Análise de Procedência
+                Procedência
               </h1>
               <p className="text-lg text-slate-600 font-medium">
-                Origem dos pacientes
+                Origem das admissões — Ago/2024 a Jul/2025
               </p>
             </div>
           </div>
@@ -144,18 +148,18 @@ export default function Procedencia() {
           <div className="flex items-center space-x-3 mb-6">
             <div className="w-1 h-8 bg-gradient-to-b from-amber-500 to-orange-500 rounded-full"></div>
             <h2 className="text-2xl font-bold text-slate-800 tracking-tight">
-              Procedência das Admissões — Set/2024 a Jul/2025
+              Origem das admissões — Ago/2024 a Jul/2025
             </h2>
           </div>
           
           <MultiLineChart
             data={getProcedenciaTimeseries()}
-            title="Procedência das Admissões — Set/2024 a Jul/2025"
+            title=""
             description=""
             lines={[
               {
                 dataKey: 'Porta',
-                name: 'Porta (Demanda + SAMU + Bombeiro)',
+                name: 'Porta (SAMU + demanda espontânea)',
                 color: '#1e40af'
               },
               {
@@ -164,9 +168,14 @@ export default function Procedencia() {
                 color: '#6b7280'
               },
               {
-                dataKey: 'Hospital JD IVA',
-                name: 'Hospital JD IVA',
+                dataKey: 'Hospital Jardim IVA',
+                name: 'Hospital Jardim IVA',
                 color: '#059669'
+              },
+              {
+                dataKey: 'Outros',
+                name: 'Outros',
+                color: '#f59e0b'
               }
             ]}
           />
@@ -174,7 +183,7 @@ export default function Procedencia() {
           {/* Explanatory text */}
           <div className="bg-gradient-to-br from-white to-slate-50/50 shadow-xl backdrop-blur-sm ring-1 ring-slate-200/50 rounded-2xl p-6 mt-6">
             <p className="text-sm text-slate-700 leading-relaxed">
-              Nos últimos três meses, observou-se uma inversão marcante no perfil de admissões: a porta (demanda espontânea + SAMU + Bombeiro) superou os casos regulados pelo SIRESP — cenário incompatível com a vocação do serviço como unidade de "porta fechada". Essa mudança pressiona o pronto-socorro e compromete a previsibilidade assistencial.
+              Nos últimos quatro meses, observou-se uma inversão marcante no perfil de admissões: a "Porta" (SAMU + demanda espontânea) superou os casos regulados pelo SIRESP — cenário incompatível com a vocação do serviço como unidade de "porta fechada". Essa mudança pressiona o pronto-socorro e compromete a previsibilidade assistencial.
             </p>
           </div>
         </div>

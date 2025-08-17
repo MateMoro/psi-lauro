@@ -1,4 +1,4 @@
-import { Home, BarChart3, Users, RefreshCw, Activity, TrendingUp, Stethoscope, MapPin, MessageCircle, Building2 } from "lucide-react";
+import { Home, BarChart3, Users, RefreshCw, Activity, TrendingUp, Stethoscope, MapPin, MessageCircle, Building2, Star } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -42,6 +42,12 @@ const navigationItems = [
     url: "/interconsultas", 
     icon: MessageCircle,
     description: "Volume e análise de interconsultas"
+  },
+  { 
+    title: "Qualidade e Satisfação", 
+    url: "/qualidade-satisfacao", 
+    icon: Star,
+    description: "Avaliação da experiência dos pacientes"
   },
   { 
     title: "Institucional", 

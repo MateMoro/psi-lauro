@@ -12,6 +12,7 @@ import IndicadoresAssistenciais from "./pages/IndicadoresAssistenciais";
 import Procedencia from "./pages/Procedencia";
 import Interconsultas from "./pages/Interconsultas";
 import SobreServico from "./pages/SobreServico";
+import QualidadeSatisfacao from "./pages/QualidadeSatisfacao";
 
 import NotFound from "./pages/NotFound";
 
@@ -32,6 +33,7 @@ const App = () => (
               <Route path="/perfil-epidemiologico" element={<PerfilEpidemiologico />} />
               <Route path="/procedencia" element={<Procedencia />} />
               <Route path="/interconsultas" element={<Interconsultas />} />
+              <Route path="/qualidade-satisfacao" element={<QualidadeSatisfacao />} />
               <Route path="/sobre-servico" element={<SobreServico />} />
               
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

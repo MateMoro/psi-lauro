@@ -57,44 +57,16 @@ export default function QualidadeSatisfacao() {
         </div>
 
         {/* Charts Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="w-full">
           <MiniChart
             data={satisfactionData}
             title="Satisfação Geral do Paciente"
-            subtitle="Evolução no trimestre (Mai-Jul 2025)"
-            type="line"
+            subtitle="Evolução no período (Mai-Jul 2025)"
+            type="bar"
             icon={BarChart3}
             showXAxisLabels={true}
-            hideLegend={false}
+            hideLegend={true}
           />
-
-          <div className="bg-gradient-to-br from-slate-50 to-white shadow-lg backdrop-blur-sm ring-1 ring-slate-200/50 rounded-xl">
-            <div className="p-6">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="p-2 rounded-xl bg-gradient-to-br from-yellow-500 to-orange-600 shadow-lg">
-                  <Star className="h-4 w-4 text-white" />
-                </div>
-                <h3 className="text-sm font-bold text-slate-800 tracking-wide">Métricas de Satisfação</h3>
-              </div>
-              
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs font-semibold text-slate-700">Satisfação Média</span>
-                  <span className="text-lg font-bold text-green-600">{metrics.averageSatisfaction}%</span>
-                </div>
-                
-                <div className="flex justify-between items-center">
-                  <span className="text-xs font-semibold text-slate-700">Maior Índice</span>
-                  <span className="text-sm font-bold text-green-600">{metrics.maxSatisfaction}% (Mai/25)</span>
-                </div>
-                
-                <div className="flex justify-between items-center">
-                  <span className="text-xs font-semibold text-slate-700">Menor Índice</span>
-                  <span className="text-sm font-bold text-orange-600">{metrics.minSatisfaction}% (Jun/25)</span>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Analysis Card */}

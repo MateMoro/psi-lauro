@@ -98,7 +98,7 @@ export default function Interconsultas() {
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-slate-800">Tempo de Resposta</h3>
-                  <p className="text-sm text-slate-600">Percentual cumprido por tempo limite</p>
+                  <p className="text-sm text-slate-600">Percentual cumprido por tempo</p>
                 </div>
               </div>
               

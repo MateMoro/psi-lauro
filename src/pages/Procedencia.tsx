@@ -65,8 +65,7 @@ export default function Procedencia() {
       monthlyProcedencia[monthKey] = {
         'Porta': 0,
         'Hospital Cidade Tiradentes': 0,
-        'Hospital Jardim IVA': 0,
-        'Outros': 0
+        'Hospital Jardim IVA': 0
       };
     }
 
@@ -79,15 +78,13 @@ export default function Procedencia() {
         if (monthlyProcedencia[monthKey] !== undefined) {
           const procedencia = patient.procedencia || '';
           
-          // Map procedencias to the 4 required categories
+          // Map procedencias to the 3 required categories
           if (procedencia.includes('SAMU') || procedencia.includes('Bombeiro') || procedencia.toLowerCase().includes('demanda espon')) {
             monthlyProcedencia[monthKey]['Porta']++;
           } else if (procedencia.includes('TIRADENTES')) {
             monthlyProcedencia[monthKey]['Hospital Cidade Tiradentes']++;
           } else if (procedencia.includes('Hospital JD IVA') || procedencia.includes('JD IVA') || procedencia.includes('Jardim IVA')) {
             monthlyProcedencia[monthKey]['Hospital Jardim IVA']++;
-          } else {
-            monthlyProcedencia[monthKey]['Outros']++;
           }
         }
       }
@@ -97,8 +94,7 @@ export default function Procedencia() {
       month: month.name,
       'Porta': monthlyProcedencia[month.key]['Porta'],
       'Hospital Cidade Tiradentes': monthlyProcedencia[month.key]['Hospital Cidade Tiradentes'],
-      'Hospital Jardim IVA': monthlyProcedencia[month.key]['Hospital Jardim IVA'],
-      'Outros': monthlyProcedencia[month.key]['Outros']
+      'Hospital Jardim IVA': monthlyProcedencia[month.key]['Hospital Jardim IVA']
     }));
   };
 
@@ -137,7 +133,7 @@ export default function Procedencia() {
                 Procedência
               </h1>
               <p className="text-lg text-slate-600 font-medium">
-                Origem das admissões — Ago/2024 a Jul/2025
+                Análise temporal da origem dos pacientes
               </p>
             </div>
           </div>
@@ -171,11 +167,6 @@ export default function Procedencia() {
                 dataKey: 'Hospital Jardim IVA',
                 name: 'Hospital Jardim IVA',
                 color: '#059669'
-              },
-              {
-                dataKey: 'Outros',
-                name: 'Outros',
-                color: '#f59e0b'
               }
             ]}
           />

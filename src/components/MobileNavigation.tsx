@@ -1,4 +1,4 @@
-import { BarChart3, Users, Activity, MapPin, MessageCircle, MoreHorizontal, Building2 } from "lucide-react";
+import { BarChart3, Users, Activity, MapPin, MessageCircle, MoreHorizontal, Building2, Star } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -37,6 +37,11 @@ const secondaryNavItems = [
     title: "Interconsultas", 
     url: "/interconsultas", 
     icon: MessageCircle
+  },
+  { 
+    title: "Qualidade e Satisfação", 
+    url: "/qualidade-satisfacao", 
+    icon: Star
   },
   { 
     title: "Institucional", 

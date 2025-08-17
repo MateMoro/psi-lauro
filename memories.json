@@ -3110,7 +3110,27 @@
       "lastAccessed": "2025-08-17T16:48:16.149Z",
       "lastVerified": "2025-08-17T16:48:16.149Z",
       "status": "fresh"
+    },
+    {
+      "id": "mem_1755464529477_6tjxi4wsu",
+      "content": "Fixed accessibility errors in PSI Lauro sidebar component. The errors were caused by missing DialogTitle and DialogDescription components in the Sheet component used for mobile navigation. Solution: Added SheetTitle and SheetDescription components with sr-only class (screen reader only) inside SheetContent in sidebar.tsx file at lines 207-210. This resolves the console warnings about missing accessibility components for screen readers.",
+      "type": "code",
+      "tags": [
+        "code",
+        "accessibility",
+        "dialog",
+        "sidebar",
+        "screen-reader",
+        "react",
+        "shadcn"
+      ],
+      "timestamp": "2025-08-17T21:02:09.477Z",
+      "context": "PSI Lauro healthcare analytics dashboard - accessibility fixes for sidebar navigation",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-17T21:02:09.477Z",
+      "lastVerified": "2025-08-17T21:02:09.477Z",
+      "status": "fresh"
     }
   ],
-  "lastUpdated": "2025-08-17T16:48:16.149Z"
+  "lastUpdated": "2025-08-17T21:02:09.477Z"
 }

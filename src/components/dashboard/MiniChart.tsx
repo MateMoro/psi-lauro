@@ -170,6 +170,12 @@ export function MiniChart({
                         'Valor'
                       ];
                     }
+                    if (title.toLowerCase().includes('satisfação')) {
+                      return [
+                        `${value}%`,
+                        'Taxa de Satisfação'
+                      ];
+                    }
                     return [
                       `${value}${title.toLowerCase().includes('length of stay') || title.toLowerCase().includes('los') ? ' pacientes' : (typeof value === 'number' && value <= 100 ? '%' : '')}`, 
                       'Valor'
@@ -212,7 +218,12 @@ export function MiniChart({
                   axisLine={false}
                   tickLine={false}
                   domain={['dataMin - 5', 'dataMax + 5']}
-                  tickFormatter={showYAxis ? (value) => `${value}%` : undefined}
+                  tickFormatter={showYAxis ? (value) => {
+                    if (title.toLowerCase().includes('permanência') || title.toLowerCase().includes('média de permanência')) {
+                      return `${value}`;
+                    }
+                    return `${value}%`;
+                  } : undefined}
                 />
                 <Tooltip 
                   contentStyle={{
@@ -225,7 +236,12 @@ export function MiniChart({
                     color: '#1e293b',
                     backdropFilter: 'blur(8px)'
                   }}
-                  formatter={(value: any) => [`${value}%`, 'Taxa de Ocupação']}
+                  formatter={(value: any) => {
+                    if (title.toLowerCase().includes('permanência') || title.toLowerCase().includes('média de permanência')) {
+                      return [`${value} dias`, 'Média de Permanência'];
+                    }
+                    return [`${value}%`, 'Taxa de Ocupação'];
+                  }}
                 />
                 <Line 
                   type="monotone" 

@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,12 +13,37 @@ import { PrivacyPolicyModal } from '@/components/privacy/PrivacyPolicyModal';
 export default function Login() {
   const { user, signIn, loading, debugAuthState } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+  const [loginAttempted, setLoginAttempted] = useState(false);
+
+  // Fallback redirect effect for login attempts that succeed but don't trigger immediate redirect
+  useEffect(() => {
+    if (loginAttempted && !loading && !isLoading) {
+      const checkForSuccessfulLogin = setTimeout(async () => {
+        try {
+          // Check if we have a valid session using Supabase API
+          const { data: { session }, error } = await supabase.auth.getSession();
+          if (!error && session?.user) {
+            console.log('🔄 Login: Forcing redirect after successful login - session found:', session.user.id);
+            const from = location.state?.from?.pathname || '/dashboard';
+            navigate(from, { replace: true });
+          } else {
+            console.log('🔄 Login: No valid session found during fallback check');
+          }
+        } catch (error) {
+          console.error('🔄 Login: Error checking session during fallback:', error);
+        }
+      }, 2000); // Wait 2 seconds for auth state to update
+
+      return () => clearTimeout(checkForSuccessfulLogin);
+    }
+  }, [loginAttempted, loading, isLoading, location, navigate]);
 
   // Redirect to dashboard if already logged in
   if (user && !loading) {
@@ -46,6 +72,9 @@ export default function Login() {
         } else {
           setError('Erro ao fazer login. Tente novamente.');
         }
+      } else {
+        // Login successful, set flag for fallback redirect
+        setLoginAttempted(true);
       }
     } catch (error) {
       console.error('Login error:', error);

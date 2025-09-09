@@ -162,40 +162,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     console.log('🔄 AuthContext: Initializing auth...');
     setInitializationError(null);
-    let isInitialLoad = true;
+    let mounted = true;
+    let sessionProcessed = false;
     
-    // Increase timeout to 30 seconds for better reliability
+    // Set timeout to 5 seconds for better UX
     const initTimeout = setTimeout(() => {
-      if (isInitialLoad) {
-        console.warn('⏰ AuthContext: Initialization timeout after 30 seconds');
+      if (mounted && !sessionProcessed) {
+        console.warn('⏰ AuthContext: Initialization timeout after 5 seconds');
         setInitializationError('Authentication initialization timed out');
         setLoading(false);
       }
-    }, 30000);
+    }, 5000);
     
-    // Listen for auth changes first to avoid race conditions
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('🔔 AuthContext: Auth state change -', event, session ? 'SESSION_EXISTS' : 'NO_SESSION');
-      
-      // Clear initialization timeout once we have any auth event
-      if (isInitialLoad) {
+    const completeInitialization = () => {
+      if (mounted && !sessionProcessed) {
+        sessionProcessed = true;
         clearTimeout(initTimeout);
-        isInitialLoad = false;
+        setLoading(false);
+        console.log('✅ AuthContext: Initialization complete');
       }
+    };
+
+    const processSession = async (session: Session | null, source: string) => {
+      // Allow processing for: initial load, signed-in events, or if not yet processed
+      const shouldProcess = !sessionProcessed || source === 'initial' || source === 'signed-in';
+      
+      if (!mounted || !shouldProcess) {
+        console.log(`🚫 AuthContext: Skipping processing from ${source} - mounted:${mounted}, shouldProcess:${shouldProcess}`);
+        return;
+      }
+      
+      console.log(`🔔 AuthContext: Processing session from ${source} -`, session ? 'SESSION_EXISTS' : 'NO_SESSION');
       
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        console.log('👤 AuthContext: Fetching profile after auth change:', session.user.id);
+        console.log('👤 AuthContext: Fetching profile:', session.user.id);
         try {
           await fetchUserProfile(session.user.id);
           console.log('✅ AuthContext: Profile fetch completed');
         } catch (error) {
           console.error('❌ AuthContext: Profile fetch failed, but continuing with session:', error);
-          // Don't set initialization error - we have a valid session even without profile
           setProfile(null);
         }
       } else {
@@ -203,65 +211,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setProfile(null);
       }
       
-      console.log('✅ AuthContext: Auth state change complete');
-      setLoading(false);
-    });
+      // Complete initialization only on first processing
+      if (!sessionProcessed) {
+        completeInitialization();
+      }
+    };
     
-    // Get initial session after setting up listener
+    // Get initial session first (synchronous from localStorage)
     supabase.auth.getSession().then(async ({ data: { session }, error }) => {
-      console.log('📊 AuthContext: Initial session check:', session ? 'EXISTS' : 'NULL');
+      if (!mounted) return;
       
       if (error) {
         console.error('❌ AuthContext: Error getting initial session:', error);
-        // Only set error if we don't already have a session from onAuthStateChange
-        if (isInitialLoad) {
-          clearTimeout(initTimeout);
-          setInitializationError(`Session error: ${error.message}`);
-          setLoading(false);
-          isInitialLoad = false;
-        }
+        setInitializationError(`Session error: ${error.message}`);
+        completeInitialization();
         return;
       }
       
-      // If we already processed this session via onAuthStateChange, skip
-      if (!isInitialLoad) {
-        console.log('📊 AuthContext: Session already processed via onAuthStateChange');
-        return;
-      }
-      
-      // Clear timeout since we got a response
-      clearTimeout(initTimeout);
-      isInitialLoad = false;
-      
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        console.log('👤 AuthContext: Fetching profile for initial session:', session.user.id);
-        try {
-          await fetchUserProfile(session.user.id);
-          console.log('✅ AuthContext: Initial profile fetch completed');
-        } catch (error) {
-          console.error('❌ AuthContext: Initial profile fetch failed, but continuing with session:', error);
-          // Don't set initialization error - we have a valid session even without profile
-          setProfile(null);
-        }
-      }
-      
-      console.log('✅ AuthContext: Initial loading complete');
-      setLoading(false);
+      await processSession(session, 'initial');
     }).catch(error => {
+      if (!mounted) return;
       console.error('💥 AuthContext: Exception during session initialization:', error);
-      if (isInitialLoad) {
-        clearTimeout(initTimeout);
-        setInitializationError(`Initialization failed: ${error instanceof Error ? error.message : String(error)}`);
-        setLoading(false);
-        isInitialLoad = false;
+      setInitializationError(`Initialization failed: ${error instanceof Error ? error.message : String(error)}`);
+      completeInitialization();
+    });
+    
+    // Listen for future auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return;
+      
+      console.log('🔔 AuthContext: Auth state change -', event);
+      
+      // Process auth state changes with unified logic
+      if (event === 'SIGNED_IN') {
+        console.log('🔑 AuthContext: Processing login event');
+        await processSession(session, 'signed-in');
+      } else if (sessionProcessed) {
+        console.log('🔄 AuthContext: Processing auth change event:', event);
+        await processSession(session, 'auth-change');
+      } else {
+        console.log('🔄 AuthContext: Skipping auth change (not yet initialized):', event);
       }
     });
 
     return () => {
       console.log('🧹 AuthContext: Cleaning up subscription');
+      mounted = false;
       clearTimeout(initTimeout);
       subscription.unsubscribe();
     };

@@ -15,6 +15,12 @@ export interface CAPSType {
 // Define page permissions based on user roles
 export const PAGE_PERMISSIONS: PagePermission[] = [
   {
+    path: '/',
+    name: 'Início',
+    roles: ['coordenador', 'gestor_caps'],
+    description: 'Página inicial'
+  },
+  {
     path: '/dashboard',
     name: 'Visão Geral',
     roles: ['coordenador', 'gestor_caps'],
@@ -31,6 +37,30 @@ export const PAGE_PERMISSIONS: PagePermission[] = [
     name: 'Perfil Epidemiológico',
     roles: ['coordenador', 'gestor_caps'],
     description: 'Características demográficas dos pacientes'
+  },
+  {
+    path: '/caps-comparacoes',
+    name: 'CAPS Comparações',
+    roles: ['coordenador', 'gestor_caps'],
+    description: 'Comparações entre diferentes CAPS'
+  },
+  {
+    path: '/reinternacoes',
+    name: 'Reinternações',
+    roles: ['coordenador', 'gestor_caps'],
+    description: 'Análise de reinternações'
+  },
+  {
+    path: '/pacientes',
+    name: 'Pacientes',
+    roles: ['coordenador', 'gestor_caps'],
+    description: 'Gestão de pacientes'
+  },
+  {
+    path: '/notificacoes',
+    name: 'Notificações',
+    roles: ['coordenador', 'gestor_caps'],
+    description: 'Sistema de notificações'
   },
   {
     path: '/procedencia',
@@ -51,10 +81,28 @@ export const PAGE_PERMISSIONS: PagePermission[] = [
     description: 'Avaliação da experiência dos pacientes'
   },
   {
+    path: '/exportar',
+    name: 'Exportar',
+    roles: ['coordenador', 'gestor_caps'],
+    description: 'Exportação de dados'
+  },
+  {
     path: '/sobre-servico',
     name: 'Institucional',
     roles: ['coordenador', 'gestor_caps'],
     description: 'Informações sobre o serviço'
+  },
+  {
+    path: '/sobre-integraraps',
+    name: 'Sobre IntegraRAPS',
+    roles: ['coordenador', 'gestor_caps'],
+    description: 'Informações sobre a plataforma IntegraRAPS'
+  },
+  {
+    path: '/perfil',
+    name: 'Perfil',
+    roles: ['coordenador', 'gestor_caps'],
+    description: 'Perfil do usuário'
   },
   {
     path: '/configuracoes',

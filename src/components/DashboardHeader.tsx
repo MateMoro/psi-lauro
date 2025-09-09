@@ -53,6 +53,10 @@ export function DashboardHeader() {
     }
   };
 
+  const handleProfile = () => {
+    navigate('/perfil');
+  };
+
   return (
     <header className="h-20 border-b border-slate-200/60 bg-gradient-to-r from-slate-50 to-white flex items-center justify-between px-6 shadow-sm sticky top-0 z-40 backdrop-blur-sm">
       <div className="flex items-center gap-3">
@@ -120,7 +124,7 @@ export function DashboardHeader() {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={handleProfile}>
                 <User className="mr-2 h-4 w-4" />
                 <span>Perfil</span>
               </DropdownMenuItem>

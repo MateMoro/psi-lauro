@@ -24,6 +24,7 @@ import Pacientes from "./pages/Pacientes";
 import Notificacoes from "./pages/Notificacoes";
 import SobreIntegraRAPS from "./pages/SobreIntegraRAPS";
 import Reinternacoes from "./pages/Reinternacoes";
+import Perfil from "./pages/Perfil";
 
 import NotFound from "./pages/NotFound";
 
@@ -163,6 +164,14 @@ const App = () => (
                       element={
                         <RoleGuard>
                           <SobreServico />
+                        </RoleGuard>
+                      } 
+                    />
+                    <Route 
+                      path="/perfil" 
+                      element={
+                        <RoleGuard>
+                          <Perfil />
                         </RoleGuard>
                       } 
                     />

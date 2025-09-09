@@ -17,20 +17,14 @@ interface ProtectedRouteProps {
 
 function LoadingScreen() {
   return (
-    <div className="flex items-center justify-center min-h-[400px] p-6">
-      <Card className="w-full max-w-md">
-        <CardContent className="p-6 space-y-4">
-          <div className="text-center space-y-2">
-            <Skeleton className="h-4 w-32 mx-auto" />
-            <Skeleton className="h-3 w-48 mx-auto" />
-          </div>
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-3/4" />
-            <Skeleton className="h-4 w-1/2" />
-          </div>
-        </CardContent>
-      </Card>
+    <div className="flex items-center justify-center min-h-screen p-4">
+      <div className="text-center space-y-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+        <div className="space-y-2">
+          <h2 className="text-lg font-semibold text-foreground">Carregando...</h2>
+          <p className="text-sm text-muted-foreground">Verificando autenticação</p>
+        </div>
+      </div>
     </div>
   );
 }
@@ -144,7 +138,7 @@ export function ProtectedRoute({
   if (!authLoading && initializationError && !user) {
     console.error('❌ ProtectedRoute: SHOWING CRITICAL AUTH ERROR -', initializationError);
     return (
-      <div className="flex items-center justify-center min-h-[400px] p-6">
+      <div className="flex items-center justify-center min-h-screen p-4">
         <Card className="w-full max-w-md">
           <CardContent className="p-6 text-center space-y-4">
             <div className="text-destructive">
@@ -162,14 +156,17 @@ export function ProtectedRoute({
                 />
               </svg>
             </div>
-            <h2 className="text-lg font-semibold text-foreground">Erro de Autenticação</h2>
+            <h2 className="text-lg font-semibold text-foreground">Erro de Conexão</h2>
             <p className="text-sm text-muted-foreground">
-              {initializationError}
+              {initializationError.includes('timeout') 
+                ? 'A conexão está demorando mais que o esperado. Verifique sua internet.'
+                : 'Ocorreu um erro na autenticação. Tente novamente.'
+              }
             </p>
             <div className="pt-2 space-y-2">
               <button
                 onClick={() => window.location.reload()}
-                className="text-sm text-primary hover:underline block w-full"
+                className="w-full bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded text-sm font-medium transition-colors"
               >
                 Tentar novamente
               </button>
@@ -177,7 +174,7 @@ export function ProtectedRoute({
                 onClick={() => window.location.href = '/login'}
                 className="text-sm text-muted-foreground hover:underline"
               >
-                Ir para login
+                Voltar ao login
               </button>
             </div>
           </CardContent>

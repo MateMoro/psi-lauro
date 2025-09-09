@@ -17,7 +17,7 @@ export default function SobreServico() {
                 Institucional
               </h1>
               <p className="text-lg text-slate-600 font-medium">
-                Serviço de Psiquiatria – Hospital Planalto
+                IntegraRAPS – Ferramenta de Apoio à Rede de Atenção Psicossocial
               </p>
             </div>
           </div>

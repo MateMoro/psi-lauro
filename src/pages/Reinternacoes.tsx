@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { RefreshCw, Calendar, MapPin, User, Filter, Database } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useToast } from "@/hooks/use-toast";
+import { useHospital } from "@/contexts/HospitalContext";
 
 interface PatientAdmission {
   nome: string;
@@ -31,10 +32,11 @@ export default function Reinternacoes() {
   const [loading, setLoading] = useState(true);
   const [intervalFilter, setIntervalFilter] = useState<string>("all");
   const { toast } = useToast();
+  const { getTableName } = useHospital();
 
   useEffect(() => {
     fetchReadmissions();
-  }, []);
+  }, [getTableName]);
 
   useEffect(() => {
     applyIntervalFilter();
@@ -42,9 +44,11 @@ export default function Reinternacoes() {
 
   const fetchReadmissions = async () => {
     try {
+      const tableName = getTableName();
       const { data, error } = await supabase
-        .from('pacientes_planalto')
+        .from(tableName)
         .select('*')
+        .range(0, 4999)
         .order('nome, data_admissao');
 
       if (error) throw error;

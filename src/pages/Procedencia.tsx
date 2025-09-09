@@ -5,6 +5,7 @@ import { DashboardSkeleton } from "@/components/dashboard/LoadingSkeletons";
 import { EmptyState } from "@/components/ui/empty-state";
 import { MultiLineChart } from "@/components/dashboard/charts/MultiLineChart";
 import { useToast } from "@/hooks/use-toast";
+import { useHospital } from "@/contexts/HospitalContext";
 
 interface Patient {
   nome: string;
@@ -23,16 +24,19 @@ export default function Procedencia() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { getTableName } = useHospital();
 
   useEffect(() => {
     fetchPatients();
-  }, []);
+  }, [getTableName]);
 
   const fetchPatients = async () => {
     try {
+      const tableName = getTableName();
       const { data, error } = await supabase
-        .from('pacientes_planalto')
-        .select('*');
+        .from(tableName)
+        .select('*')
+        .range(0, 4999);
 
       if (error) throw error;
       setPatients(data || []);

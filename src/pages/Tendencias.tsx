@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Search, TrendingUp, BarChart3, Eye, Users, Activity, PieChart, AlertTriangle, Target, Stethoscope } from "lucide-react";
+import { useHospital } from "@/contexts/HospitalContext";
 
 interface Patient {
   nome: string;
@@ -21,16 +22,19 @@ export default function Tendencias() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { getTableName } = useHospital();
 
   useEffect(() => {
     fetchPatients();
-  }, []);
+  }, [getTableName]);
 
   const fetchPatients = async () => {
     try {
+      const tableName = getTableName();
       const { data, error } = await supabase
-        .from('pacientes_planalto')
+        .from(tableName)
         .select('*')
+        .range(0, 4999)
         .not('caps_referencia', 'ilike', '%vila monumento%')
         .not('caps_referencia', 'ilike', '%mooca%')
         .not('caps_referencia', 'ilike', '%ij%')

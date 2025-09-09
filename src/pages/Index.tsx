@@ -26,10 +26,10 @@ export default function Index() {
             </div>
           </div>
           <h1 className="text-5xl font-black text-slate-800 tracking-tight mb-4">
-            PSI Analytics
+            IntegraRAPS
           </h1>
           <p className="text-xl text-slate-600 font-medium max-w-3xl mx-auto">
-            Sistema de análise de internações psiquiátricas do Hospital Planalto
+            Ferramenta de Apoio à Rede de Atenção Psicossocial
           </p>
         </div>
 
@@ -58,7 +58,7 @@ export default function Index() {
                 <h3 className="text-2xl font-black text-slate-800 tracking-tight">Metodologia</h3>
               </div>
               <p className="text-slate-600 leading-relaxed font-medium">
-                Dados extraídos da Enfermaria Psiquiátrica do Hospital Planalto. Análise institucional retroativa com finalidade técnica e gerencial para qualificação do cuidado em saúde mental.
+                Dados integrados da Rede de Atenção Psicossocial incluindo Hospital Planalto e CAPS. Análise institucional retroativa com finalidade técnica e gerencial para qualificação do cuidado em saúde mental.
               </p>
             </div>
           </Card>

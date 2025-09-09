@@ -7,12 +7,24 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Environment and config files
 .env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 .mcp.json
+
+# Dependencies
 node_modules
 dist
 dist-ssr
 *.local
+
+# Development tools and temporary files
+.daddy/
+.qlty/
+daddy_project.md
 
 # Editor directories and files
 .vscode/*
@@ -24,3 +36,20 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output

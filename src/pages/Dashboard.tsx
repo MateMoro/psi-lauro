@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
-import { Clock, Users, RefreshCw, Calendar, Filter, Database, MapPin, Building2, Palette, UserCheck, Bed, RotateCcw, CalendarX2, Stethoscope, Timer, BarChart3, Heart, Activity } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Clock, Users, RefreshCw, Database, MapPin, Building2, Bed, Stethoscope, BarChart3, Heart } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { PatientSearch } from "@/components/dashboard/PatientSearch";
 import { DashboardSkeleton } from "@/components/dashboard/LoadingSkeletons";
 import { EmptyState } from "@/components/ui/empty-state";
+import { useHospital } from "@/contexts/HospitalContext";
 
 import { CustomPieChart } from "@/components/dashboard/charts/PieChart";
 import { VerticalBarChart } from "@/components/dashboard/charts/VerticalBarChart";
@@ -13,6 +14,9 @@ import { DischargesByWeekdayChart } from "@/components/dashboard/charts/Discharg
 import { MiniChart } from "@/components/dashboard/MiniChart";
 import { RadialChart } from "@/components/dashboard/RadialChart";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { getRoleDisplayName } from "@/utils/permissions";
+import CapsUserInfo from "@/components/CapsUserInfo";
 
 interface Patient {
   nome: string;
@@ -34,32 +38,42 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [weekdayDischarges, setWeekdayDischarges] = useState<Array<{name: string, value: number, percentage: number}>>([]);
   const { toast } = useToast();
+  const { getTableName, selectedHospital } = useHospital();
+  const { user, profile, getUserRole, loading: authLoading } = useAuth();
 
-  useEffect(() => {
-    fetchPatients();
-    fetchWeekdayDischarges();
-  }, []);
-
-  const fetchPatients = async () => {
+  const fetchPatients = useCallback(async () => {
     try {
+      const tableName = getTableName();
+      
       const { data, error } = await supabase
-        .from('pacientes_planalto')
-        .select('*');
+        .from(tableName)
+        .select('*')
+        .range(0, 4999);
 
-      if (error) throw error;
-
+      if (error) {
+        throw error;
+      }
+      
       setPatients(data || []);
+      
     } catch (error) {
-      console.error('Erro ao buscar pacientes:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível carregar os dados dos pacientes.",
+        description: `Não foi possível carregar os dados dos pacientes. ${error?.message || 'Erro desconhecido'}`,
         variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
-  };
+  }, [getTableName, toast]);
+
+  useEffect(() => {
+    // Only fetch data when auth is ready
+    if (!authLoading && user) {
+      fetchPatients();
+      fetchWeekdayDischarges();
+    }
+  }, [fetchPatients, getTableName, authLoading, user]);
 
   const fetchWeekdayDischarges = async () => {
     try {
@@ -94,10 +108,9 @@ export default function Dashboard() {
     let reinternacoes = 0;
     let altas_total = 0;
 
-    // Group patients by CNS only (not name fallback)
+    // Group patients by name for readmission calculation
     const patientGroups = patients.reduce((acc, patient) => {
-      if (!patient.cns) return acc; // Skip patients without CNS
-      const identifier = patient.cns.toString();
+      const identifier = patient.nome;
       if (!acc[identifier]) {
         acc[identifier] = [];
       }
@@ -594,10 +607,17 @@ export default function Dashboard() {
   };
 
 
+
   const metrics = calculateMetrics();
   const advancedMetrics = calculateAdvancedMetrics();
 
-  if (loading) {
+  // Show loading while auth is loading OR while data is loading
+  if (authLoading || loading) {
+    return <DashboardSkeleton />;
+  }
+
+  // If auth is done but no user, the ProtectedRoute will handle redirect
+  if (!authLoading && !user) {
     return <DashboardSkeleton />;
   }
 
@@ -610,7 +630,7 @@ export default function Dashboard() {
         description="Não foi possível encontrar dados de pacientes. Verifique a conexão com o banco de dados ou entre em contato com o administrador do sistema."
         action={{
           label: "Tentar novamente",
-          onClick: fetchPatients
+          onClick: () => fetchPatients()
         }}
       />
     );
@@ -621,57 +641,76 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gray-100">
       <div className="space-y-6 lg:space-y-8">
         
-        {/* Header Section */}
-        <div className="mb-4 lg:mb-8">
-          <div className="flex items-center gap-3 lg:gap-4 mb-3">
-            <div className="p-2 lg:p-3 bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-700 rounded-xl lg:rounded-2xl shadow-xl shadow-blue-500/25">
-              <BarChart3 className="h-6 w-6 lg:h-8 lg:w-8 text-white drop-shadow-sm" />
+        {/* Welcome Block */}
+        <div className="mb-6 lg:mb-8">
+          <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-2xl p-6 border border-blue-200/50 shadow-lg">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-700 rounded-2xl shadow-xl shadow-blue-500/25">
+                <BarChart3 className="h-8 w-8 text-white drop-shadow-sm" />
+              </div>
+              <div className="flex-1">
+                <h1 className="text-3xl lg:text-4xl font-black text-slate-800 tracking-tight mb-2">
+                  Olá, {profile?.nome || user?.email || 'Usuário'}!
+                </h1>
+                <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <span className="font-medium">{getRoleDisplayName(getUserRole() || 'gestor_caps')}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span className="font-medium">
+                      Hospital {selectedHospital === 'planalto' ? 'Planalto' : 'Cidade Tiradentes'}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div>
-              <h1 className="text-2xl lg:text-4xl font-black text-slate-800 tracking-tight">
-                Visão Geral
-              </h1>
-              <p className="text-sm lg:text-lg text-slate-600 font-medium">
-                Panorama das principais métricas assistenciais
+            <div className="mt-4 pt-4 border-t border-blue-200/50">
+              <p className="text-slate-600 font-medium">
+                Panorama das principais métricas assistenciais - Período: 01/07/2024 a 30/06/2025
               </p>
             </div>
           </div>
         </div>
 
+        {/* CAPS Team Info - Real-time sync display */}
+        <CapsUserInfo className="mb-6" />
+
         {/* Cards Superiores */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 lg:gap-4">
           <MetricCard
             title="Média de Permanência"
-            value="13,6"
+            value={`${metrics.avgStayDays} dias`}
             description="Tempo médio de internação"
             icon={Clock}
             variant="primary"
           />
           <MetricCard
             title="Taxa de Ocupação"
-            value="88,7%"
+            value={`${advancedMetrics.occupancyRate}%`}
             description="Percentual médio de ocupação"
             icon={Bed}
             variant="success"
           />
           <MetricCard
             title="Taxa de Reinternação"
-            value="2,7%"
+            value={`${metrics.readmissionRate}%`}
             description="Em até 30 dias"
             icon={RefreshCw}
             variant="warning"
           />
           <MetricCard
-            title="Número Total de Internações"
-            value="402"
-            description="Período: 01/07/2024 a 30/06/2025"
+            title="Total de Internações"
+            value={metrics.totalPatients.toString()}
+            description="Dados do hospital selecionado"
             icon={Users}
             variant="info"
           />
           <MetricCard
-            title="Satisfação Geral"
-            value="94,5%"
-            description="Pacientes/Familiares – mai–jul 2025"
+            title="Pacientes Internados"
+            value={`${advancedMetrics.currentOccupancy}/${advancedMetrics.totalCapacity}`}
+            description="Leitos ocupados atualmente"
             icon={Heart}
             variant="success"
           />
@@ -688,27 +727,24 @@ export default function Dashboard() {
                   <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg">
                     <Stethoscope className="h-4 w-4 text-white" />
                   </div>
-                  <h3 className="text-sm font-bold text-slate-800 tracking-wide">Principais Patologias</h3>
+                  <h3 className="text-sm font-bold text-slate-800 tracking-wide">Principais Patologias (CID-10)</h3>
                 </div>
                 
                 <div className="flex-1 space-y-3">
-                  {[
-                    { name: "Espectro da esquizofrenia", value: 35, color: "#0ea5e9" },
-                    { name: "Transtorno bipolar", value: 26, color: "#10b981" },
-                    { name: "Transtornos por drogas", value: 12.3, color: "#f97316" },
-                    { name: "Transtorno depressivo", value: 6.4, color: "#6366f1" },
-                    { name: "Transtorno de personalidade", value: 4.4, color: "#14b8a6" }
-                  ].map((item, index) => (
+                  {getTopDiagnoses().slice(0, 6).map((item, index) => (
                     <div key={index} className="space-y-2">
                       <div className="flex justify-between items-center">
                         <span className="text-xs font-semibold text-slate-700">{item.name}</span>
-                        <span className="text-xs font-bold text-slate-800">{item.value}%</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-slate-600">({item.value})</span>
+                          <span className="text-xs font-bold text-slate-800">{item.percentage}%</span>
+                        </div>
                       </div>
                       <div className="w-full bg-slate-200 rounded-full h-2">
                         <div 
                           className="h-2 rounded-full transition-all duration-500"
                           style={{ 
-                            width: `${item.value}%`, 
+                            width: `${item.percentage}%`, 
                             backgroundColor: item.color 
                           }}
                         />
@@ -720,19 +756,30 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Procedência Chart */}
-          <div className="grid grid-cols-1 gap-4 lg:gap-6">
+          {/* Charts Row */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
             <MiniChart
-              data={[
-                { name: "Porta (SAMU e demanda espontânea)", value: 53.4, color: "#0ea5e9" },
-                { name: "Hospital Cidade Tiradentes", value: 29.5, color: "#10b981" },
-                { name: "Hospital Jardim IVA", value: 11.8, color: "#f97316" },
-                { name: "Outros", value: 5.3, color: "#6366f1" }
-              ]}
+              data={getProcedenciaDistribution().slice(0, 6).map(item => ({
+                name: item.name,
+                value: item.value,
+                color: ['#0ea5e9', '#10b981', '#f97316', '#6366f1', '#14b8a6', '#e11d48'][getProcedenciaDistribution().indexOf(item) % 6]
+              }))}
               title="Procedência"
               subtitle="Origem dos pacientes"
               type="pie"
               icon={MapPin}
+            />
+            
+            <MiniChart
+              data={getCapsDistribution().slice(0, 6).map(item => ({
+                name: item.name,
+                value: item.value,
+                color: item.fill
+              }))}
+              title="CAPS de Referência"
+              subtitle="Distribuição por CAPS (Adulto vs AD)"
+              type="bar"
+              icon={Building2}
             />
           </div>
         </div>

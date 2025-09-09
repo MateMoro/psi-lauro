@@ -1,5 +1,5 @@
-import { Home, BarChart3, Users, RefreshCw, Activity, TrendingUp, Stethoscope, MapPin, MessageCircle, Building2, Star } from "lucide-react";
-import { NavLink, useLocation } from "react-router-dom";
+import { Home, BarChart3, Users, RefreshCw, Activity, TrendingUp, Stethoscope, MapPin, MessageCircle, Building2, Star, Settings, LogOut, Download, GitCompare, Bell, UserPlus } from "lucide-react";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
@@ -11,6 +11,8 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { useAuth } from "@/hooks/useAuth";
+import { canAccessPage, getRoleDisplayName } from "@/utils/permissions";
 
 const navigationItems = [
   { 
@@ -32,36 +34,84 @@ const navigationItems = [
     description: "Características demográficas dos pacientes"
   },
   { 
-    title: "Procedência", 
-    url: "/procedencia", 
-    icon: MapPin,
-    description: "Origem e encaminhamentos dos pacientes"
+    title: "CAPS – Comparações e Rankings", 
+    url: "/caps-comparacoes", 
+    icon: GitCompare,
+    description: "Comparações entre CAPS e rankings"
   },
   { 
-    title: "Interconsultas", 
-    url: "/interconsultas", 
-    icon: MessageCircle,
-    description: "Volume e análise de interconsultas"
+    title: "Reinternações e Risco", 
+    url: "/reinternacoes", 
+    icon: RefreshCw,
+    description: "Análise de reinternações e fatores de risco"
   },
   { 
-    title: "Qualidade e Satisfação", 
-    url: "/qualidade-satisfacao", 
-    icon: Star,
-    description: "Avaliação da experiência dos pacientes"
+    title: "Pacientes", 
+    url: "/pacientes", 
+    icon: UserPlus,
+    description: "Gestão e visualização de pacientes"
   },
   { 
-    title: "Institucional", 
-    url: "/sobre-servico", 
+    title: "Central de Notificações", 
+    url: "/notificacoes", 
+    icon: Bell,
+    description: "Alertas e notificações do sistema"
+  },
+  { 
+    title: "Sobre o IntegraRAPS", 
+    url: "/sobre-integraraps", 
     icon: Building2,
-    description: "Informações sobre o serviço"
+    description: "Informações sobre o sistema IntegraRAPS"
+  },
+  { 
+    title: "Configurações", 
+    url: "/configuracoes", 
+    icon: Settings,
+    description: "Configurações do sistema (apenas coordenador)"
   },
 ];
 
 export function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, getUserRole, profile, signOut } = useAuth();
   const currentPath = location.pathname;
   const collapsed = state === "collapsed";
+
+  const userRole = getUserRole();
+  
+  // Filter navigation items based on user role
+  const accessibleItems = navigationItems.filter(item => 
+    canAccessPage(userRole, item.url)
+  );
+
+  const handleLogout = async () => {
+    console.log('🚪 AppSidebar: Logout button clicked');
+    try {
+      console.log('🔄 AppSidebar: Calling signOut...');
+      await signOut();
+      console.log('✅ AppSidebar: SignOut successful');
+      
+      // Try multiple redirect methods
+      console.log('🎯 AppSidebar: Attempting redirect to /login');
+      
+      // Method 1: React Router navigate
+      navigate('/login', { replace: true });
+      
+      // Method 2: Force reload after a delay (fallback)
+      setTimeout(() => {
+        console.log('🔄 AppSidebar: Fallback redirect with window.location');
+        window.location.href = '/login';
+      }, 1000);
+      
+    } catch (error) {
+      console.error('❌ AppSidebar: Logout error:', error);
+      // Even if signOut fails, try to redirect
+      console.log('🚨 AppSidebar: Force redirect despite error');
+      window.location.href = '/login';
+    }
+  };
 
   const isActive = (path: string) => currentPath === path;
   const getNavCls = ({ isActive }: { isActive: boolean }) =>
@@ -71,7 +121,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar 
-      className={`${collapsed ? "w-16" : "w-72"} hidden lg:flex`} 
+      className={`${collapsed ? "w-16" : "w-72"}`} 
       collapsible="icon"
     >
       <SidebarContent className="bg-gradient-to-b from-slate-50 to-white border-r border-slate-200/60 backdrop-blur-sm h-full">
@@ -82,7 +132,18 @@ export function AppSidebar() {
             </div>
             {!collapsed && (
               <div className="flex flex-col">
-                <h2 className="text-lg font-black text-slate-800 tracking-tight leading-tight">Hospital Planalto</h2>
+                <h2 className="text-lg font-black text-slate-800 tracking-tight leading-tight">IntegraRAPS</h2>
+                <p className="text-sm text-slate-600 font-medium">Hospital Planalto e CAPS</p>
+                {user && userRole && (
+                  <div className="mt-1">
+                    <p className="text-xs text-slate-600 font-medium">
+                      {profile?.nome || user.email}
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      {getRoleDisplayName(userRole)}
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -95,7 +156,7 @@ export function AppSidebar() {
           
           <SidebarGroupContent>
             <SidebarMenu className="space-y-3">
-              {navigationItems.map((item) => (
+              {accessibleItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild className="h-14 px-4">
                     <NavLink 
@@ -121,6 +182,21 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {/* Logout Button */}
+        {user && (
+          <div className="mt-auto px-4 py-6 border-t border-slate-200/60">
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-4 w-full p-3 text-slate-700 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200 hover:shadow-md"
+            >
+              <LogOut className="h-5 w-5 flex-shrink-0" />
+              {!collapsed && (
+                <span className="font-medium text-sm">Sair</span>
+              )}
+            </button>
+          </div>
+        )}
       </SidebarContent>
     </Sidebar>
   );

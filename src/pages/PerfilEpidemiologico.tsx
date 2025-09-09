@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Users, Calendar, Palette, MapPin, Stethoscope } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { DashboardSkeleton } from "@/components/dashboard/LoadingSkeletons";
 import { EmptyState } from "@/components/ui/empty-state";
 import { MiniChart } from "@/components/dashboard/MiniChart";
 import { useToast } from "@/hooks/use-toast";
+import { useHospital } from "@/contexts/HospitalContext";
 
 interface Patient {
   nome: string;
@@ -24,16 +25,15 @@ export default function PerfilEpidemiologico() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { getTableName } = useHospital();
 
-  useEffect(() => {
-    fetchPatients();
-  }, []);
-
-  const fetchPatients = async () => {
+  const fetchPatients = useCallback(async () => {
     try {
+      const tableName = getTableName();
       const { data, error } = await supabase
-        .from('pacientes_planalto')
-        .select('*');
+        .from(tableName)
+        .select('*')
+        .range(0, 4999);
 
       if (error) throw error;
       setPatients(data || []);
@@ -47,7 +47,11 @@ export default function PerfilEpidemiologico() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [getTableName, toast]);
+
+  useEffect(() => {
+    fetchPatients();
+  }, [fetchPatients, getTableName]);
 
   const getGenderDistribution = () => {
     const genderCount = patients.reduce((acc, p) => {
@@ -139,16 +143,62 @@ export default function PerfilEpidemiologico() {
   };
 
   const getMentalDisorders = () => {
-    // Fixed data for main pathologies as requested
-    const disorderData = [
-      { name: 'Espectro da esquizofrenia', value: 35.0, color: '#0ea5e9' },
-      { name: 'Transtorno bipolar', value: 26.0, color: '#10b981' },
-      { name: 'Transtornos por drogas', value: 12.3, color: '#f97316' },
-      { name: 'Transtorno depressivo', value: 6.4, color: '#6366f1' },
-      { name: 'Transtorno de personalidade', value: 4.4, color: '#14b8a6' }
-    ];
+    const cidCount = patients.reduce((acc, p) => {
+      let cid = p.cid_grupo || p.transtorno_categoria || 'Não especificado';
+      
+      // Normalizar e agrupar CIDs similares
+      if (cid.toLowerCase().includes('esquizofrenia') || cid.toLowerCase().includes('psicótica')) {
+        cid = 'Espectro da esquizofrenia';
+      } else if (cid.toLowerCase().includes('bipolar') || cid.toLowerCase().includes('maníaco')) {
+        cid = 'Transtorno bipolar';
+      } else if (cid.toLowerCase().includes('droga') || cid.toLowerCase().includes('substância') || cid.toLowerCase().includes('álcool')) {
+        cid = 'Transtornos por substâncias';
+      } else if (cid.toLowerCase().includes('depressi') || cid.toLowerCase().includes('humor')) {
+        cid = 'Transtorno depressivo';
+      } else if (cid.toLowerCase().includes('personalidade')) {
+        cid = 'Transtorno de personalidade';
+      } else if (cid.toLowerCase().includes('ansiedade') || cid.toLowerCase().includes('ansiosos')) {
+        cid = 'Transtornos de ansiedade';
+      }
+      
+      acc[cid] = (acc[cid] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
 
-    return disorderData;
+    const colors = ['#0ea5e9', '#10b981', '#f97316', '#6366f1', '#14b8a6', '#8b5cf6', '#06b6d4'];
+    const total = patients.length;
+    
+    return Object.entries(cidCount)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 5)
+      .map(([name, count], index) => ({ 
+        name, 
+        value: total > 0 ? parseFloat(((count / total) * 100).toFixed(1)) : 0,
+        color: colors[index % colors.length] || '#6b7280'
+      }));
+  };
+
+  const getAgeStatistics = () => {
+    const ages = patients
+      .filter(p => p.data_nascimento)
+      .map(p => new Date().getFullYear() - new Date(p.data_nascimento).getFullYear())
+      .filter(age => age > 0 && age < 120);
+    
+    if (ages.length === 0) return { average: '0', median: '0', min: '0', max: '0' };
+    
+    ages.sort((a, b) => a - b);
+    const sum = ages.reduce((a, b) => a + b, 0);
+    const average = (sum / ages.length).toFixed(1);
+    const median = ages.length % 2 === 0 
+      ? ((ages[ages.length / 2 - 1] + ages[ages.length / 2]) / 2).toFixed(1)
+      : ages[Math.floor(ages.length / 2)].toFixed(1);
+    
+    return {
+      average,
+      median,
+      min: ages[0].toString(),
+      max: ages[ages.length - 1].toString()
+    };
   };
 
   const getProcedenciaDistribution = () => {
@@ -159,13 +209,29 @@ export default function PerfilEpidemiologico() {
     }, {} as Record<string, number>);
 
     const total = patients.length;
-    return Object.entries(procedenciaCount)
-      .sort(([,a], [,b]) => b - a)
-      .map(([name, count]) => ({ 
-        name,
-        value: total > 0 ? Math.round((count / total) * 100) : 0,
-        count 
-      }));
+    const sorted = Object.entries(procedenciaCount)
+      .sort(([,a], [,b]) => b - a);
+    
+    // Return top 4 + others if there are more than 4
+    const top4 = sorted.slice(0, 4);
+    const others = sorted.slice(4);
+    
+    const result = top4.map(([name, count]) => ({ 
+      name,
+      value: total > 0 ? Math.round((count / total) * 100) : 0,
+      count 
+    }));
+    
+    if (others.length > 0) {
+      const othersCount = others.reduce((sum, [, count]) => sum + count, 0);
+      result.push({
+        name: 'Outros',
+        value: total > 0 ? Math.round((othersCount / total) * 100) : 0,
+        count: othersCount
+      });
+    }
+    
+    return result;
   };
 
   if (loading) {
@@ -215,7 +281,7 @@ export default function PerfilEpidemiologico() {
                 <Users className="h-6 w-6 text-white" />
               </div>
               <div>
-                <p className="text-2xl font-black text-slate-800">402</p>
+                <p className="text-2xl font-black text-slate-800">{patients.length.toLocaleString()}</p>
                 <p className="text-sm text-slate-600 font-semibold">Total de Pacientes</p>
               </div>
             </div>
@@ -227,10 +293,10 @@ export default function PerfilEpidemiologico() {
                 <Calendar className="h-6 w-6 text-white" />
               </div>
               <div className="space-y-1">
-                <p className="text-2xl font-black text-slate-800">38,3 anos</p>
-                <p className="text-sm text-slate-600 font-semibold">Idade</p>
-                <p className="text-xs text-slate-500">DP = 13,1 • Mediana = 37,4</p>
-                <p className="text-xs text-slate-500">Mín–Máx: 15 – 76 anos</p>
+                <p className="text-2xl font-black text-slate-800">{getAgeStatistics().average} anos</p>
+                <p className="text-sm text-slate-600 font-semibold">Idade Média</p>
+                <p className="text-xs text-slate-500">Mediana = {getAgeStatistics().median}</p>
+                <p className="text-xs text-slate-500">Mín–Máx: {getAgeStatistics().min} – {getAgeStatistics().max} anos</p>
               </div>
             </div>
           </div>
@@ -250,13 +316,7 @@ export default function PerfilEpidemiologico() {
             />
 
             <MiniChart
-              data={[
-                { name: "<18", value: 8 },
-                { name: "18–25", value: 22 },
-                { name: "26–44", value: 35 },
-                { name: "45–64", value: 28 },
-                { name: "65+", value: 7 }
-              ]}
+              data={getAgeDistribution()}
               title="Faixa Etária de Idade"
               subtitle="Distribuição por idade"
               type="bar"
@@ -310,10 +370,12 @@ export default function PerfilEpidemiologico() {
                   const percentage = Math.round((item.value / patients.length) * 100);
                   return {
                     ...item,
-                    value: item.name === 'Parda' ? 50 : percentage, // Force Parda to show 50%
+                    value: percentage,
                     color: item.name === 'Parda' ? '#f97316' : 
                            item.name === 'Branca' ? '#10b981' : 
-                           item.name === 'Preta' ? '#6366f1' : item.color
+                           item.name === 'Preta' ? '#6366f1' : 
+                           item.name === 'Amarela' ? '#eab308' :
+                           item.name === 'Indígena' ? '#8b5cf6' : item.color
                   };
                 })
                 .filter(item => item.value > 0)
@@ -368,7 +430,7 @@ export default function PerfilEpidemiologico() {
                   <div>
                     <h3 className="text-lg font-bold text-slate-800 mb-2">Cor</h3>
                     <p className="text-sm text-slate-700 leading-relaxed">
-                      Predomínio de pardos e pretos (58%), acima do esperado para o perfil de São Paulo. Pode refletir maior vulnerabilidade social e barreiras de acesso a serviços de saúde mental.
+                      Distribuição étnico-racial dos pacientes atendidos. Importante para análise de equidade no acesso aos serviços de saúde mental.
                     </p>
                   </div>
                 </div>
@@ -384,7 +446,39 @@ export default function PerfilEpidemiologico() {
                   <div>
                     <h3 className="text-lg font-bold text-slate-800 mb-2">Principais Diagnósticos</h3>
                     <p className="text-sm text-slate-700 leading-relaxed">
-                      Perfil compatível com unidades hospitalares de "porta fechada", demandando estabilização de crises e manejo de risco.
+                      Principais categorias diagnósticas dos pacientes internados, baseadas nos códigos CID registrados no sistema.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Procedência Chart */}
+          <div className="grid grid-cols-1 gap-6">
+            <MiniChart
+              data={getProcedenciaDistribution().slice(0, 5)}
+              title="Procedência"
+              subtitle="Top 4 principais origens + outros"
+              type="bar"
+              icon={MapPin}
+              showXAxisLabels={true}
+              hideLegend={false}
+            />
+          </div>
+
+          {/* Procedência Explanation Card */}
+          <div className="grid grid-cols-1 gap-6">
+            <div className="bg-gradient-to-br from-white to-slate-50/50 shadow-xl backdrop-blur-sm ring-1 ring-slate-200/50 rounded-xl">
+              <div className="p-6">
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-gradient-to-br from-green-500 to-teal-600 rounded-xl flex-shrink-0">
+                    <MapPin className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-800 mb-2">Procedência</h3>
+                    <p className="text-sm text-slate-700 leading-relaxed">
+                      Origem geográfica dos pacientes internados. Permite identificar regiões de maior demanda e otimizar a organização da rede de cuidados.
                     </p>
                   </div>
                 </div>

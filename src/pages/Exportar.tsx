@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download, FileText, BarChart3, Calendar, Users } from "lucide-react";
@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { PDFGenerator } from "@/lib/pdfGenerator";
 import { PrintDashboard } from "@/components/dashboard/PrintDashboard";
+import { useHospital } from "@/contexts/HospitalContext";
 
 interface Patient {
   nome: string;
@@ -28,16 +29,15 @@ export default function Exportar() {
   const [loading, setLoading] = useState(true);
   const [showPrintDashboard, setShowPrintDashboard] = useState(false);
   const { toast } = useToast();
+  const { getTableName } = useHospital();
 
-  useEffect(() => {
-    fetchPatients();
-  }, []);
-
-  const fetchPatients = async () => {
+  const fetchPatients = useCallback(async () => {
     try {
+      const tableName = getTableName();
       const { data, error } = await supabase
-        .from('pacientes_planalto')
-        .select('*');
+        .from(tableName)
+        .select('*')
+        .range(0, 4999);
 
       if (error) throw error;
       setPatients(data || []);
@@ -51,7 +51,11 @@ export default function Exportar() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [getTableName, toast]);
+
+  useEffect(() => {
+    fetchPatients();
+  }, [fetchPatients]);
 
   const prepareDashboardData = () => {
     const totalPatients = patients.length;

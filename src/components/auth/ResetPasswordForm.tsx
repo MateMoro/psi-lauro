@@ -22,7 +22,7 @@ const resetPasswordSchema = z.object({
 type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
 
 export function ResetPasswordForm() {
-  const { updatePassword, user } = useAuth();
+  const { updatePassword, user, isPasswordRecovery } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -38,11 +38,16 @@ export function ResetPasswordForm() {
     resolver: zodResolver(resetPasswordSchema),
   });
 
-  // Redirect to login if no user session (invalid or expired reset token)
+  // Validate password recovery session
   useEffect(() => {
-    console.log('[ResetPassword] User session check:', user ? 'Valid' : 'Invalid');
-    console.log('[ResetPassword] Current URL:', window.location.href);
+    console.log('[ResetPassword] Session check:', {
+      hasUser: !!user,
+      isPasswordRecovery,
+      email: user?.email,
+      url: window.location.href
+    });
 
+    // No user session at all - invalid or expired token
     if (!user) {
       console.warn('[ResetPassword] No user session found, redirecting to login');
       navigate('/login', {
@@ -51,10 +56,20 @@ export function ResetPasswordForm() {
           message: 'Link de recuperação inválido ou expirado. Solicite um novo link.'
         }
       });
-    } else {
-      console.log('[ResetPassword] User authenticated:', user.email);
+      return;
     }
-  }, [user, navigate]);
+
+    // User is logged in normally (not a password recovery session)
+    // Redirect to dashboard since they don't need to reset password
+    if (user && !isPasswordRecovery) {
+      console.log('[ResetPassword] User already logged in (not recovery), redirecting to dashboard');
+      navigate('/dashboard', { replace: true });
+      return;
+    }
+
+    // Valid password recovery session
+    console.log('[ResetPassword] Valid password recovery session for:', user.email);
+  }, [user, isPasswordRecovery, navigate]);
 
   const onSubmit = async (data: ResetPasswordFormData) => {
     console.log('[ResetPassword] Form submitted');

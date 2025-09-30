@@ -8,4 +8,15 @@ const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+  auth: {
+    // Automatically detect session in URL (for email confirmation and password recovery links)
+    detectSessionInUrl: true,
+    // Auto refresh tokens before they expire
+    autoRefreshToken: true,
+    // Persist session in local storage
+    persistSession: true,
+    // Handle hash fragments in URL for OAuth and magic links
+    flowType: 'pkce'
+  }
+});

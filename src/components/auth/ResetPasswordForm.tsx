@@ -40,18 +40,27 @@ export function ResetPasswordForm() {
 
   // Redirect to login if no user session (invalid or expired reset token)
   useEffect(() => {
+    console.log('[ResetPassword] User session check:', user ? 'Valid' : 'Invalid');
+    console.log('[ResetPassword] Current URL:', window.location.href);
+
     if (!user) {
+      console.warn('[ResetPassword] No user session found, redirecting to login');
       navigate('/login', {
         replace: true,
         state: {
           message: 'Link de recuperação inválido ou expirado. Solicite um novo link.'
         }
       });
+    } else {
+      console.log('[ResetPassword] User authenticated:', user.email);
     }
   }, [user, navigate]);
 
   const onSubmit = async (data: ResetPasswordFormData) => {
+    console.log('[ResetPassword] Form submitted');
+
     if (!user) {
+      console.error('[ResetPassword] No user session when submitting form');
       setError('Sessão inválida. Solicite um novo link de recuperação.');
       return;
     }
@@ -60,9 +69,11 @@ export function ResetPasswordForm() {
     setError('');
 
     try {
+      console.log('[ResetPassword] Calling updatePassword...');
       const { error: updateError } = await updatePassword(data.password);
 
       if (updateError) {
+        console.error('[ResetPassword] Update failed:', updateError.message);
         if (updateError.message.includes('Password should be at least')) {
           setError('A senha deve ter pelo menos 6 caracteres.');
         } else if (updateError.message.includes('New password should be different')) {
@@ -71,6 +82,7 @@ export function ResetPasswordForm() {
           setError('Erro ao atualizar senha. Tente novamente.');
         }
       } else {
+        console.log('[ResetPassword] Password updated successfully!');
         setSuccess(true);
         // Redirect to dashboard after 3 seconds
         setTimeout(() => {
@@ -78,7 +90,7 @@ export function ResetPasswordForm() {
         }, 3000);
       }
     } catch (error) {
-      console.error('Update password error:', error);
+      console.error('[ResetPassword] Unexpected error:', error);
       setError('Erro inesperado. Tente novamente.');
     } finally {
       setIsLoading(false);

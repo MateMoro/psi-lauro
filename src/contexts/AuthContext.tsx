@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { AuthContext, AuthContextType, UserProfile, UserRole } from './auth-context';
+import { AuthContext, AuthContextType, UserProfile, UserRole, JWTClaims } from './auth-context';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -11,49 +11,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [initializationError, setInitializationError] = useState<string | null>(null);
 
   const fetchUserProfile = async (userId: string) => {
-    console.log('🔍 AuthContext: Starting fetchUserProfile for:', userId);
     try {
-      const { data: profileData, error: profileError } = await supabase
+      const { data, error } = await supabase
         .from('user_profiles')
         .select('*')
         .eq('user_id', userId)
         .maybeSingle();
 
-      if (profileError) {
-        console.error('❌ AuthContext: Error fetching user profile:', profileError);
-        console.error('Profile error details:', {
-          message: profileError.message,
-          details: profileError.details,
-          hint: profileError.hint,
-          code: profileError.code
-        });
-        setProfile(null);
-        throw new Error(`Profile fetch failed: ${profileError.message}`);
+      if (!error && data) {
+        setProfile(data);
       }
-
-      // Se não existe perfil, criar um perfil básico
-      if (!profileData) {
-        console.log('⚠️ AuthContext: No profile found for user, would need to create one');
-        setProfile(null);
-        return;
-      }
-
-      console.log('✅ AuthContext: Profile loaded successfully:', {
-        id: profileData.id,
-        user_id: profileData.user_id,
-        role: profileData.role,
-        hospital: profileData.hospital_name
-      });
-      setProfile(profileData);
     } catch (error) {
-      console.error('💥 AuthContext: Exception in fetchUserProfile:', error);
-      setProfile(null);
-      throw error; // Re-throw so calling code can handle it
+      console.error('Error fetching profile:', error);
     }
   };
 
   const getUserRole = (): UserRole | null => {
-    // Primeira tentativa: buscar do JWT claims se disponível
     if (user?.user_metadata?.user_role) {
       const jwtRole = user.user_metadata.user_role;
       if (jwtRole === 'coordenador' || jwtRole === 'gestor_caps') {
@@ -61,18 +34,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    // Segunda tentativa: buscar do profile da base de dados
     if (!profile?.role) return null;
-    
+
     const role = profile.role;
-    
+
     switch (role) {
       case 'coordenador':
       case 'gestor_caps':
         return role as UserRole;
       default:
-        // Para compatibilidade, mapear outros roles possíveis
-        return 'gestor_caps'; // default fallback
+        return 'gestor_caps';
     }
   };
 
@@ -82,19 +53,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const canAccessPage = (page: string): boolean => {
     const role = getUserRole();
-    
+
     if (!role) return false;
-    
-    // Coordenador has access to everything
+
     if (role === 'coordenador') return true;
-    
-    // Pages restricted only to coordenador (like settings)
+
     const coordenadorOnlyPages = ['settings', 'configuracoes'];
     if (coordenadorOnlyPages.includes(page.toLowerCase())) {
       return role === 'coordenador';
     }
-    
-    // All other pages are accessible to gestor_caps and equipe_multiprofissional
+
     return true;
   };
 
@@ -106,43 +74,56 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error };
   };
 
-  const signOut = async () => {
-    console.log('🔄 AuthContext: Starting signOut...');
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error('❌ AuthContext: Supabase signOut error:', error);
-        throw error;
+  const signUp = async (email: string, password: string, userData?: { name?: string }) => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: userData || {},
+        emailRedirectTo: undefined, // No email confirmation needed
       }
-      console.log('✅ AuthContext: Supabase signOut successful');
-      
-      // Clear state
-      setUser(null);
-      setProfile(null);
-      setSession(null);
-      
-      // Clear localStorage
-      localStorage.removeItem('psi-selected-hospital');
-      
-      console.log('🧹 AuthContext: State cleared, ready for redirect');
-    } catch (error) {
-      console.error('💥 AuthContext: SignOut exception:', error);
-      throw error;
-    }
+    });
+
+    // If signup successful and email confirmation disabled, user is auto-confirmed
+    // Session will be automatically set by onAuthStateChange listener
+    return { data, error };
   };
 
-  const getJWTClaims = () => {
+  const resetPassword = async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    return { error };
+  };
+
+  const updatePassword = async (password: string) => {
+    const { error } = await supabase.auth.updateUser({
+      password,
+    });
+    return { error };
+  };
+
+  const signOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+
+    setUser(null);
+    setProfile(null);
+    setSession(null);
+    localStorage.removeItem('psi-selected-hospital');
+  };
+
+  const getJWTClaims = (): JWTClaims | null => {
     if (!session?.access_token) return null;
-    
+
     try {
-      // Decodificar JWT token (sem verificar assinatura - apenas para debug)
       const base64Url = session.access_token.split('.')[1];
       const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
       const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
         return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
       }).join(''));
-      
-      return JSON.parse(jsonPayload);
+
+      return JSON.parse(jsonPayload) as JWTClaims;
     } catch (error) {
       console.error('Error decoding JWT:', error);
       return null;
@@ -150,121 +131,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const debugAuthState = () => {
-    console.group('🔍 DEBUG: Auth State');
+    console.group('Auth State');
     console.log('User:', user);
     console.log('Profile:', profile);
     console.log('Session:', session);
     console.log('JWT Claims:', getJWTClaims());
-    console.log('Current Role (from function):', getUserRole());
+    console.log('Current Role:', getUserRole());
     console.groupEnd();
   };
 
   useEffect(() => {
-    console.log('🔄 AuthContext: Initializing auth...');
-    setInitializationError(null);
-    let isInitialLoad = true;
-    
-    // Increase timeout to 30 seconds for better reliability
-    const initTimeout = setTimeout(() => {
-      if (isInitialLoad) {
-        console.warn('⏰ AuthContext: Initialization timeout after 30 seconds');
-        setInitializationError('Authentication initialization timed out');
-        setLoading(false);
-      }
-    }, 30000);
-    
-    // Listen for auth changes first to avoid race conditions
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('🔔 AuthContext: Auth state change -', event, session ? 'SESSION_EXISTS' : 'NO_SESSION');
-      
-      // Clear initialization timeout once we have any auth event
-      if (isInitialLoad) {
-        clearTimeout(initTimeout);
-        isInitialLoad = false;
-      }
-      
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        console.log('👤 AuthContext: Fetching profile after auth change:', session.user.id);
-        try {
-          await fetchUserProfile(session.user.id);
-          console.log('✅ AuthContext: Profile fetch completed');
-        } catch (error) {
-          console.error('❌ AuthContext: Profile fetch failed, but continuing with session:', error);
-          // Don't set initialization error - we have a valid session even without profile
-          setProfile(null);
-        }
-      } else {
-        console.log('❌ AuthContext: Clearing profile (no session)');
-        setProfile(null);
-      }
-      
-      console.log('✅ AuthContext: Auth state change complete');
       setLoading(false);
-    });
-    
-    // Get initial session after setting up listener
-    supabase.auth.getSession().then(async ({ data: { session }, error }) => {
-      console.log('📊 AuthContext: Initial session check:', session ? 'EXISTS' : 'NULL');
-      
-      if (error) {
-        console.error('❌ AuthContext: Error getting initial session:', error);
-        // Only set error if we don't already have a session from onAuthStateChange
-        if (isInitialLoad) {
-          clearTimeout(initTimeout);
-          setInitializationError(`Session error: ${error.message}`);
-          setLoading(false);
-          isInitialLoad = false;
-        }
-        return;
-      }
-      
-      // If we already processed this session via onAuthStateChange, skip
-      if (!isInitialLoad) {
-        console.log('📊 AuthContext: Session already processed via onAuthStateChange');
-        return;
-      }
-      
-      // Clear timeout since we got a response
-      clearTimeout(initTimeout);
-      isInitialLoad = false;
-      
-      setSession(session);
-      setUser(session?.user ?? null);
-      
+
       if (session?.user) {
-        console.log('👤 AuthContext: Fetching profile for initial session:', session.user.id);
-        try {
-          await fetchUserProfile(session.user.id);
-          console.log('✅ AuthContext: Initial profile fetch completed');
-        } catch (error) {
-          console.error('❌ AuthContext: Initial profile fetch failed, but continuing with session:', error);
-          // Don't set initialization error - we have a valid session even without profile
-          setProfile(null);
-        }
-      }
-      
-      console.log('✅ AuthContext: Initial loading complete');
-      setLoading(false);
-    }).catch(error => {
-      console.error('💥 AuthContext: Exception during session initialization:', error);
-      if (isInitialLoad) {
-        clearTimeout(initTimeout);
-        setInitializationError(`Initialization failed: ${error instanceof Error ? error.message : String(error)}`);
-        setLoading(false);
-        isInitialLoad = false;
+        fetchUserProfile(session.user.id);
       }
     });
 
-    return () => {
-      console.log('🧹 AuthContext: Cleaning up subscription');
-      clearTimeout(initTimeout);
-      subscription.unsubscribe();
-    };
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+
+        if (session?.user) {
+          fetchUserProfile(session.user.id);
+        } else {
+          setProfile(null);
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const value: AuthContextType = {
@@ -274,7 +176,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loading,
     initializationError,
     signIn,
+    signUp,
     signOut,
+    resetPassword,
+    updatePassword,
     getUserRole,
     hasRole,
     canAccessPage,
@@ -288,4 +193,3 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     </AuthContext.Provider>
   );
 }
-

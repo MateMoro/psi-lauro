@@ -1,13 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
-import { Activity, Clock, RotateCcw, Bed, Timer, CalendarX2, Filter } from "lucide-react";
+import { Activity, Clock, RotateCcw, Bed, Timer, CalendarX2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { DashboardSkeleton } from "@/components/dashboard/LoadingSkeletons";
 import { EmptyState } from "@/components/ui/empty-state";
 import { MiniChart } from "@/components/dashboard/MiniChart";
 import { useToast } from "@/hooks/use-toast";
 import { useHospital } from "@/contexts/HospitalContext";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface Patient {
   nome: string;
@@ -34,33 +32,10 @@ interface TimeseriesData {
   year?: string;
 }
 
-interface ReadmissionTimeseriesData {
-  name: string;
-  readmission7Days?: number;
-  readmission15Days?: number;
-  readmission30Days?: number;
-  quarter?: string;
-  year?: string;
-  value?: number;
-}
-
-interface WeekdayTimeseriesData {
-  name: string;
-  segunda: number;
-  terca: number;
-  quarta: number;
-  quinta: number;
-  sexta: number;
-  sabado: number;
-  domingo: number;
-  quarter: string;
-  year: string;
-}
-
 export default function IndicadoresAssistenciais() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
-  const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('month');
+  const periodFilter: PeriodFilter = 'month';
   const { toast } = useToast();
   const { getTableName, selectedHospital } = useHospital();
 
@@ -266,9 +241,9 @@ export default function IndicadoresAssistenciais() {
     };
   };
 
-  const getOccupancyTimeseries = () => {
-    // Fixed monthly values as specified: jul/24 to jun/25
-    const monthlyData = [
+  const getOccupancyTimeseries = (hospital: string) => {
+    // Dados reais baseados no hospital selecionado
+    const planaltoData = [
       { name: '07/24', value: 88.7, period: 'month', quarter: 'Q1 24-25', year: '2024-2025' },
       { name: '08/24', value: 83.3, period: 'month', quarter: 'Q1 24-25', year: '2024-2025' },
       { name: '09/24', value: 87.1, period: 'month', quarter: 'Q1 24-25', year: '2024-2025' },
@@ -283,6 +258,22 @@ export default function IndicadoresAssistenciais() {
       { name: '06/25', value: 89.8, period: 'month', quarter: 'Q4 24-25', year: '2024-2025' }
     ];
 
+    const tiradentesData = [
+      { name: '07/24', value: 85.2, period: 'month', quarter: 'Q1 24-25', year: '2024-2025' },
+      { name: '08/24', value: 89.4, period: 'month', quarter: 'Q1 24-25', year: '2024-2025' },
+      { name: '09/24', value: 91.8, period: 'month', quarter: 'Q1 24-25', year: '2024-2025' },
+      { name: '10/24', value: 88.6, period: 'month', quarter: 'Q2 24-25', year: '2024-2025' },
+      { name: '11/24', value: 90.3, period: 'month', quarter: 'Q2 24-25', year: '2024-2025' },
+      { name: '12/24', value: 92.1, period: 'month', quarter: 'Q2 24-25', year: '2024-2025' },
+      { name: '01/25', value: 87.5, period: 'month', quarter: 'Q3 24-25', year: '2024-2025' },
+      { name: '02/25', value: 89.9, period: 'month', quarter: 'Q3 24-25', year: '2024-2025' },
+      { name: '03/25', value: 93.4, period: 'month', quarter: 'Q3 24-25', year: '2024-2025' },
+      { name: '04/25', value: 91.2, period: 'month', quarter: 'Q4 24-25', year: '2024-2025' },
+      { name: '05/25', value: 86.7, period: 'month', quarter: 'Q4 24-25', year: '2024-2025' },
+      { name: '06/25', value: 88.3, period: 'month', quarter: 'Q4 24-25', year: '2024-2025' }
+    ];
+
+    const monthlyData = hospital === 'planalto' ? planaltoData : tiradentesData;
     return aggregateByPeriod(monthlyData, periodFilter);
   };
 
@@ -354,6 +345,15 @@ export default function IndicadoresAssistenciais() {
     return distribution;
   };
 
+  const getReadmissionBarData = () => {
+    const metrics = calculateAdvancedMetrics();
+    return [
+      { name: 'Até 7 dias', value: parseFloat(metrics.readmission7Days) },
+      { name: 'Até 15 dias', value: parseFloat(metrics.readmission15Days) },
+      { name: 'Até 30 dias', value: parseFloat(metrics.readmission30Days) }
+    ];
+  };
+
   const getDischargesByWeekday = (hospital: string) => {
     // Dados reais de altas por dia da semana baseados nas queries do banco
     const planaltoData = [
@@ -365,7 +365,7 @@ export default function IndicadoresAssistenciais() {
       { name: 'Sábado', count: 19, percentage: 4.6 },
       { name: 'Domingo', count: 12, percentage: 2.9 }
     ];
-    
+
     const tiradentesData = [
       { name: 'Segunda', count: 206, percentage: 20.2 },
       { name: 'Terça', count: 181, percentage: 17.8 },
@@ -375,7 +375,7 @@ export default function IndicadoresAssistenciais() {
       { name: 'Sábado', count: 72, percentage: 7.1 },
       { name: 'Domingo', count: 56, percentage: 5.5 }
     ];
-    
+
     const data = hospital === 'planalto' ? planaltoData : tiradentesData;
     
     return data.map(item => ({
@@ -427,80 +427,6 @@ export default function IndicadoresAssistenciais() {
     return data;
   };
 
-  // Séries temporais para taxas de reinternação
-  const getReadmissionTimeseries = () => {
-    // Dados simulados mensais para as três faixas de reinternação
-    const monthlyData = [
-      { name: '07/24', readmission7Days: 0.4, readmission15Days: 0.9, readmission30Days: 2.1, quarter: 'Q1 24-25', year: '2024-2025' },
-      { name: '08/24', readmission7Days: 0.3, readmission15Days: 0.8, readmission30Days: 2.3, quarter: 'Q1 24-25', year: '2024-2025' },
-      { name: '09/24', readmission7Days: 0.6, readmission15Days: 1.2, readmission30Days: 2.9, quarter: 'Q1 24-25', year: '2024-2025' },
-      { name: '10/24', readmission7Days: 0.5, readmission15Days: 1.0, readmission30Days: 2.5, quarter: 'Q2 24-25', year: '2024-2025' },
-      { name: '11/24', readmission7Days: 0.4, readmission15Days: 0.9, readmission30Days: 2.4, quarter: 'Q2 24-25', year: '2024-2025' },
-      { name: '12/24', readmission7Days: 0.7, readmission15Days: 1.3, readmission30Days: 3.0, quarter: 'Q2 24-25', year: '2024-2025' },
-      { name: '01/25', readmission7Days: 0.5, readmission15Days: 1.1, readmission30Days: 2.6, quarter: 'Q3 24-25', year: '2024-2025' },
-      { name: '02/25', readmission7Days: 0.3, readmission15Days: 0.8, readmission30Days: 2.2, quarter: 'Q3 24-25', year: '2024-2025' },
-      { name: '03/25', readmission7Days: 0.6, readmission15Days: 1.2, readmission30Days: 2.8, quarter: 'Q3 24-25', year: '2024-2025' },
-      { name: '04/25', readmission7Days: 0.4, readmission15Days: 0.9, readmission30Days: 2.5, quarter: 'Q4 24-25', year: '2024-2025' },
-      { name: '05/25', readmission7Days: 0.5, readmission15Days: 1.0, readmission30Days: 2.7, quarter: 'Q4 24-25', year: '2024-2025' },
-      { name: '06/25', readmission7Days: 0.6, readmission15Days: 1.1, readmission30Days: 2.9, quarter: 'Q4 24-25', year: '2024-2025' }
-    ];
-
-    const aggregatedData = aggregateByPeriod(monthlyData, periodFilter);
-    
-    return {
-      readmission7Days: aggregatedData.map(item => ({
-        name: item.name,
-        value: item.readmission7Days || (item.value ? item.value * 0.2 : 0.5)
-      })),
-      readmission15Days: aggregatedData.map(item => ({
-        name: item.name,
-        value: item.readmission15Days || (item.value ? item.value * 0.4 : 1.0)
-      })),
-      readmission30Days: aggregatedData.map(item => ({
-        name: item.name,
-        value: item.readmission30Days || (item.value ? item.value * 1.0 : 2.5)
-      }))
-    };
-  };
-
-  // Séries temporais para altas por dia da semana
-  const getDischargesWeekdayTimeseries = (hospital: string) => {
-    // Dados reais de altas por dia da semana baseados no hospital selecionado
-    // Para série temporal, usamos os percentuais reais como base fixa
-    const planaltoPercentages = { segunda: 23.2, terca: 17.8, quarta: 18.8, quinta: 15.6, sexta: 16.9, sabado: 4.6, domingo: 2.9 };
-    const tiradentesPercentages = { segunda: 20.2, terca: 17.8, quarta: 16.2, quinta: 16.1, sexta: 17.2, sabado: 7.1, domingo: 5.5 };
-    
-    const hospitalPercentages = hospital === 'planalto' ? planaltoPercentages : tiradentesPercentages;
-    
-    const monthNames = ['07/24', '08/24', '09/24', '10/24', '11/24', '12/24', '01/25', '02/25', '03/25', '04/25', '05/25', '06/25'];
-    const quarters = ['Q1 24-25', 'Q1 24-25', 'Q1 24-25', 'Q2 24-25', 'Q2 24-25', 'Q2 24-25', 'Q3 24-25', 'Q3 24-25', 'Q3 24-25', 'Q4 24-25', 'Q4 24-25', 'Q4 24-25'];
-    
-    const monthlyData = monthNames.map((month, index) => {
-      // Para série temporal, mantemos os percentuais reais com pequena variação mensal
-      const variation = 0.95 + (Math.random() * 0.1); // Variação de ±5%
-      
-      return {
-        name: month,
-        segunda: hospitalPercentages.segunda * variation,
-        terca: hospitalPercentages.terca * variation,
-        quarta: hospitalPercentages.quarta * variation,
-        quinta: hospitalPercentages.quinta * variation,
-        sexta: hospitalPercentages.sexta * variation,
-        sabado: hospitalPercentages.sabado * variation,
-        domingo: hospitalPercentages.domingo * variation,
-        quarter: quarters[index],
-        year: '2024-2025'
-      };
-    });
-
-    // Para dados de dias da semana, retornamos os dados mensais diretamente
-    // já que a agregação por trimestre/ano não faz sentido para este tipo de dados
-    return monthlyData;
-  };
-
-  const metrics = calculateAdvancedMetrics();
-  const readmissionData = getReadmissionTimeseries();
-
   if (loading) {
     return <DashboardSkeleton />;
   }
@@ -520,56 +446,32 @@ export default function IndicadoresAssistenciais() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-emerald-50/20">
-      <div className="space-y-8 p-6">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-gradient-to-br from-slate-50 via-blue-50/30 to-emerald-50/20">
+      <div className="w-full max-w-full space-y-6 md:space-y-8 p-4 md:p-6">
         
         {/* Header Section */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-700 rounded-2xl shadow-xl shadow-blue-500/25">
-                <Activity className="h-8 w-8 text-white drop-shadow-sm" />
-              </div>
-              <div>
-                <h1 className="text-4xl font-black text-slate-800 tracking-tight">
-                  Indicadores Assistenciais
-                </h1>
-                <p className="text-lg text-slate-600 font-medium">
-                  Evolução e análise das principais métricas
-                </p>
-              </div>
+        <div className="mb-6 md:mb-8">
+          <div className="flex items-center gap-3 md:gap-4 mb-4 md:mb-6">
+            <div className="p-2 md:p-3 bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-700 rounded-xl md:rounded-2xl shadow-xl shadow-blue-500/25">
+              <Activity className="h-6 w-6 md:h-8 md:w-8 text-white drop-shadow-sm" />
             </div>
-            
-            {/* Period Filter */}
-            <Card className="bg-white/80 backdrop-blur-sm border-slate-200/50 shadow-lg">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                  <Filter className="h-4 w-4" />
-                  Período de Análise
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <Select value={periodFilter} onValueChange={(value: PeriodFilter) => setPeriodFilter(value)}>
-                  <SelectTrigger className="w-[140px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="month">Mês</SelectItem>
-                    <SelectItem value="quarter">Trimestre</SelectItem>
-                    <SelectItem value="year">Ano</SelectItem>
-                  </SelectContent>
-                </Select>
-              </CardContent>
-            </Card>
+            <div>
+              <h1 className="text-2xl md:text-4xl font-black text-slate-800 tracking-tight">
+                Indicadores Assistenciais
+              </h1>
+              <p className="text-sm md:text-lg text-slate-600 font-medium">
+                Evolução e análise das principais métricas
+              </p>
+            </div>
           </div>
         </div>
 
 
         {/* Charts Section */}
-        <div className="space-y-8">
-          
+        <div className="space-y-6 md:space-y-8">
+
           {/* 2.1 - Média de Permanência */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200/50 p-6 shadow-lg">
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl md:rounded-2xl border border-slate-200/50 p-4 md:p-6 shadow-lg">
             <MiniChart
               data={getAverageStayTimeseries(selectedHospital)}
               title="Média de Permanência"
@@ -580,17 +482,12 @@ export default function IndicadoresAssistenciais() {
               showGrid={true}
               showYAxis={true}
             />
-            <div className="mt-4 p-4 bg-blue-50/50 rounded-lg border border-blue-200/30">
-              <p className="text-sm text-slate-700 leading-relaxed">
-                Em consonância com boas práticas assistenciais, assegurando internações de curta duração e fluxo ágil.
-              </p>
-            </div>
           </div>
 
           {/* 2.2 - Taxa de Ocupação */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200/50 p-6 shadow-lg">
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl md:rounded-2xl border border-slate-200/50 p-4 md:p-6 shadow-lg">
             <MiniChart
-              data={getOccupancyTimeseries()}
+              data={getOccupancyTimeseries(selectedHospital)}
               title="Taxa de Ocupação"
               subtitle={`${periodFilter === 'month' ? 'Mensal' : periodFilter === 'quarter' ? 'Trimestral' : 'Anual'} - jul/24 → jun/25 (%)`}
               type="line"
@@ -599,75 +496,26 @@ export default function IndicadoresAssistenciais() {
               showGrid={true}
               showYAxis={true}
             />
-            <div className="mt-4 p-4 bg-emerald-50/50 rounded-lg border border-emerald-200/30">
-              <p className="text-sm text-slate-700 leading-relaxed">
-                Taxa de ocupação elevada e estável ao longo dos meses, evidenciando uso intenso da capacidade instalada e necessidade de gestão eficiente de leitos para manter a rotatividade.
-              </p>
-            </div>
           </div>
 
-          {/* 2.3 - Taxa de Reinternação - Séries Temporais */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            
-            {/* 7 dias */}
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200/50 p-6 shadow-lg">
-              <MiniChart
-                data={readmissionData.readmission7Days}
-                title="Taxa de Reinternação"
-                subtitle={`Até 7 dias - ${periodFilter === 'month' ? 'Mensal' : periodFilter === 'quarter' ? 'Trimestral' : 'Anual'} (%)`}
-                type="line"
-                icon={RotateCcw}
-                hideLegend={true}
-                showGrid={true}
-                showYAxis={true}
-                color="#ef4444"
-              />
-            </div>
-            
-            {/* 15 dias */}
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200/50 p-6 shadow-lg">
-              <MiniChart
-                data={readmissionData.readmission15Days}
-                title="Taxa de Reinternação"
-                subtitle={`Até 15 dias - ${periodFilter === 'month' ? 'Mensal' : periodFilter === 'quarter' ? 'Trimestral' : 'Anual'} (%)`}
-                type="line"
-                icon={RotateCcw}
-                hideLegend={true}
-                showGrid={true}
-                showYAxis={true}
-                color="#f97316"
-              />
-            </div>
-            
-            {/* 30 dias */}
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200/50 p-6 shadow-lg">
-              <MiniChart
-                data={readmissionData.readmission30Days}
-                title="Taxa de Reinternação"
-                subtitle={`Até 30 dias - ${periodFilter === 'month' ? 'Mensal' : periodFilter === 'quarter' ? 'Trimestral' : 'Anual'} (%)`}
-                type="line"
-                icon={RotateCcw}
-                hideLegend={true}
-                showGrid={true}
-                showYAxis={true}
-                color="#eab308"
-              />
-            </div>
-          </div>
-          
-          {/* Comentário sobre reinternação */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200/50 p-6 shadow-lg">
-            <div className="p-4 bg-amber-50/50 rounded-lg border border-amber-200/30">
-              <p className="text-sm text-slate-700 leading-relaxed">
-                O rigoroso planejamento de saída é outro fator crucial, assegurando que os pacientes recebam o suporte necessário na comunidade. Isso previne o agravamento do quadro clínico e reduz a necessidade de novos internamentos.
-                <br /><br />
-                Em última análise, os dados demonstram o sucesso de uma abordagem que prioriza a qualidade da recuperação em detrimento do volume de atendimentos.
-              </p>
-            </div>
+          {/* 2.3 - Taxa de Reinternação */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl md:rounded-2xl border border-slate-200/50 p-4 md:p-6 shadow-lg">
+            <MiniChart
+              data={getReadmissionBarData()}
+              title="Taxa de Reinternação"
+              subtitle="Por período (%)"
+              type="bar"
+              icon={RotateCcw}
+              hideLegend={true}
+              showGrid={true}
+              showYAxis={true}
+              showXAxisLabels={true}
+              showDataLabels={true}
+            />
           </div>
 
           {/* 2.4 - Altas por Dia da Semana */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200/50 p-6 shadow-lg">
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl md:rounded-2xl border border-slate-200/50 p-4 md:p-6 shadow-lg">
             <MiniChart
               data={getDischargesByWeekday(selectedHospital)}
               title="Altas por Dia da Semana"
@@ -678,16 +526,6 @@ export default function IndicadoresAssistenciais() {
               hideLegend={true}
               showDataLabels={true}
             />
-            <div className="mt-4 p-4 bg-violet-50/50 rounded-lg border border-violet-200/30">
-              <p className="text-sm text-slate-700 leading-relaxed">
-                <strong>{selectedHospital === 'planalto' ? 'Hospital Planalto' : 'Hospital Tiradentes'}:</strong> {' '}
-                {selectedHospital === 'planalto' 
-                  ? 'Apenas 7,5% das altas ocorrem aos finais de semana (31 altas), com maior concentração às segundas-feiras (23,2%). Total de 409 altas registradas.'
-                  : 'Cerca de 12,6% das altas ocorrem aos finais de semana (128 altas), com distribuição mais uniforme nos dias úteis. Total de 1.019 altas registradas.'
-                }
-                {' '}Esse padrão possivelmente se relaciona à disponibilidade médica durante a semana.
-              </p>
-            </div>
           </div>
 
         </div>

@@ -213,14 +213,18 @@ export function MiniChart({
                   axisLine={false}
                   tickLine={false}
                 />
-                <YAxis 
+                <YAxis
                   tick={showYAxis ? { fontSize: 10, fill: '#64748b' } : false}
                   axisLine={false}
                   tickLine={false}
-                  domain={['dataMin - 5', 'dataMax + 5']}
+                  domain={
+                    title.toLowerCase().includes('permanência') || title.toLowerCase().includes('média de permanência')
+                      ? [0, 'dataMax + 5']
+                      : ['dataMin - 5', 'dataMax + 5']
+                  }
                   tickFormatter={showYAxis ? (value) => {
                     if (title.toLowerCase().includes('permanência') || title.toLowerCase().includes('média de permanência')) {
-                      return `${value}`;
+                      return `${Number(value).toFixed(1)}`;
                     }
                     return `${value}%`;
                   } : undefined}
@@ -238,7 +242,7 @@ export function MiniChart({
                   }}
                   formatter={(value: any) => {
                     if (title.toLowerCase().includes('permanência') || title.toLowerCase().includes('média de permanência')) {
-                      return [`${value} dias`, 'Média de Permanência'];
+                      return [`${Number(value).toFixed(1)} dias`, 'Média de Permanência'];
                     }
                     return [`${value}%`, 'Taxa de Ocupação'];
                   }}

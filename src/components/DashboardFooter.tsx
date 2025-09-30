@@ -18,7 +18,7 @@ export function DashboardFooter() {
         {/* Desktop layout - single line for >= 480px */}
         <div className="hidden min-[480px]:flex justify-between items-center">
           <p className="text-sm text-muted-foreground">
-            © 2025 – IntegraRAPS. Todos os direitos reservados.
+               © 2025 – IntegraRAPS. Todos os direitos reservados.
           </p>
           <button
             onClick={handlePrivacyLinkClick}
@@ -32,7 +32,7 @@ export function DashboardFooter() {
         {/* Mobile layout - two lines for < 480px */}
         <div className="min-[480px]:hidden space-y-2 text-center">
           <p className="text-sm text-muted-foreground">
-            © 2025 – IntegraRAPS. Todos os direitos reservados.
+                © 2025 – IntegraRAPS. Todos os direitos reservados.
           </p>
           <button
             onClick={handlePrivacyLinkClick}

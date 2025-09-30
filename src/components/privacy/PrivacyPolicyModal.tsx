@@ -14,76 +14,13 @@ interface PrivacyPolicyModalProps {
 }
 
 const PRIVACY_POLICY_CONTENT = `
-**Declaração de Uso e Política de Privacidade**
+O aplicativo IntegraRAPS é uma ferramenta digital de uso exclusivo institucional, desenvolvida para finalidade assistencial e gerencial. Seus dados são processados com base na Lei Geral de Proteção de Dados (LGPD), em alinhamento com as bases legais de tutela da saúde e execução de políticas públicas.
 
-**1. Propósito e Natureza dos Dados**
+Esta plataforma integra, com atualização diária em dias úteis, dados provenientes de uma planilha operacional compartilhada com a Secretaria de Saúde. Esses dados são consolidados e disponibilizados na aplicação para facilitar a continuidade do cuidado, otimizar a comunicação entre equipes e aprimorar a gestão do histórico clínico.
 
-Este sistema (PSI Analytics - Hospital Planalto) processa dados de saúde mental para fins de análise epidemiológica, gestão hospitalar e melhoria da qualidade assistencial. Os dados incluem informações demográficas, diagnósticos (CID), procedência, e indicadores de internação de pacientes do serviço de psiquiatria.
+Seguimos o princípio da minimização, compartilhando apenas os dados estritamente necessários para a prestação dos serviços. Todos os acessos são logados, auditáveis e restritos a profissionais de saúde autorizados. É proibido o compartilhamento externo de qualquer informação, assegurando a confidencialidade e a segurança do paciente.
 
-**2. Base Legal**
-
-O tratamento dos dados fundamenta-se na Lei Geral de Proteção de Dados Pessoais (LGPD - Lei nº 13.709/2018) e demais normas aplicáveis, tendo como bases legais:
-- Exercício regular de direitos em processo administrativo (Art. 7°, VI);
-- Execução de políticas públicas (Art. 7°, III);
-- Tutela da saúde (Art. 11, II).
-
-**3. Coleta e Uso de Dados**
-
-Os dados são coletados exclusivamente de sistemas hospitalares internos e utilizados para:
-- Geração de indicadores assistenciais e epidemiológicos;
-- Análise de tendências e padrões de internação;
-- Avaliação de qualidade dos serviços prestados;
-- Suporte à gestão e tomada de decisões clínicas;
-- Cumprimento de obrigações regulatórias.
-
-**4. Compartilhamento de Dados**
-
-Os dados são compartilhados apenas com profissionais autorizados do Hospital Planalto e órgãos de saúde competentes, quando necessário para:
-- Continuidade do cuidado;
-- Relatórios epidemiológicos obrigatórios;
-- Auditoria e fiscalização;
-- Pesquisas científicas aprovadas por comitê de ética.
-
-**5. Segurança e Proteção**
-
-Implementamos medidas técnicas e organizacionais apropriadas para proteger os dados pessoais contra:
-- Acesso não autorizado;
-- Alteração, destruição ou perda acidental;
-- Tratamento não autorizado ou ilícito;
-- Transmissão acidental.
-
-**6. Retenção de Dados**
-
-Os dados são mantidos pelo tempo necessário para cumprimento das finalidades descritas, observando:
-- Prazos legais de guarda de prontuários (20 anos);
-- Necessidades de continuidade do cuidado;
-- Obrigações regulatórias e de auditoria.
-
-**7. Direitos do Titular**
-
-Você tem direito a:
-- Confirmação da existência de tratamento;
-- Acesso aos dados;
-- Correção de dados incompletos, inexatos ou desatualizados;
-- Anonimização, bloqueio ou eliminação quando aplicável;
-- Portabilidade quando tecnicamente viável;
-- Informação sobre compartilhamento;
-- Revogação do consentimento quando aplicável.
-
-**8. Contato e Encarregado**
-
-Para exercer seus direitos ou esclarecer dúvidas sobre esta política, entre em contato:
-- Encarregado de Dados: [nome]@hospitalplanalto.com.br
-- Telefone: (XX) XXXX-XXXX
-- Endereço: [Endereço do Hospital Planalto]
-
-**9. Alterações**
-
-Esta política pode ser alterada periodicamente. As alterações serão comunicadas através do próprio sistema e nova aceitação será solicitada quando necessário.
-
-**10. Vigência**
-
-Esta política entra em vigor na data de sua aceitação e permanece válida até nova versão.
+O uso indevido deste aplicativo, incluindo o acesso não autorizado ou a divulgação de dados sigilosos, configura infração ética, administrativa e legal.
 `;
 
 export function PrivacyPolicyModal({ 

@@ -9,6 +9,9 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { UserManagementProvider } from "./contexts/UserManagementContext";
 import { RoleGuard } from "./components/auth/ProtectedRoute";
 import Login from "./pages/Login";
+import SignUp from "./pages/SignUp";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import PerfilEpidemiologico from "./pages/PerfilEpidemiologico";
@@ -24,6 +27,7 @@ import Pacientes from "./pages/Pacientes";
 import Notificacoes from "./pages/Notificacoes";
 import SobreIntegraRAPS from "./pages/SobreIntegraRAPS";
 import Reinternacoes from "./pages/Reinternacoes";
+import Perfil from "./pages/Perfil";
 
 import NotFound from "./pages/NotFound";
 
@@ -39,9 +43,12 @@ const App = () => (
             <Sonner />
             <BrowserRouter>
             <Routes>
-              {/* Login route - outside DashboardLayout */}
+              {/* Auth routes - outside DashboardLayout */}
               <Route path="/login" element={<Login />} />
-              
+              <Route path="/signup" element={<SignUp />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+
               {/* Protected routes - inside DashboardLayout */}
               <Route path="/*" element={
                 <DashboardLayout>
@@ -163,6 +170,14 @@ const App = () => (
                       element={
                         <RoleGuard>
                           <SobreServico />
+                        </RoleGuard>
+                      } 
+                    />
+                    <Route 
+                      path="/perfil" 
+                      element={
+                        <RoleGuard>
+                          <Perfil />
                         </RoleGuard>
                       } 
                     />

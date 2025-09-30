@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +21,7 @@ interface PatientAdmission {
 
 interface ReadmissionPatient {
   nome: string;
+  identifier: string; // CNS or nome usado para agrupar
   totalAdmissions: number;
   admissions: PatientAdmission[];
   averageInterval: number;
@@ -34,15 +35,7 @@ export default function Reinternacoes() {
   const { toast } = useToast();
   const { getTableName } = useHospital();
 
-  useEffect(() => {
-    fetchReadmissions();
-  }, [getTableName]);
-
-  useEffect(() => {
-    applyIntervalFilter();
-  }, [readmissions, intervalFilter]);
-
-  const fetchReadmissions = async () => {
+  const fetchReadmissions = useCallback(async () => {
     try {
       const tableName = getTableName();
       const { data, error } = await supabase
@@ -75,7 +68,7 @@ export default function Reinternacoes() {
         .filter(([, admissions]) => admissions.length > 1)
         .map(([name, admissions]) => {
           // Sort admissions by date
-          const sortedAdmissions = admissions.sort((a, b) => 
+          const sortedAdmissions = admissions.sort((a, b) =>
             new Date(a.data_admissao).getTime() - new Date(b.data_admissao).getTime()
           );
 
@@ -84,15 +77,15 @@ export default function Reinternacoes() {
            for (let i = 1; i < sortedAdmissions.length; i++) {
              const prevDischarge = sortedAdmissions[i - 1].data_alta;
              const currentAdmission = sortedAdmissions[i].data_admissao;
-             
+
              if (prevDischarge && currentAdmission) {
                const prevDischargeDate = new Date(prevDischarge);
                const currentAdmissionDate = new Date(currentAdmission);
-               
+
                // Ensure we have valid dates and current admission is after previous discharge
                if (prevDischargeDate <= currentAdmissionDate) {
                  const interval = Math.floor(
-                   (currentAdmissionDate.getTime() - prevDischargeDate.getTime()) / 
+                   (currentAdmissionDate.getTime() - prevDischargeDate.getTime()) /
                    (1000 * 60 * 60 * 24)
                  );
                  if (interval >= 0) {
@@ -102,12 +95,13 @@ export default function Reinternacoes() {
              }
            }
 
-          const averageInterval = intervals.length > 0 
-            ? intervals.reduce((sum, interval) => sum + interval, 0) / intervals.length 
+          const averageInterval = intervals.length > 0
+            ? intervals.reduce((sum, interval) => sum + interval, 0) / intervals.length
             : 0;
 
           return {
-            nome: name,
+            nome: sortedAdmissions[0]?.nome || name, // Use actual patient name from first admission
+            identifier: name, // Keep the grouping identifier (CNS or nome)
             totalAdmissions: sortedAdmissions.length,
             admissions: sortedAdmissions,
             averageInterval: Math.round(averageInterval),
@@ -126,9 +120,9 @@ export default function Reinternacoes() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [getTableName, toast]);
 
-  const applyIntervalFilter = () => {
+  const applyIntervalFilter = useCallback(() => {
     if (intervalFilter === "all") {
       setFilteredReadmissions(readmissions);
       return;
@@ -150,7 +144,15 @@ export default function Reinternacoes() {
     });
 
     setFilteredReadmissions(filtered);
-  };
+  }, [readmissions, intervalFilter]);
+
+  useEffect(() => {
+    fetchReadmissions();
+  }, [fetchReadmissions, getTableName]);
+
+  useEffect(() => {
+    applyIntervalFilter();
+  }, [applyIntervalFilter]);
 
   const calculateReadmissionRate = (days: number) => {
     if (readmissions.length === 0) return "0.0";
@@ -163,22 +165,22 @@ export default function Reinternacoes() {
       // Count discharges for this patient
       const discharges = patient.admissions.filter(adm => adm.data_alta).length;
       totalDischarges += discharges;
-      
+
       // Count readmissions based on the new criteria
-      const sortedAdmissions = patient.admissions.sort((a, b) => 
+      const sortedAdmissions = patient.admissions.sort((a, b) =>
         new Date(a.data_admissao).getTime() - new Date(b.data_admissao).getTime()
       );
-      
+
       const datas_alta = sortedAdmissions
         .map(adm => adm.data_alta)
         .filter(alta => alta !== null && alta !== undefined);
       const datas_adm = sortedAdmissions.map(adm => adm.data_admissao);
-      
+
       for (let i = 0; i < datas_alta.length - 1; i++) {
         const altatTime = new Date(datas_alta[i]).getTime();
         const nextAdmTime = new Date(datas_adm[i + 1]).getTime();
         const daysBetween = (nextAdmTime - altatTime) / (1000 * 60 * 60 * 24);
-        
+
         if (days === 31) { // > 30 days
           if (daysBetween > 30) {
             readmissionCount++;
@@ -192,6 +194,44 @@ export default function Reinternacoes() {
     });
 
     const rate = totalDischarges > 0 ? (readmissionCount / totalDischarges) * 100 : 0;
+    return rate % 1 === 0 ? rate.toString() : rate.toFixed(1);
+  };
+
+  const calculateTotalReadmissionRate = () => {
+    if (readmissions.length === 0) return "0.0";
+
+    // Calculate total readmission rate (all readmissions regardless of interval)
+    let totalDischarges = 0;
+    let totalReadmissions = 0;
+
+    readmissions.forEach(patient => {
+      // Count discharges for this patient
+      const discharges = patient.admissions.filter(adm => adm.data_alta).length;
+      totalDischarges += discharges;
+
+      // Count all readmissions (total admissions - 1 for each patient with multiple admissions)
+      const sortedAdmissions = patient.admissions.sort((a, b) =>
+        new Date(a.data_admissao).getTime() - new Date(b.data_admissao).getTime()
+      );
+
+      const datas_alta = sortedAdmissions
+        .map(adm => adm.data_alta)
+        .filter(alta => alta !== null && alta !== undefined);
+      const datas_adm = sortedAdmissions.map(adm => adm.data_admissao);
+
+      // Count all valid readmissions (where discharge date < next admission date)
+      for (let i = 0; i < datas_alta.length - 1; i++) {
+        const altatTime = new Date(datas_alta[i]).getTime();
+        const nextAdmTime = new Date(datas_adm[i + 1]).getTime();
+        const daysBetween = (nextAdmTime - altatTime) / (1000 * 60 * 60 * 24);
+
+        if (daysBetween > 0) {
+          totalReadmissions++;
+        }
+      }
+    });
+
+    const rate = totalDischarges > 0 ? (totalReadmissions / totalDischarges) * 100 : 0;
     return rate % 1 === 0 ? rate.toString() : rate.toFixed(1);
   };
 
@@ -253,20 +293,20 @@ export default function Reinternacoes() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-emerald-50/20 dark:from-gray-950 dark:via-gray-900 dark:to-gray-800">
-      <div className="space-y-8 p-6">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-gradient-to-br from-slate-50 via-blue-50/30 to-emerald-50/20 dark:from-gray-950 dark:via-gray-900 dark:to-gray-800">
+      <div className="w-full max-w-full space-y-6 md:space-y-8 p-4 md:p-6">
         
         {/* Header Section */}
-        <div className="mb-8">
-          <div className="flex items-center gap-4 mb-3">
-            <div className="p-3 bg-gradient-to-br from-orange-500 via-amber-600 to-yellow-600 rounded-2xl shadow-xl shadow-orange-500/25">
-              <RefreshCw className="h-8 w-8 text-white drop-shadow-sm" />
+        <div className="mb-6 md:mb-8">
+          <div className="flex items-center gap-3 md:gap-4 mb-3">
+            <div className="p-2 md:p-3 bg-gradient-to-br from-orange-500 via-amber-600 to-yellow-600 rounded-xl md:rounded-2xl shadow-xl shadow-orange-500/25">
+              <RefreshCw className="h-6 w-6 md:h-8 md:w-8 text-white drop-shadow-sm" />
             </div>
             <div>
-              <h1 className="text-4xl font-black text-slate-800 dark:text-gray-100 tracking-tight">
+              <h1 className="text-2xl md:text-4xl font-black text-slate-800 dark:text-gray-100 tracking-tight">
                 Reinternações
               </h1>
-              <p className="text-lg text-slate-600 dark:text-gray-300 font-medium">
+              <p className="text-sm md:text-lg text-slate-600 dark:text-gray-300 font-medium">
                 Análise de pacientes com múltiplas internações
               </p>
             </div>
@@ -274,20 +314,17 @@ export default function Reinternacoes() {
         </div>
 
         {/* Modern Readmission Rate Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           <Card className="transition-all duration-300 hover:scale-[1.03] hover:-translate-y-1 border-0 bg-gradient-to-br from-red-500 via-pink-600 to-rose-700 text-white shadow-xl shadow-red-500/30 backdrop-blur-sm rounded-2xl overflow-hidden">
-            <CardContent className="p-6">
+            <CardContent className="p-4 md:p-6">
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold tracking-wide uppercase truncate text-red-50">
                     ≤ 7 Dias
                   </p>
                   <div className="text-3xl font-extrabold mt-2 tracking-tight text-white">
-                    0,8%
+                    {calculateReadmissionRate(7)}%
                   </div>
-                  <p className="text-sm mt-2 font-medium text-red-100/80">
-                    reinternação precoce
-                  </p>
                 </div>
                 <div className="ml-4 p-3 rounded-xl bg-white/15 backdrop-blur-sm ring-1 ring-white/10">
                   <RefreshCw className="h-6 w-6 text-red-100 drop-shadow-sm" />
@@ -297,18 +334,15 @@ export default function Reinternacoes() {
           </Card>
 
           <Card className="transition-all duration-300 hover:scale-[1.03] hover:-translate-y-1 border-0 bg-gradient-to-br from-amber-500 via-orange-600 to-yellow-600 text-white shadow-xl shadow-amber-500/30 backdrop-blur-sm rounded-2xl overflow-hidden">
-            <CardContent className="p-6">
+            <CardContent className="p-4 md:p-6">
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold tracking-wide uppercase truncate text-amber-50">
                     ≤ 15 Dias
                   </p>
                   <div className="text-3xl font-extrabold mt-2 tracking-tight text-white">
-                    1,33%
+                    {calculateReadmissionRate(15)}%
                   </div>
-                  <p className="text-sm mt-2 font-medium text-amber-100/80">
-                    primeiras duas semanas
-                  </p>
                 </div>
                 <div className="ml-4 p-3 rounded-xl bg-white/15 backdrop-blur-sm ring-1 ring-white/10">
                   <Calendar className="h-6 w-6 text-amber-100 drop-shadow-sm" />
@@ -318,18 +352,15 @@ export default function Reinternacoes() {
           </Card>
 
           <Card className="transition-all duration-300 hover:scale-[1.03] hover:-translate-y-1 border-0 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white shadow-xl shadow-blue-500/30 backdrop-blur-sm rounded-2xl overflow-hidden">
-            <CardContent className="p-6">
+            <CardContent className="p-4 md:p-6">
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold tracking-wide uppercase truncate text-blue-50">
                     ≤ 30 Dias
                   </p>
                   <div className="text-3xl font-extrabold mt-2 tracking-tight text-white">
-                    3,73%
+                    {calculateReadmissionRate(30)}%
                   </div>
-                  <p className="text-sm mt-2 font-medium text-blue-100/80">
-                    primeiro mês
-                  </p>
                 </div>
                 <div className="ml-4 p-3 rounded-xl bg-white/15 backdrop-blur-sm ring-1 ring-white/10">
                   <RefreshCw className="h-6 w-6 text-blue-100 drop-shadow-sm" />
@@ -339,18 +370,15 @@ export default function Reinternacoes() {
           </Card>
 
           <Card className="transition-all duration-300 hover:scale-[1.03] hover:-translate-y-1 border-0 bg-gradient-to-br from-emerald-500 via-green-600 to-teal-700 text-white shadow-xl shadow-emerald-500/30 backdrop-blur-sm rounded-2xl overflow-hidden">
-            <CardContent className="p-6">
+            <CardContent className="p-4 md:p-6">
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold tracking-wide uppercase truncate text-emerald-50">
                     Total
                   </p>
                   <div className="text-3xl font-extrabold mt-2 tracking-tight text-white">
-                    6,67%
+                    {calculateTotalReadmissionRate()}%
                   </div>
-                  <p className="text-sm mt-2 font-medium text-emerald-100/80">
-                    período analisado
-                  </p>
                 </div>
                 <div className="ml-4 p-3 rounded-xl bg-white/15 backdrop-blur-sm ring-1 ring-white/10">
                   <User className="h-6 w-6 text-emerald-100 drop-shadow-sm" />
@@ -414,17 +442,18 @@ export default function Reinternacoes() {
                     </div>
                   </div>
 
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Internação</TableHead>
-                        <TableHead>Data Admissão</TableHead>
-                        <TableHead>Data Alta</TableHead>
-                        <TableHead>Duração</TableHead>
-                        <TableHead>Intervalo</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
+                  <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Internação</TableHead>
+                          <TableHead>Data Admissão</TableHead>
+                          <TableHead>Data Alta</TableHead>
+                          <TableHead>Duração</TableHead>
+                          <TableHead>Intervalo</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
                       {patient.admissions.map((admission, admissionIndex) => {
                         const prevAdmission = patient.admissions[admissionIndex - 1];
                        let interval = null;
@@ -483,6 +512,7 @@ export default function Reinternacoes() {
                       })}
                     </TableBody>
                   </Table>
+                  </div>
                 </div>
               ))}
             </div>

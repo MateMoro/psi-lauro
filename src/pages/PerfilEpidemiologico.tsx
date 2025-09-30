@@ -201,36 +201,56 @@ export default function PerfilEpidemiologico() {
     };
   };
 
+  const normalizeString = (str: string): string => {
+    return str
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
+  };
+
   const getProcedenciaDistribution = () => {
     const procedenciaCount = patients.reduce((acc, p) => {
-      const procedencia = p.procedencia || 'Não informado';
-      acc[procedencia] = (acc[procedencia] || 0) + 1;
+      let procedencia = p.procedencia || 'Não informado';
+
+      // Map specific hospital to category
+      if (normalizeString(procedencia).includes('hospital waldomiro de paula')) {
+        procedencia = 'DEMANDA ESPONTÂNEA';
+      }
+
+      const rawProcedencia = procedencia;
+      const normalizedKey = normalizeString(rawProcedencia);
+
+      if (!acc[normalizedKey]) {
+        acc[normalizedKey] = { count: 0, displayName: rawProcedencia };
+      }
+      acc[normalizedKey].count++;
       return acc;
-    }, {} as Record<string, number>);
+    }, {} as Record<string, { count: number; displayName: string }>);
 
     const total = patients.length;
     const sorted = Object.entries(procedenciaCount)
-      .sort(([,a], [,b]) => b - a);
-    
+      .sort(([,a], [,b]) => b.count - a.count);
+
     // Return top 4 + others if there are more than 4
     const top4 = sorted.slice(0, 4);
     const others = sorted.slice(4);
-    
-    const result = top4.map(([name, count]) => ({ 
-      name,
+
+    const result = top4.map(([, { count, displayName }]) => ({
+      name: displayName,
       value: total > 0 ? Math.round((count / total) * 100) : 0,
-      count 
+      count
     }));
-    
+
     if (others.length > 0) {
-      const othersCount = others.reduce((sum, [, count]) => sum + count, 0);
+      const othersCount = others.reduce((sum, [, { count }]) => sum + count, 0);
       result.push({
         name: 'Outros',
         value: total > 0 ? Math.round((othersCount / total) * 100) : 0,
         count: othersCount
       });
     }
-    
+
     return result;
   };
 
@@ -253,20 +273,20 @@ export default function PerfilEpidemiologico() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-emerald-50/20">
-      <div className="space-y-8 p-6">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-gradient-to-br from-slate-50 via-blue-50/30 to-emerald-50/20">
+      <div className="w-full max-w-full space-y-6 md:space-y-8 p-4 md:p-6">
         
         {/* Header Section */}
-        <div className="mb-8">
-          <div className="flex items-center gap-4 mb-3">
-            <div className="p-3 bg-gradient-to-br from-emerald-500 via-teal-600 to-cyan-700 rounded-2xl shadow-xl shadow-emerald-500/25">
-              <Users className="h-8 w-8 text-white drop-shadow-sm" />
+        <div className="mb-6 md:mb-8">
+          <div className="flex items-center gap-3 md:gap-4 mb-3">
+            <div className="p-2 md:p-3 bg-gradient-to-br from-emerald-500 via-teal-600 to-cyan-700 rounded-xl md:rounded-2xl shadow-xl shadow-emerald-500/25">
+              <Users className="h-6 w-6 md:h-8 md:w-8 text-white drop-shadow-sm" />
             </div>
             <div>
-              <h1 className="text-4xl font-black text-slate-800 tracking-tight">
+              <h1 className="text-2xl md:text-4xl font-black text-slate-800 tracking-tight">
                 Perfil Epidemiológico
               </h1>
-              <p className="text-lg text-slate-600 font-medium mt-1">
+              <p className="text-sm md:text-lg text-slate-600 font-medium mt-1">
                 Caracterização demográfica e clínica
               </p>
             </div>
@@ -274,27 +294,27 @@ export default function PerfilEpidemiologico() {
         </div>
 
         {/* Statistics cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-gradient-to-br from-white to-slate-50/50 shadow-xl backdrop-blur-sm ring-1 ring-slate-200/50 rounded-2xl p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl">
-                <Users className="h-6 w-6 text-white" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+          <div className="bg-gradient-to-br from-white to-slate-50/50 shadow-xl backdrop-blur-sm ring-1 ring-slate-200/50 rounded-xl md:rounded-2xl p-4 md:p-6">
+            <div className="flex items-center gap-3 md:gap-4">
+              <div className="p-2 md:p-3 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl">
+                <Users className="h-5 w-5 md:h-6 md:w-6 text-white" />
               </div>
               <div>
-                <p className="text-2xl font-black text-slate-800">{patients.length.toLocaleString()}</p>
-                <p className="text-sm text-slate-600 font-semibold">Total de Pacientes</p>
+                <p className="text-xl md:text-2xl font-black text-slate-800">{patients.length.toLocaleString()}</p>
+                <p className="text-xs md:text-sm text-slate-600 font-semibold">Total de Pacientes</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-white to-slate-50/50 shadow-xl backdrop-blur-sm ring-1 ring-slate-200/50 rounded-2xl p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl">
-                <Calendar className="h-6 w-6 text-white" />
+          <div className="bg-gradient-to-br from-white to-slate-50/50 shadow-xl backdrop-blur-sm ring-1 ring-slate-200/50 rounded-xl md:rounded-2xl p-4 md:p-6">
+            <div className="flex items-center gap-3 md:gap-4">
+              <div className="p-2 md:p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl">
+                <Calendar className="h-5 w-5 md:h-6 md:w-6 text-white" />
               </div>
               <div className="space-y-1">
-                <p className="text-2xl font-black text-slate-800">{getAgeStatistics().average} anos</p>
-                <p className="text-sm text-slate-600 font-semibold">Idade Média</p>
+                <p className="text-xl md:text-2xl font-black text-slate-800">{getAgeStatistics().average} anos</p>
+                <p className="text-xs md:text-sm text-slate-600 font-semibold">Idade Média</p>
                 <p className="text-xs text-slate-500">Mediana = {getAgeStatistics().median}</p>
                 <p className="text-xs text-slate-500">Mín–Máx: {getAgeStatistics().min} – {getAgeStatistics().max} anos</p>
               </div>
@@ -303,9 +323,9 @@ export default function PerfilEpidemiologico() {
         </div>
 
         {/* Charts */}
-        <div className="space-y-8">
+        <div className="space-y-6 md:space-y-8">
           {/* Gender Chart */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             <MiniChart
               data={getGenderDistribution()}
               title="Gênero"
@@ -326,43 +346,8 @@ export default function PerfilEpidemiologico() {
             />
           </div>
 
-          {/* Gender and Age Explanation Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-gradient-to-br from-white to-slate-50/50 shadow-xl backdrop-blur-sm ring-1 ring-slate-200/50 rounded-xl">
-              <div className="p-6">
-                <div className="flex items-start gap-4">
-                  <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex-shrink-0">
-                    <Users className="h-6 w-6 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-slate-800 mb-2">Sexo</h3>
-                    <p className="text-sm text-slate-700 leading-relaxed">
-                      Perfil equilibrado entre os sexos, refletindo padrão comum em serviços de internação psiquiátrica.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-gradient-to-br from-white to-slate-50/50 shadow-xl backdrop-blur-sm ring-1 ring-slate-200/50 rounded-xl">
-              <div className="p-6">
-                <div className="flex items-start gap-4">
-                  <div className="p-3 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex-shrink-0">
-                    <Calendar className="h-6 w-6 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-slate-800 mb-2">Faixa Etária</h3>
-                    <p className="text-sm text-slate-700 leading-relaxed">
-                      Predomínio de 26–44 anos, fase produtiva em que esquizofrenia e transtorno bipolar frequentemente se manifestam ou agravam.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
           {/* Race and Pathologies Charts */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             <MiniChart
               data={getRaceDistribution()
                 .filter(item => item.name !== 'Não informado')
@@ -419,43 +404,8 @@ export default function PerfilEpidemiologico() {
             </div>
           </div>
 
-          {/* Race and Pathologies Explanation Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-gradient-to-br from-white to-slate-50/50 shadow-xl backdrop-blur-sm ring-1 ring-slate-200/50 rounded-xl">
-              <div className="p-6">
-                <div className="flex items-start gap-4">
-                  <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex-shrink-0">
-                    <Palette className="h-6 w-6 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-slate-800 mb-2">Cor</h3>
-                    <p className="text-sm text-slate-700 leading-relaxed">
-                      Distribuição étnico-racial dos pacientes atendidos. Importante para análise de equidade no acesso aos serviços de saúde mental.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-gradient-to-br from-white to-slate-50/50 shadow-xl backdrop-blur-sm ring-1 ring-slate-200/50 rounded-xl">
-              <div className="p-6">
-                <div className="flex items-start gap-4">
-                  <div className="p-3 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex-shrink-0">
-                    <Stethoscope className="h-6 w-6 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-slate-800 mb-2">Principais Diagnósticos</h3>
-                    <p className="text-sm text-slate-700 leading-relaxed">
-                      Principais categorias diagnósticas dos pacientes internados, baseadas nos códigos CID registrados no sistema.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
           {/* Procedência Chart */}
-          <div className="grid grid-cols-1 gap-6">
+          <div className="grid grid-cols-1 gap-4 md:gap-6">
             <MiniChart
               data={getProcedenciaDistribution().slice(0, 5)}
               title="Procedência"
@@ -465,25 +415,6 @@ export default function PerfilEpidemiologico() {
               showXAxisLabels={true}
               hideLegend={false}
             />
-          </div>
-
-          {/* Procedência Explanation Card */}
-          <div className="grid grid-cols-1 gap-6">
-            <div className="bg-gradient-to-br from-white to-slate-50/50 shadow-xl backdrop-blur-sm ring-1 ring-slate-200/50 rounded-xl">
-              <div className="p-6">
-                <div className="flex items-start gap-4">
-                  <div className="p-3 bg-gradient-to-br from-green-500 to-teal-600 rounded-xl flex-shrink-0">
-                    <MapPin className="h-6 w-6 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-slate-800 mb-2">Procedência</h3>
-                    <p className="text-sm text-slate-700 leading-relaxed">
-                      Origem geográfica dos pacientes internados. Permite identificar regiões de maior demanda e otimizar a organização da rede de cuidados.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>

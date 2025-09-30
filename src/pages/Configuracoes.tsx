@@ -26,7 +26,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, DialogTrigger as AlertDialogTrigger, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Settings, Shield, User, Database, UserPlus, Edit, Trash2, KeyRound, RefreshCw } from 'lucide-react';
+import { Settings, Shield, User, Database, UserPlus, Edit, Trash2, KeyRound, RefreshCw, Lock } from 'lucide-react';
 import { getRoleDisplayName } from '@/utils/permissions';
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -53,6 +53,7 @@ export default function Configuracoes() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showChangePasswordDialog, setShowChangePasswordDialog] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   
   const [formData, setFormData] = useState({
@@ -62,6 +63,13 @@ export default function Configuracoes() {
     caps_id: '',
     hospital_id: '',
     password: ''
+  });
+
+  // Password change form state
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
   });
 
   const refreshData = async () => {
@@ -324,6 +332,75 @@ export default function Configuracoes() {
     }
   };
 
+  // Change current user password
+  const handleChangePassword = async () => {
+    if (!user) return;
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      toast({
+        title: "Erro na confirmação",
+        description: "A nova senha e a confirmação devem ser iguais.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (passwordForm.newPassword.length < 6) {
+      toast({
+        title: "Senha muito fraca",
+        description: "A nova senha deve ter pelo menos 6 caracteres.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // First verify current password by attempting to sign in
+      const { error: verifyError } = await supabase.auth.signInWithPassword({
+        email: user.email!,
+        password: passwordForm.currentPassword,
+      });
+
+      if (verifyError) {
+        toast({
+          title: "Senha atual incorreta",
+          description: "A senha atual informada está incorreta.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // If verification successful, update password
+      const { error } = await supabase.auth.updateUser({
+        password: passwordForm.newPassword
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Senha alterada com sucesso",
+        description: "Sua senha foi alterada com sucesso.",
+      });
+
+      setShowChangePasswordDialog(false);
+      setPasswordForm({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+    } catch (error: unknown) {
+      console.error('Error changing password:', error);
+      toast({
+        title: "Erro ao alterar senha",
+        description: error instanceof Error ? error.message : "Não foi possível alterar a senha.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       nome: '',
@@ -442,6 +519,78 @@ export default function Configuracoes() {
                 <Badge variant="default" className="mt-1 bg-green-100 text-green-800">
                   Ativo
                 </Badge>
+              </div>
+            </div>
+            
+            <div className="pt-4 border-t border-slate-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-sm font-medium text-slate-800">Segurança da Conta</h4>
+                  <p className="text-xs text-slate-600 mt-1">Gerencie a senha da sua conta</p>
+                </div>
+                <Dialog open={showChangePasswordDialog} onOpenChange={setShowChangePasswordDialog}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <Lock className="h-4 w-4 mr-2" />
+                      Alterar Senha
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle>Alterar Senha</DialogTitle>
+                      <DialogDescription>
+                        Para alterar sua senha, digite a senha atual e defina uma nova senha.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="current-password">Senha Atual</Label>
+                        <Input
+                          id="current-password"
+                          type="password"
+                          value={passwordForm.currentPassword}
+                          onChange={(e) => setPasswordForm({...passwordForm, currentPassword: e.target.value})}
+                          placeholder="Digite sua senha atual"
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="new-password">Nova Senha</Label>
+                        <Input
+                          id="new-password"
+                          type="password"
+                          value={passwordForm.newPassword}
+                          onChange={(e) => setPasswordForm({...passwordForm, newPassword: e.target.value})}
+                          placeholder="Digite a nova senha (mín. 6 caracteres)"
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="confirm-password">Confirmar Nova Senha</Label>
+                        <Input
+                          id="confirm-password"
+                          type="password"
+                          value={passwordForm.confirmPassword}
+                          onChange={(e) => setPasswordForm({...passwordForm, confirmPassword: e.target.value})}
+                          placeholder="Digite novamente a nova senha"
+                        />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button type="button" variant="outline" onClick={() => {
+                        setShowChangePasswordDialog(false);
+                        setPasswordForm({
+                          currentPassword: '',
+                          newPassword: '',
+                          confirmPassword: ''
+                        });
+                      }}>
+                        Cancelar
+                      </Button>
+                      <Button type="button" onClick={handleChangePassword} disabled={loading}>
+                        {loading ? 'Alterando...' : 'Alterar Senha'}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
             </div>
           </CardContent>

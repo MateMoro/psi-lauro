@@ -164,10 +164,39 @@ export default function Dashboard() {
 
   // New Advanced Metrics
   const calculateAdvancedMetrics = () => {
-    // Taxa de Ocupação - 16 leitos na enfermaria
-    const totalCapacity = 16;
+    // Taxa de Ocupação - capacidade por hospital
+    const totalCapacity = selectedHospital === 'planalto' ? 16 : 10;
+
+    // Calcular ocupação média histórica (desde 01/07/2024)
+    const startDate = new Date('2024-07-01');
+    const endDate = new Date();
+    const dailyOccupancies: number[] = [];
+
+    // Iterar por cada dia do período
+    for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
+      const currentDate = new Date(date);
+
+      // Contar pacientes internados neste dia
+      const occupiedBeds = patients.filter(p => {
+        const admissionDate = new Date(p.data_admissao);
+        const dischargeDate = p.data_alta ? new Date(p.data_alta) : null;
+
+        // Paciente está internado se: admissão <= dia atual E (sem alta OU alta > dia atual)
+        return admissionDate <= currentDate && (!dischargeDate || dischargeDate > currentDate);
+      }).length;
+
+      // Calcular taxa de ocupação do dia
+      const dailyRate = totalCapacity > 0 ? (occupiedBeds / totalCapacity * 100) : 0;
+      dailyOccupancies.push(dailyRate);
+    }
+
+    // Calcular média histórica
+    const occupancyRate = dailyOccupancies.length > 0
+      ? dailyOccupancies.reduce((sum, rate) => sum + rate, 0) / dailyOccupancies.length
+      : 0;
+
+    // Ocupação atual (para referência)
     const currentOccupancy = patients.filter(p => !p.data_alta).length;
-    const occupancyRate = totalCapacity > 0 ? (currentOccupancy / totalCapacity * 100) : 0;
 
     // Taxa de reinternação por período específico (7, 15, 30 dias)
     const calculateReadmissionsByPeriod = (days: number) => {
@@ -438,21 +467,123 @@ export default function Dashboard() {
   };
 
   // New chart data functions
-  const getCapsDistribution = () => {
+  const getCapsAdultoDistribution = () => {
+    // Lista dos principais CAPS Adulto a serem exibidos (formato do banco de dados)
+    const mainAdultoCaps = [
+      'ADULTO II ITAQUERA',
+      'ADULTO II GUAIANASES',
+      'ADULTO II SAO MIGUEL',
+      'ADULTO II ITAIM PAULISTA',
+      'ADULTO II ERMELINO MATARAZZO',
+      'ADULTO II CIDADE TIRADENTES',
+      'ADULTO III SAO MATEUS'
+    ];
+
+    // Contar todos os CAPS Adulto (excluindo AD)
     const capsCount = patients.reduce((acc, p) => {
       const caps = p.caps_referencia || 'Não informado';
-      acc[caps] = (acc[caps] || 0) + 1;
+      // Filtrar apenas CAPS Adulto (contém "ADULTO" mas não "AD ")
+      if (caps.includes('ADULTO') && !caps.startsWith('AD ')) {
+        acc[caps] = (acc[caps] || 0) + 1;
+      }
       return acc;
     }, {} as Record<string, number>);
 
-    const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#84cc16', '#eab308', '#f97316', '#ec4899'];
-    return Object.entries(capsCount)
-      .sort(([,a], [,b]) => b - a)
-      .map(([name, value], index) => ({ 
-        name,
-        value, 
-        fill: colors[index % colors.length] || '#6b7280'
-      }));
+    const total = Object.values(capsCount).reduce((sum, count) => sum + count, 0);
+
+    if (total === 0) {
+      return [];
+    }
+
+    // Calcular percentuais para os principais CAPS
+    let mainCapsTotal = 0;
+    const mainCapsData = mainAdultoCaps
+      .filter(capsName => capsCount[capsName] > 0)
+      .map(capsName => {
+        const count = capsCount[capsName];
+        const percentage = Math.round((count / total) * 100);
+        mainCapsTotal += percentage;
+        return {
+          name: capsName,
+          value: percentage,
+          fill: '#3b82f6'
+        };
+      });
+
+    // Adicionar "Outros CAPS" com o restante
+    const othersPercentage = 100 - mainCapsTotal;
+    if (othersPercentage > 0) {
+      mainCapsData.push({
+        name: 'Outros CAPS (não exibidos)',
+        value: othersPercentage,
+        fill: '#9ca3af'
+      });
+    }
+
+    const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#84cc16', '#eab308'];
+    return mainCapsData.map((item, index) => ({
+      ...item,
+      fill: item.name === 'Outros CAPS (não exibidos)' ? '#9ca3af' : colors[index % colors.length]
+    }));
+  };
+
+  const getCapsADDistribution = () => {
+    // Lista dos principais CAPS AD a serem exibidos (formato do banco de dados)
+    const mainADCaps = [
+      'AD III ITAQUERA',
+      'AD II GUAIANASES',
+      'AD II JARDIM NELIA',
+      'AD III SAO MIGUEL',
+      'AD III SAO MATEUS',
+      'AD II ERMELINO MATARAZZO'
+    ];
+
+    // Contar todos os CAPS AD
+    const capsCount = patients.reduce((acc, p) => {
+      const caps = p.caps_referencia || 'Não informado';
+      // Filtrar apenas CAPS AD (começa com "AD ")
+      if (caps.startsWith('AD ')) {
+        acc[caps] = (acc[caps] || 0) + 1;
+      }
+      return acc;
+    }, {} as Record<string, number>);
+
+    const total = Object.values(capsCount).reduce((sum, count) => sum + count, 0);
+
+    if (total === 0) {
+      return [];
+    }
+
+    // Calcular percentuais para os principais CAPS AD
+    let mainCapsTotal = 0;
+    const mainCapsData = mainADCaps
+      .filter(capsName => capsCount[capsName] > 0)
+      .map(capsName => {
+        const count = capsCount[capsName];
+        const percentage = Math.round((count / total) * 100);
+        mainCapsTotal += percentage;
+        return {
+          name: capsName,
+          value: percentage,
+          fill: '#10b981'
+        };
+      });
+
+    // Adicionar "Outros CAPS" com o restante
+    const othersPercentage = 100 - mainCapsTotal;
+    if (othersPercentage > 0) {
+      mainCapsData.push({
+        name: 'Outros CAPS (não exibidos)',
+        value: othersPercentage,
+        fill: '#9ca3af'
+      });
+    }
+
+    const colors = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#84cc16', '#eab308'];
+    return mainCapsData.map((item, index) => ({
+      ...item,
+      fill: item.name === 'Outros CAPS (não exibidos)' ? '#9ca3af' : colors[index % colors.length]
+    }));
   };
 
   const getProcedenciaDistribution = () => {
@@ -638,8 +769,8 @@ export default function Dashboard() {
 
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="space-y-6 lg:space-y-8">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-gray-100">
+      <div className="w-full max-w-full space-y-6 lg:space-y-8">
         
         {/* Welcome Block */}
         <div className="mb-6 lg:mb-8">
@@ -650,7 +781,7 @@ export default function Dashboard() {
               </div>
               <div className="flex-1">
                 <h1 className="text-3xl lg:text-4xl font-black text-slate-800 tracking-tight mb-2">
-                  Olá, {profile?.nome || user?.email || 'Usuário'}!
+                  Bem-vindo, {profile?.nome || user?.email || 'Usuário'}!
                 </h1>
                 <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600">
                   <div className="flex items-center gap-2">
@@ -667,8 +798,9 @@ export default function Dashboard() {
               </div>
             </div>
             <div className="mt-4 pt-4 border-t border-blue-200/50">
-              <p className="text-slate-600 font-medium">
-                Panorama das principais métricas assistenciais - Período: 01/07/2024 a 30/06/2025
+              <h2 className="text-slate-800 text-lg font-semibold">Panorama Assistencial</h2>
+              <p className="text-slate-500 text-sm mt-1">
+                Dados consolidados a partir de 01/07/2024
               </p>
             </div>
           </div>
@@ -678,7 +810,7 @@ export default function Dashboard() {
         <CapsUserInfo className="mb-6" />
 
         {/* Cards Superiores */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 lg:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
           <MetricCard
             title="Média de Permanência"
             value={`${metrics.avgStayDays} dias`}
@@ -707,13 +839,6 @@ export default function Dashboard() {
             icon={Users}
             variant="info"
           />
-          <MetricCard
-            title="Pacientes Internados"
-            value={`${advancedMetrics.currentOccupancy}/${advancedMetrics.totalCapacity}`}
-            description="Leitos ocupados atualmente"
-            icon={Heart}
-            variant="success"
-          />
         </div>
 
         {/* Gráficos Principais */}
@@ -727,7 +852,7 @@ export default function Dashboard() {
                   <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg">
                     <Stethoscope className="h-4 w-4 text-white" />
                   </div>
-                  <h3 className="text-sm font-bold text-slate-800 tracking-wide">Principais Patologias (CID-10)</h3>
+                  <h3 className="text-sm font-bold text-slate-800 tracking-wide">Principais Patologias</h3>
                 </div>
                 
                 <div className="flex-1 space-y-3">
@@ -769,15 +894,30 @@ export default function Dashboard() {
               type="pie"
               icon={MapPin}
             />
-            
+
             <MiniChart
-              data={getCapsDistribution().slice(0, 6).map(item => ({
+              data={getCapsAdultoDistribution().map(item => ({
                 name: item.name,
                 value: item.value,
                 color: item.fill
               }))}
               title="CAPS de Referência"
-              subtitle="Distribuição por CAPS (Adulto vs AD)"
+              subtitle="Principais CAPS – Adulto"
+              type="bar"
+              icon={Building2}
+            />
+          </div>
+
+          {/* Second CAPS Chart Row */}
+          <div className="grid grid-cols-1 gap-4 lg:gap-6">
+            <MiniChart
+              data={getCapsADDistribution().map(item => ({
+                name: item.name,
+                value: item.value,
+                color: item.fill
+              }))}
+              title="CAPS de Referência"
+              subtitle="Principais CAPS – AD"
               type="bar"
               icon={Building2}
             />

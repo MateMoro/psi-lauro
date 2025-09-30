@@ -9,6 +9,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [initializationError, setInitializationError] = useState<string | null>(null);
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
 
   const fetchUserProfile = async (userId: string) => {
     try {
@@ -174,6 +175,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('[AuthContext] Auth event:', event, 'User:', session?.user?.email);
+
+        // Handle password recovery flow
+        if (event === 'PASSWORD_RECOVERY') {
+          console.log('[AuthContext] PASSWORD_RECOVERY detected - user should reset password');
+          setIsPasswordRecovery(true);
+          setSession(session);
+          setUser(session?.user ?? null);
+          // Don't fetch profile during password recovery - we want to force password change first
+          return;
+        }
+
+        // For other events, clear recovery flag and proceed normally
+        setIsPasswordRecovery(false);
         setSession(session);
         setUser(session?.user ?? null);
 
@@ -194,6 +209,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     session,
     loading,
     initializationError,
+    isPasswordRecovery,
     signIn,
     signUp,
     signOut,

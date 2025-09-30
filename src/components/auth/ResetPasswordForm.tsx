@@ -50,11 +50,21 @@ export function ResetPasswordForm() {
     // No user session at all - invalid or expired token
     if (!user) {
       console.warn('[ResetPassword] No user session found, redirecting to login');
+      console.warn('[ResetPassword] Common causes:');
+      console.warn('  1. Link expired (tokens expire after a certain time)');
+      console.warn('  2. Link was generated for different environment (production vs localhost)');
+      console.warn('  3. This URL is not in Supabase allowed redirect URLs list');
+      console.warn('  4. Token already used');
+
+      // Show helpful message depending on environment
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      const message = isLocalhost
+        ? 'Link de recuperação inválido ou expirado. Se você solicitou o link em produção, precisa solicitar um novo link aqui no localhost. Clique em "Esqueci minha senha" para gerar um novo link.'
+        : 'Link de recuperação inválido ou expirado. Solicite um novo link.';
+
       navigate('/login', {
         replace: true,
-        state: {
-          message: 'Link de recuperação inválido ou expirado. Solicite um novo link.'
-        }
+        state: { message }
       });
       return;
     }

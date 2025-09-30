@@ -91,17 +91,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const resetPassword = async (email: string) => {
-    console.log('[Auth] Sending password reset email to:', email);
-    console.log('[Auth] Redirect URL:', `${window.location.origin}/reset-password`);
+    const redirectUrl = `${window.location.origin}/reset-password`;
 
+    console.log('[Auth] Sending password reset email to:', email);
+    console.log('[Auth] Redirect URL:', redirectUrl);
+    console.log('[Auth] IMPORTANT: Make sure this URL is added to Supabase allowed redirect URLs');
+    console.log('[Auth] Go to: Supabase Dashboard > Authentication > URL Configuration > Redirect URLs');
+    console.log('[Auth] Add both production and localhost URLs:');
+    console.log('[Auth]   - https://integra-raps.vercel.app/reset-password');
+    console.log('[Auth]   - http://localhost:8080/reset-password');
+    console.log('[Auth]   - http://localhost:8081/reset-password (or whatever port Vite uses)');
+
+    // IMPORTANT: The redirectTo URL MUST be in the Supabase allowed redirect URLs list
+    // Otherwise Supabase will reject the redirect and the password reset will fail
+    // The link generated will only work on the same origin where it was requested
+    // (e.g., link generated on localhost only works on localhost, not on production)
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: redirectUrl,
     });
 
     if (error) {
       console.error('[Auth] Password reset error:', error);
     } else {
       console.log('[Auth] Password reset email sent successfully');
+      console.log('[Auth] User will receive an email with a link to:', redirectUrl);
     }
 
     return { error };
@@ -161,13 +174,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // Get initial session and check if it's a password recovery session
+    // IMPORTANT: When user clicks password reset link from email, Supabase redirects
+    // to the app with hash fragments like #access_token=xxx&type=recovery
+    // The detectSessionInUrl setting automatically processes these fragments
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      console.log('[AuthContext] Initial session check:', {
+        hasSession: !!session,
+        hasUser: !!session?.user,
+        email: session?.user?.email,
+        error: error?.message,
+        url: window.location.href,
+        hasHashFragments: window.location.hash.length > 0
+      });
+
+      // Check if this is a password recovery session by looking at URL hash
+      // The Supabase auth will set session from URL automatically, but we need to
+      // detect if it's a recovery type to set our flag
+      const urlHash = window.location.hash;
+      const isRecoveryInUrl = urlHash.includes('type=recovery') || urlHash.includes('type%3Drecovery');
+
+      if (isRecoveryInUrl && session?.user) {
+        console.log('[AuthContext] PASSWORD_RECOVERY detected in initial session from URL hash');
+        setIsPasswordRecovery(true);
+      }
+
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
 
-      if (session?.user) {
+      // Only fetch profile if NOT in password recovery mode
+      if (session?.user && !isRecoveryInUrl) {
         fetchUserProfile(session.user.id);
       }
     });

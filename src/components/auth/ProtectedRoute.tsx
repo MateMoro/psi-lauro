@@ -78,7 +78,7 @@ export function ProtectedRoute({
   requiresRole = true,
   requiredRole
 }: ProtectedRouteProps) {
-  const { user, getUserRole, loading: authLoading } = useAuth();
+  const { user, getUserRole, profile, loading: authLoading } = useAuth();
   const {
     hasAcceptedCurrentVersion,
     loading: privacyLoading,
@@ -87,9 +87,23 @@ export function ProtectedRoute({
   } = usePrivacyPolicy();
   const location = useLocation();
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+  const [isWaitingForProfile, setIsWaitingForProfile] = useState(false);
 
   const userRole = getUserRole();
   const currentPath = location.pathname;
+
+  // Add intelligent delay when user exists but profile hasn't loaded yet
+  useEffect(() => {
+    if (!authLoading && user && !profile) {
+      setIsWaitingForProfile(true);
+      const timer = setTimeout(() => {
+        setIsWaitingForProfile(false);
+      }, 800);
+      return () => clearTimeout(timer);
+    } else {
+      setIsWaitingForProfile(false);
+    }
+  }, [authLoading, user, profile]);
 
   // Check if we need to show the privacy policy modal
   useEffect(() => {
@@ -108,8 +122,8 @@ export function ProtectedRoute({
     }
   };
 
-  // Show loading screen while checking authentication and privacy
-  if (authLoading || privacyLoading) {
+  // Show loading screen while checking authentication, privacy, or waiting for profile
+  if (authLoading || privacyLoading || isWaitingForProfile) {
     return <LoadingScreen />;
   }
 

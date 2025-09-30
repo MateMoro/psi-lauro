@@ -14,7 +14,7 @@ export function DashboardFooter() {
 
   return (
     <>
-      <footer className="py-4 px-6 border-t border-border bg-card mt-auto">
+      <footer className="py-4 px-8 lg:px-12 border-t border-border bg-card mt-auto">
         {/* Desktop layout - single line for >= 480px */}
         <div className="hidden min-[480px]:flex justify-between items-center">
           <p className="text-sm text-muted-foreground">

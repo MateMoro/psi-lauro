@@ -90,16 +90,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const resetPassword = async (email: string) => {
+    console.log('[Auth] Sending password reset email to:', email);
+    console.log('[Auth] Redirect URL:', `${window.location.origin}/reset-password`);
+
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password`,
     });
+
+    if (error) {
+      console.error('[Auth] Password reset error:', error);
+    } else {
+      console.log('[Auth] Password reset email sent successfully');
+    }
+
     return { error };
   };
 
   const updatePassword = async (password: string) => {
+    console.log('[Auth] Updating password for user:', user?.email);
+
     const { error } = await supabase.auth.updateUser({
       password,
     });
+
+    if (error) {
+      console.error('[Auth] Update password error:', error);
+    } else {
+      console.log('[Auth] Password updated successfully');
+    }
+
     return { error };
   };
 

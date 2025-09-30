@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -22,7 +22,7 @@ const resetPasswordSchema = z.object({
 type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
 
 export function ResetPasswordForm() {
-  const { updatePassword, user, isPasswordRecovery } = useAuth();
+  const { updatePassword, signOut } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -38,90 +38,54 @@ export function ResetPasswordForm() {
     resolver: zodResolver(resetPasswordSchema),
   });
 
-  // Validate password recovery session
-  useEffect(() => {
-    console.log('[ResetPassword] Session check:', {
-      hasUser: !!user,
-      isPasswordRecovery,
-      email: user?.email,
-      url: window.location.href
-    });
-
-    // No user session at all - invalid or expired token
-    if (!user) {
-      console.warn('[ResetPassword] No user session found, redirecting to login');
-      console.warn('[ResetPassword] Common causes:');
-      console.warn('  1. Link expired (tokens expire after a certain time)');
-      console.warn('  2. Link was generated for different environment (production vs localhost)');
-      console.warn('  3. This URL is not in Supabase allowed redirect URLs list');
-      console.warn('  4. Token already used');
-
-      // Show helpful message depending on environment
-      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      const message = isLocalhost
-        ? 'Link de recuperação inválido ou expirado. Se você solicitou o link em produção, precisa solicitar um novo link aqui no localhost. Clique em "Esqueci minha senha" para gerar um novo link.'
-        : 'Link de recuperação inválido ou expirado. Solicite um novo link.';
-
-      navigate('/login', {
-        replace: true,
-        state: { message }
-      });
-      return;
-    }
-
-    // User is logged in normally (not a password recovery session)
-    // Redirect to dashboard since they don't need to reset password
-    if (user && !isPasswordRecovery) {
-      console.log('[ResetPassword] User already logged in (not recovery), redirecting to dashboard');
-      navigate('/dashboard', { replace: true });
-      return;
-    }
-
-    // Valid password recovery session
-    console.log('[ResetPassword] Valid password recovery session for:', user.email);
-  }, [user, isPasswordRecovery, navigate]);
-
   const onSubmit = async (data: ResetPasswordFormData) => {
     console.log('[ResetPassword] Form submitted');
-
-    if (!user) {
-      console.error('[ResetPassword] No user session when submitting form');
-      setError('Sessão inválida. Solicite um novo link de recuperação.');
-      return;
-    }
 
     setIsLoading(true);
     setError('');
 
     try {
-      console.log('[ResetPassword] Calling updatePassword...');
+      console.log('[ResetPassword] Chamando updatePassword...');
       const { error: updateError } = await updatePassword(data.password);
 
       if (updateError) {
-        console.error('[ResetPassword] Update failed:', updateError.message);
+        console.error('[ResetPassword] Erro ao atualizar:', updateError.message);
+
+        // Se falhar, provavelmente o link expirou ou é inválido
         if (updateError.message.includes('Password should be at least')) {
           setError('A senha deve ter pelo menos 6 caracteres.');
         } else if (updateError.message.includes('New password should be different')) {
           setError('A nova senha deve ser diferente da atual.');
         } else {
-          setError('Erro ao atualizar senha. Tente novamente.');
+          setError('Link inválido ou expirado. Solicite um novo link de recuperação.');
         }
       } else {
-        console.log('[ResetPassword] Password updated successfully!');
+        console.log('[ResetPassword] ✅ Senha atualizada com sucesso!');
+
+        // IMPORTANTE: Fazer logout para limpar a sessão de recovery
+        // Isso garante que o usuário precise fazer login com a nova senha
+        console.log('[ResetPassword] 🔐 Fazendo logout para limpar sessão de recovery...');
+        await signOut();
+        console.log('[ResetPassword] ✅ Sessão limpa com sucesso!');
+
         setSuccess(true);
-        // Redirect to dashboard after 3 seconds
+        // Redireciona para login após 2 segundos
         setTimeout(() => {
-          navigate('/dashboard', { replace: true });
-        }, 3000);
+          navigate('/login', {
+            replace: true,
+            state: { message: '✅ Senha alterada com sucesso! Faça login com sua nova senha.' }
+          });
+        }, 2000);
       }
     } catch (error) {
-      console.error('[ResetPassword] Unexpected error:', error);
-      setError('Erro inesperado. Tente novamente.');
+      console.error('[ResetPassword] Erro inesperado:', error);
+      setError('Erro inesperado. Solicite um novo link de recuperação.');
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Show success message after password updated
   if (success) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50 p-4">
@@ -152,17 +116,17 @@ export function ResetPasswordForm() {
                       Senha alterada com sucesso!
                     </p>
                     <p>
-                      Você será redirecionado para o dashboard em alguns segundos...
+                      Você será redirecionado para o login em alguns segundos...
                     </p>
                   </div>
                 </div>
               </div>
 
               <Button
-                onClick={() => navigate('/dashboard', { replace: true })}
+                onClick={() => navigate('/login', { replace: true })}
                 className="w-full h-11 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-medium shadow-lg shadow-green-500/25 transition-all duration-200"
               >
-                Ir para Dashboard
+                Ir para Login
               </Button>
             </CardContent>
           </Card>

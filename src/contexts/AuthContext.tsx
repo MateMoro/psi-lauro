@@ -178,26 +178,87 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // IMPORTANT: When user clicks password reset link from email, Supabase redirects
     // to the app with hash fragments like #access_token=xxx&type=recovery
     // The detectSessionInUrl setting automatically processes these fragments
+
+    console.log('='.repeat(80));
+    console.log('[AuthContext] 🔍 DEBUGGING PASSWORD RECOVERY FLOW');
+    console.log('='.repeat(80));
+
+    // Log URL details
+    const urlHash = window.location.hash;
+    const fullUrl = window.location.href;
+    const searchParams = new URLSearchParams(window.location.search);
+    const urlError = searchParams.get('error');
+    const errorCode = searchParams.get('error_code');
+    const errorDescription = searchParams.get('error_description');
+    const hasAccessToken = urlHash.includes('access_token');
+    const hasTypeRecovery = urlHash.includes('type=recovery') || urlHash.includes('type%3Drecovery');
+
+    console.log('[AuthContext] 📍 URL Information:');
+    console.log('  Full URL:', fullUrl);
+    console.log('  Hash present:', urlHash.length > 0);
+    console.log('  Hash length:', urlHash.length);
+    console.log('  Hash content (first 100 chars):', urlHash.substring(0, 100));
+    console.log('  Has access_token:', hasAccessToken);
+    console.log('  Has type=recovery:', hasTypeRecovery);
+    console.log('');
+
+    // Check for Supabase error codes in URL
+    if (urlError || errorCode) {
+      console.error('[AuthContext] ⛔ SUPABASE ERROR DETECTED IN URL!');
+      console.error('  Error:', urlError);
+      console.error('  Error Code:', errorCode);
+      console.error('  Description:', errorDescription);
+      console.error('');
+
+      if (errorCode === 'otp_expired') {
+        console.error('[AuthContext] 💥 TOKEN EXPIRED!');
+        console.error('  Recovery tokens expire quickly (usually 1 hour)');
+        console.error('  This token is no longer valid');
+        console.error('');
+        console.error('[AuthContext] 🔧 SOLUTION:');
+        console.error('  1. Go to http://localhost:8081/forgot-password');
+        console.error('  2. Generate a NEW recovery link');
+        console.error('  3. Use the link IMMEDIATELY (do not wait)');
+        console.error('  4. Complete the password reset within a few minutes');
+      }
+      console.log('');
+    }
+
     supabase.auth.getSession().then(({ data: { session }, error }) => {
-      console.log('[AuthContext] Initial session check:', {
-        hasSession: !!session,
-        hasUser: !!session?.user,
-        email: session?.user?.email,
-        error: error?.message,
-        url: window.location.href,
-        hasHashFragments: window.location.hash.length > 0
-      });
+      console.log('[AuthContext] 📦 Session Check Result:');
+      console.log('  Has session:', !!session);
+      console.log('  Has user:', !!session?.user);
+      console.log('  User email:', session?.user?.email || 'N/A');
+      console.log('  Error:', error?.message || 'None');
+      console.log('');
 
       // Check if this is a password recovery session by looking at URL hash
-      // The Supabase auth will set session from URL automatically, but we need to
-      // detect if it's a recovery type to set our flag
-      const urlHash = window.location.hash;
-      const isRecoveryInUrl = urlHash.includes('type=recovery') || urlHash.includes('type%3Drecovery');
+      const isRecoveryInUrl = hasTypeRecovery;
 
-      if (isRecoveryInUrl && session?.user) {
-        console.log('[AuthContext] PASSWORD_RECOVERY detected in initial session from URL hash');
-        setIsPasswordRecovery(true);
+      if (isRecoveryInUrl) {
+        console.log('[AuthContext] ✅ PASSWORD_RECOVERY detected in URL!');
+        if (session?.user) {
+          console.log('[AuthContext] ✅ Valid session found for recovery');
+          console.log('[AuthContext] ✅ User will be shown password reset form');
+          setIsPasswordRecovery(true);
+        } else {
+          console.warn('[AuthContext] ⚠️ Recovery URL detected but NO SESSION!');
+          console.warn('[AuthContext] Possible causes:');
+          console.warn('  1. Token expired');
+          console.warn('  2. Token already used');
+          console.warn('  3. Redirect URL not in Supabase allowed list');
+          console.warn('  4. Link generated before adding localhost to allowed URLs');
+          console.warn('');
+          console.warn('[AuthContext] 🔧 Solution:');
+          console.warn('  → Generate a NEW link from http://localhost:8081/forgot-password');
+          console.warn('  → Make sure http://localhost:8081/reset-password is in Supabase Redirect URLs');
+        }
+      } else {
+        console.log('[AuthContext] ℹ️ Not a recovery URL (normal session check)');
       }
+
+      console.log('='.repeat(80));
+      console.log('');
 
       setSession(session);
       setUser(session?.user ?? null);

@@ -8,6 +8,13 @@ const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
+// IMPORTANT: For password recovery to work in localhost during development:
+// 1. Go to Supabase Dashboard → Authentication → URL Configuration
+// 2. TEMPORARILY change "Site URL" to: http://localhost:8081
+// 3. Add to "Redirect URLs": http://localhost:8081/reset-password
+// 4. Generate recovery link (will be valid for 1 hour)
+// 5. After testing, change Site URL back to production: https://integra-raps.vercel.app
+
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
     // Automatically detect session in URL (for email confirmation and password recovery links)
@@ -16,7 +23,8 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     autoRefreshToken: true,
     // Persist session in local storage
     persistSession: true,
-    // Handle hash fragments in URL for OAuth and magic links
-    flowType: 'pkce'
+    // Use implicit flow for password recovery (hash fragments: #access_token=xxx&type=recovery)
+    // This is the standard flow for magic links and password recovery
+    flowType: 'implicit'
   }
 });

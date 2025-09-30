@@ -17,7 +17,7 @@ export default function SobreServico() {
                 Institucional
               </h1>
               <p className="text-lg text-slate-600 font-medium">
-                IntegraRAPS – Ferramenta de Apoio à Rede de Atenção Psicossocial
+                IntegraRAPS
               </p>
             </div>
           </div>

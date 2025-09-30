@@ -9,11 +9,16 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Activity, Eye, EyeOff } from 'lucide-react';
 import { PrivacyPolicyModal } from '@/components/privacy/PrivacyPolicyModal';
+import { SignUpForm } from '@/components/auth/SignUpForm';
+import { ForgotPasswordForm } from '@/components/auth/ForgotPasswordForm';
+
+type AuthMode = 'login' | 'signup' | 'forgot-password';
 
 export default function Login() {
   const { user, signIn, loading, debugAuthState } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const [authMode, setAuthMode] = useState<AuthMode>('login');
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -21,6 +26,15 @@ export default function Login() {
   const [error, setError] = useState('');
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [loginAttempted, setLoginAttempted] = useState(false);
+
+  // Check for error message from location state (e.g., from reset password redirect)
+  useEffect(() => {
+    if (location.state?.message) {
+      setError(location.state.message);
+      // Clear the state to prevent showing the message again
+      navigate('/login', { replace: true });
+    }
+  }, [location.state, navigate]);
 
   // Fallback redirect effect for login attempts that succeed but don't trigger immediate redirect
   useEffect(() => {
@@ -103,11 +117,20 @@ export default function Login() {
     );
   }
 
-  return (
-    <>
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50 p-4">
-        <div className="w-full max-w-md">
-          <Card className="shadow-lg border-0 bg-white/95 backdrop-blur-sm">
+  // Render different forms based on auth mode
+  const renderAuthForm = () => {
+    switch (authMode) {
+      case 'signup':
+        return <SignUpForm onBackToLogin={() => setAuthMode('login')} />;
+      case 'forgot-password':
+        return <ForgotPasswordForm onBackToLogin={() => setAuthMode('login')} />;
+      default:
+        return renderLoginForm();
+    }
+  };
+
+  const renderLoginForm = () => (
+    <Card className="shadow-lg border-0 bg-white/95 backdrop-blur-sm">
             <CardHeader className="space-y-4 pb-6">
               <div className="flex justify-center">
                 <div className="p-3 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 rounded-2xl shadow-xl shadow-blue-500/25">
@@ -119,7 +142,7 @@ export default function Login() {
                   IntegraRAPS
                 </CardTitle>
                 <CardDescription className="text-slate-600">
-                  IntegraRAPS - Ferramenta de Apoio à Rede de Atenção Psicossocial
+                  IntegraRAPS 
                 </CardDescription>
               </div>
             </CardHeader>
@@ -201,6 +224,23 @@ export default function Login() {
               </form>
 
               <div className="pt-4 border-t border-slate-100 space-y-3">
+                <div className="flex justify-between text-sm">
+                  <button
+                    onClick={() => setAuthMode('forgot-password')}
+                    className="text-blue-600 hover:text-blue-800 underline underline-offset-2 transition-colors"
+                    disabled={isLoading}
+                  >
+                    Esqueci minha senha
+                  </button>
+                  <button
+                    onClick={() => setAuthMode('signup')}
+                    className="text-blue-600 hover:text-blue-800 underline underline-offset-2 transition-colors"
+                    disabled={isLoading}
+                  >
+                    Criar conta
+                  </button>
+                </div>
+
                 {user && (
                   <Button
                     type="button"
@@ -225,10 +265,17 @@ export default function Login() {
               </div>
             </CardContent>
           </Card>
+  );
+
+  return (
+    <>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50 p-4">
+        <div className="w-full max-w-md">
+          {renderAuthForm()}
 
           <div className="mt-8 text-center">
             <p className="text-xs text-slate-400">
-              © 2025 – IntegraRAPS. Todos os direitos reservados.
+                  © 2025 – IntegraRAPS. Todos os direitos reservados.
             </p>
           </div>
         </div>

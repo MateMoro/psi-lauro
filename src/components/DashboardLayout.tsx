@@ -13,21 +13,21 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
     <HospitalProvider>
       <SidebarProvider>
-        <div className="min-h-screen flex w-full bg-background">
+        <div className="min-h-screen flex w-full max-w-full overflow-x-hidden bg-background">
           {/* Sidebar - always present but styled differently for mobile/desktop */}
           <AppSidebar />
-          
-          <div className="flex-1 flex flex-col">
+
+          <div className="flex-1 flex flex-col min-w-0 max-w-full">
             <DashboardHeader />
-            <main className="flex-1 p-3 sm:p-4 md:p-6 lg:p-8 overflow-auto pb-20 lg:pb-4">
+            <main className="flex-1 w-full max-w-full p-3 sm:p-4 md:p-6 lg:p-8 overflow-x-hidden overflow-y-auto pb-20 lg:pb-4">
               {children}
             </main>
-            
+
             {/* Desktop Footer */}
             <div className="hidden lg:block">
               <DashboardFooter />
             </div>
-            
+
             {/* Mobile Navigation */}
             <div className="lg:hidden">
               <MobileNavigation />

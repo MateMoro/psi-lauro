@@ -18,28 +18,24 @@ export function ReadmissionMetrics() {
         <MetricCard
           title="Reinternação ≤ 7 dias"
           value="2,4%"
-          description="Taxa de reinternação precoce"
           icon={Clock}
           variant="success"
         />
         <MetricCard
           title="Reinternação ≤ 15 dias"
           value="2,93%"
-          description="Indicador de qualidade"
           icon={CalendarDays}
           variant="info"
         />
         <MetricCard
           title="Reinternação ≤ 30 dias"
           value="5,33%"
-          description="Taxa mensal acumulada"
           icon={TrendingDown}
           variant="warning"
         />
         <MetricCard
           title="Reinternação > 30 dias"
           value="3,2%"
-          description="Reinternações tardias"
           icon={BarChart3}
           variant="primary"
         />

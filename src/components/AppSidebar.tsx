@@ -133,17 +133,6 @@ export function AppSidebar() {
             {!collapsed && (
               <div className="flex flex-col">
                 <h2 className="text-lg font-black text-slate-800 tracking-tight leading-tight">IntegraRAPS</h2>
-                <p className="text-sm text-slate-600 font-medium">Hospital Planalto e CAPS</p>
-                {user && userRole && (
-                  <div className="mt-1">
-                    <p className="text-xs text-slate-600 font-medium">
-                      {profile?.nome || user.email}
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      {getRoleDisplayName(userRole)}
-                    </p>
-                  </div>
-                )}
               </div>
             )}
           </div>

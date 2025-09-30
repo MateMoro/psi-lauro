@@ -72,16 +72,16 @@ function UnauthorizedAccess({ userRole, path }: { userRole: string | null; path:
   );
 }
 
-export function ProtectedRoute({ 
-  children, 
-  requiresAuth = true, 
+export function ProtectedRoute({
+  children,
+  requiresAuth = true,
   requiresRole = true,
   requiredRole
 }: ProtectedRouteProps) {
-  const { user, getUserRole, loading: authLoading, initializationError } = useAuth();
-  const { 
-    hasAcceptedCurrentVersion, 
-    loading: privacyLoading, 
+  const { user, getUserRole, loading: authLoading } = useAuth();
+  const {
+    hasAcceptedCurrentVersion,
+    loading: privacyLoading,
     needsToAcceptPolicy,
     acceptPolicy
   } = usePrivacyPolicy();
@@ -91,34 +91,11 @@ export function ProtectedRoute({
   const userRole = getUserRole();
   const currentPath = location.pathname;
 
-  console.log('🔒 ProtectedRoute: Check -', {
-    path: currentPath,
-    authLoading,
-    privacyLoading,
-    hasUser: !!user,
-    userId: user?.id,
-    userRole,
-    requiresAuth,
-    requiresRole,
-    requiredRole,
-    initializationError,
-    timestamp: new Date().toISOString()
-  });
-
   // Check if we need to show the privacy policy modal
   useEffect(() => {
-    console.log('🔄 ProtectedRoute: Privacy check -', {
-      authLoading,
-      privacyLoading, 
-      hasUser: !!user,
-      needsPolicy: !authLoading && !privacyLoading ? needsToAcceptPolicy() : 'checking'
-    });
-    
     if (!authLoading && !privacyLoading && needsToAcceptPolicy()) {
-      console.log('📋 ProtectedRoute: Setting privacy modal = true');
       setShowPrivacyModal(true);
     } else {
-      console.log('📋 ProtectedRoute: Setting privacy modal = false');
       setShowPrivacyModal(false);
     }
   }, [authLoading, privacyLoading, hasAcceptedCurrentVersion, user, needsToAcceptPolicy]);
@@ -128,80 +105,25 @@ export function ProtectedRoute({
     const result = await acceptPolicy();
     if (result.success) {
       setShowPrivacyModal(false);
-    } else {
-      console.error('Failed to accept privacy policy:', result.error);
-      // Could show an error message to the user here
     }
   };
 
-  // Show error only for critical authentication failures, not profile issues
-  if (!authLoading && initializationError && !user) {
-    console.error('❌ ProtectedRoute: SHOWING CRITICAL AUTH ERROR -', initializationError);
-    return (
-      <div className="flex items-center justify-center min-h-screen p-4">
-        <Card className="w-full max-w-md">
-          <CardContent className="p-6 text-center space-y-4">
-            <div className="text-destructive">
-              <svg
-                className="h-12 w-12 mx-auto mb-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-            <h2 className="text-lg font-semibold text-foreground">Erro de Conexão</h2>
-            <p className="text-sm text-muted-foreground">
-              {initializationError.includes('timeout') 
-                ? 'A conexão está demorando mais que o esperado. Verifique sua internet.'
-                : 'Ocorreu um erro na autenticação. Tente novamente.'
-              }
-            </p>
-            <div className="pt-2 space-y-2">
-              <button
-                onClick={() => window.location.reload()}
-                className="w-full bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded text-sm font-medium transition-colors"
-              >
-                Tentar novamente
-              </button>
-              <button
-                onClick={() => window.location.href = '/login'}
-                className="text-sm text-muted-foreground hover:underline"
-              >
-                Voltar ao login
-              </button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   // Show loading screen while checking authentication and privacy
   if (authLoading || privacyLoading) {
-    console.log('⏳ ProtectedRoute: SHOWING LOADING -', { authLoading, privacyLoading });
     return <LoadingScreen />;
   }
 
   // Redirect to login if authentication is required but user is not logged in
   if (requiresAuth && !user) {
-    console.log('🚪 ProtectedRoute: REDIRECTING TO LOGIN - no user');
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   // Show privacy policy modal if user needs to accept it
   if (showPrivacyModal && user) {
-    console.log('📋 ProtectedRoute: SHOWING PRIVACY MODAL');
     return (
       <PrivacyPolicyModal
         isOpen={true}
-        onClose={() => {}} // Can't close without accepting
+        onClose={() => {}}
         onAccept={handlePrivacyAccept}
         mode="consent"
         isBlocking={true}
@@ -211,20 +133,14 @@ export function ProtectedRoute({
 
   // Check role-based access if required
   if (requiresRole && user) {
-    // If a specific role is required, check for that specific role
     if (requiredRole && userRole !== requiredRole) {
-      console.log('❌ ProtectedRoute: UNAUTHORIZED - wrong role -', { userRole, requiredRole });
       return <UnauthorizedAccess userRole={userRole} path={currentPath} />;
     }
-    // Otherwise, use the general page access check
     if (!requiredRole && !canAccessPage(userRole, currentPath)) {
-      console.log('❌ ProtectedRoute: UNAUTHORIZED - no page access -', { userRole, currentPath });
       return <UnauthorizedAccess userRole={userRole} path={currentPath} />;
     }
   }
 
-  // User is authenticated, has accepted privacy policy, and has permission
-  console.log('✅ ProtectedRoute: ACCESS GRANTED - rendering children');
   return <>{children}</>;
 }
 

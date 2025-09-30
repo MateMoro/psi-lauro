@@ -28,9 +28,6 @@ export default function Index() {
           <h1 className="text-5xl font-black text-slate-800 tracking-tight mb-4">
             IntegraRAPS
           </h1>
-          <p className="text-xl text-slate-600 font-medium max-w-3xl mx-auto">
-            Ferramenta de Apoio à Rede de Atenção Psicossocial
-          </p>
         </div>
 
         {/* Information Cards */}

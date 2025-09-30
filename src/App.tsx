@@ -9,6 +9,9 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { UserManagementProvider } from "./contexts/UserManagementContext";
 import { RoleGuard } from "./components/auth/ProtectedRoute";
 import Login from "./pages/Login";
+import SignUp from "./pages/SignUp";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import PerfilEpidemiologico from "./pages/PerfilEpidemiologico";
@@ -40,9 +43,12 @@ const App = () => (
             <Sonner />
             <BrowserRouter>
             <Routes>
-              {/* Login route - outside DashboardLayout */}
+              {/* Auth routes - outside DashboardLayout */}
               <Route path="/login" element={<Login />} />
-              
+              <Route path="/signup" element={<SignUp />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+
               {/* Protected routes - inside DashboardLayout */}
               <Route path="/*" element={
                 <DashboardLayout>

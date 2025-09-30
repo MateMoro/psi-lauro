@@ -1,0 +1,7 @@
+# Netlify SPA Routing Configuration
+# This file ensures that all routes are handled by the React Router
+# instead of returning 404 errors
+
+# Redirect all routes to index.html (except static files)
+# The 200 status code means "serve this file" rather than redirecting
+/*    /index.html   200

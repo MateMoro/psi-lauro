@@ -87,10 +87,28 @@ export default function PerfilEpidemiologico() {
       '65+': 0
     };
 
-    patients.forEach(p => {
-      if (!p.data_nascimento) return;
-      const age = new Date().getFullYear() - new Date(p.data_nascimento).getFullYear();
-      
+    const now = new Date();
+    // Filtrar pacientes válidos para estatísticas de idade
+    const validPatients = patients.filter(p => {
+      if (!p.data_nascimento) return false;
+      const birth = new Date(p.data_nascimento);
+      const age = now.getFullYear() - birth.getFullYear();
+      // Corrigir se aniversário ainda não ocorreu este ano
+      const m = now.getMonth() - birth.getMonth();
+      if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) {
+        // Ainda não fez aniversário este ano
+        return age - 1 >= 5 && birth <= now;
+      }
+      return age >= 5 && birth <= now;
+    });
+
+    validPatients.forEach(p => {
+      const birth = new Date(p.data_nascimento);
+      let age = now.getFullYear() - birth.getFullYear();
+      const m = now.getMonth() - birth.getMonth();
+      if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) {
+        age--;
+      }
       if (age < 18) ageRanges['<18']++;
       else if (age <= 25) ageRanges['18–25']++;
       else if (age <= 44) ageRanges['26–44']++;
@@ -98,11 +116,11 @@ export default function PerfilEpidemiologico() {
       else ageRanges['65+']++;
     });
 
-    const total = patients.length;
-    return Object.entries(ageRanges).map(([name, count]) => ({ 
-      name, 
+    const total = validPatients.length;
+    return Object.entries(ageRanges).map(([name, count]) => ({
+      name,
       value: total > 0 ? Math.round((count / total) * 100) : 0,
-      count 
+      count
     }));
   };
 
@@ -179,20 +197,37 @@ export default function PerfilEpidemiologico() {
   };
 
   const getAgeStatistics = () => {
+    const now = new Date();
     const ages = patients
-      .filter(p => p.data_nascimento)
-      .map(p => new Date().getFullYear() - new Date(p.data_nascimento).getFullYear())
-      .filter(age => age > 0 && age < 120);
-    
+      .filter(p => {
+        if (!p.data_nascimento) return false;
+        const birth = new Date(p.data_nascimento);
+        const age = now.getFullYear() - birth.getFullYear();
+        const m = now.getMonth() - birth.getMonth();
+        if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) {
+          return age - 1 >= 5 && birth <= now && age - 1 < 120;
+        }
+        return age >= 5 && birth <= now && age < 120;
+      })
+      .map(p => {
+        const birth = new Date(p.data_nascimento);
+        let age = now.getFullYear() - birth.getFullYear();
+        const m = now.getMonth() - birth.getMonth();
+        if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) {
+          age--;
+        }
+        return age;
+      });
+
     if (ages.length === 0) return { average: '0', median: '0', min: '0', max: '0' };
-    
+
     ages.sort((a, b) => a - b);
     const sum = ages.reduce((a, b) => a + b, 0);
     const average = (sum / ages.length).toFixed(1);
-    const median = ages.length % 2 === 0 
+    const median = ages.length % 2 === 0
       ? ((ages[ages.length / 2 - 1] + ages[ages.length / 2]) / 2).toFixed(1)
       : ages[Math.floor(ages.length / 2)].toFixed(1);
-    
+
     return {
       average,
       median,
@@ -216,6 +251,11 @@ export default function PerfilEpidemiologico() {
       // Map specific hospital to category
       if (normalizeString(procedencia).includes('hospital waldomiro de paula')) {
         procedencia = 'DEMANDA ESPONTÂNEA';
+      }
+
+      // Fix accent for RESIDENCIA
+      if (normalizeString(procedencia).includes('residencia')) {
+        procedencia = 'RESIDÊNCIA';
       }
 
       const rawProcedencia = procedencia;

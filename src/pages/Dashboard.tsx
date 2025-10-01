@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { getRoleDisplayName } from "@/utils/permissions";
 import CapsUserInfo from "@/components/CapsUserInfo";
+import { calculateCorrectAverageStay, calculateReadmissionRate, formatDecimalBR } from "@/lib/hospital-utils";
 
 interface Patient {
   nome: string;
@@ -31,7 +32,31 @@ interface Patient {
   raca_cor: string;
   transtorno_categoria: string;
   dia_semana_alta?: number;
+  cns?: string;
 }
+
+// Helper functions for date handling
+const parseLocalDate = (s?: string | null): Date | null => {
+  if (!s) return null;
+  // Aceita 'YYYY-MM-DD' e constrói Data local (sem UTC shift)
+  const [y, m, d] = s.split('-').map(Number);
+  if (!y || !m || !d) return null;
+  return new Date(y, m - 1, d);
+};
+
+const todayLocal = () => {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+};
+
+const lastDayOfPreviousMonth = () => {
+  const now = todayLocal();
+  // dia 0 do mês atual = último dia do mês anterior
+  return new Date(now.getFullYear(), now.getMonth(), 0);
+};
+
+const firstDayOfMonth = (d: Date) => new Date(d.getFullYear(), d.getMonth(), 1);
+const lastDayOfMonth = (d: Date) => new Date(d.getFullYear(), d.getMonth() + 1, 0);
 
 export default function Dashboard() {
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -80,7 +105,7 @@ export default function Dashboard() {
       // Fixed values as specified by user
       const fixedCounts = [92, 68, 75, 60, 62, 18, 10]; // Segunda, Terça, Quarta, Quinta, Sexta, Sábado, Domingo
       const weekdayNames = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
-      
+
       const total = fixedCounts.reduce((sum, count) => sum + count, 0);
       const result = weekdayNames.map((name, index) => ({
         name,
@@ -95,107 +120,119 @@ export default function Dashboard() {
     }
   };
 
+  const getOccupancyDateRange = () => {
+    if (patients.length === 0) {
+      const prev = lastDayOfPreviousMonth();
+      return { start: firstDayOfMonth(prev), end: prev, formatted: '' };
+    }
+
+    // menor data de admissão no dataset
+    const adms = patients
+      .map(p => parseLocalDate(p.data_admissao))
+      .filter((d): d is Date => !!d);
+    const earliestAdmission = new Date(Math.min(...adms.map(d => d.getTime())));
+
+    // fim = último dia do mês anterior ao atual
+    const periodEnd = lastDayOfPreviousMonth();
+
+    // formatação MM/YY
+    const formatMMYY = (date: Date) => {
+      const mm = String(date.getMonth() + 1).padStart(2, '0');
+      const yy = String(date.getFullYear()).slice(2);
+      return `${mm}/${yy}`;
+    };
+
+    return {
+      start: firstDayOfMonth(earliestAdmission),
+      end: periodEnd,
+      formatted: `${formatMMYY(firstDayOfMonth(earliestAdmission))} → ${formatMMYY(periodEnd)}`
+    };
+  };
+
+  const calculateOccupancyRateAverage = () => {
+    const totalCapacity = selectedHospital === 'planalto' ? 16 : 10;
+    if (totalCapacity <= 0 || patients.length === 0) return 0;
+
+    const { start: periodStart, end: periodEnd } = getOccupancyDateRange();
+
+    // Gera meses do início até o fim (mês anterior ao atual)
+    const months: Date[] = [];
+    const cursor = new Date(periodStart.getFullYear(), periodStart.getMonth(), 1);
+    const endMonth = new Date(periodEnd.getFullYear(), periodEnd.getMonth(), 1);
+    while (cursor <= endMonth) {
+      months.push(new Date(cursor));
+      cursor.setMonth(cursor.getMonth() + 1);
+    }
+
+    let sumMonthly = 0;
+    let countMonthly = 0;
+
+    for (const month of months) {
+      const monthStart = firstDayOfMonth(month);
+      const monthEnd   = lastDayOfMonth(month);
+
+      // todos os dias do mês
+      const days: Date[] = [];
+      for (let d = new Date(monthStart); d <= monthEnd; d.setDate(d.getDate() + 1)) {
+        days.push(new Date(d));
+      }
+
+      const dailyRates: number[] = days.map(day => {
+        // Filtra internações ativas no dia
+        const onDay = patients.filter(p => {
+          const adm  = parseLocalDate(p.data_admissao);
+          const alta = parseLocalDate(p.data_alta ?? null);
+          if (!adm) return false;
+          return adm <= day && (!alta || alta >= day);
+        });
+
+        // Únicos por CNS (fallback opcional para não perder sem CNS)
+        const unique = new Set<string>();
+        for (const p of onDay) {
+          const key = p.cns?.toString().trim() || `__NO_CNS__:${p.nome ?? ''}`;
+          unique.add(key);
+        }
+
+        return unique.size / totalCapacity; // proporção (0..1+)
+      });
+
+      const monthlyAvg = dailyRates.length
+        ? dailyRates.reduce((a, b) => a + b, 0) / dailyRates.length
+        : 0;
+
+      sumMonthly += monthlyAvg;
+      countMonthly += 1;
+    }
+
+    const avgOccupancyRatePct = countMonthly ? (sumMonthly / countMonthly) * 100 : 0;
+    return Number(avgOccupancyRatePct.toFixed(1));
+  };
 
   // Calculate metrics
   const calculateMetrics = () => {
     const totalPatients = patients.length;
-    
-    // Calculate average stay days
-    const avgStayDays = patients.reduce((acc, p) => 
-      acc + (p.dias_internacao || 0), 0) / totalPatients || 0;
-    
-    // Calculate 30-day readmission rate using correct algorithm (same as Python reference)
-    let reinternacoes = 0;
-    let altas_total = 0;
 
-    // Group patients by name for readmission calculation
-    const patientGroups = patients.reduce((acc, patient) => {
-      const identifier = patient.nome;
-      if (!acc[identifier]) {
-        acc[identifier] = [];
-      }
-      acc[identifier].push(patient);
-      return acc;
-    }, {} as Record<string, Patient[]>);
+    // Calculate average stay days - using correct algorithm from Python reference
+    const avgStayDays = calculateCorrectAverageStay(patients);
 
-    Object.values(patientGroups).forEach(admissions => {
-      const sortedAdmissions = admissions.sort((a, b) => 
-        new Date(a.data_admissao).getTime() - new Date(b.data_admissao).getTime()
-      );
-      
-      // Get all discharge dates (excluding null/undefined)
-      const datas_alta = sortedAdmissions
-        .map(admission => admission.data_alta)
-        .filter(alta => alta !== null && alta !== undefined);
-      
-      const datas_adm = sortedAdmissions.map(admission => admission.data_admissao);
-      
-      // Count readmissions: for each discharge that has a next admission
-      for (let i = 0; i < datas_alta.length - 1; i++) {
-        altas_total += 1;
-        const dischargeDate = new Date(datas_alta[i]);
-        const nextAdmissionDate = new Date(datas_adm[i + 1]);
-        
-        const daysBetween = Math.floor(
-          (nextAdmissionDate.getTime() - dischargeDate.getTime()) / (1000 * 60 * 60 * 24)
-        );
-        
-        if (daysBetween > 0 && daysBetween <= 30) {
-          reinternacoes++;
-        }
-      }
-      
-      // Add the last discharge to total (if exists)
-      if (datas_alta.length > 0) {
-        altas_total += 1;
-      }
-    });
-
-    // Calculate overall readmission rate
-    const readmissionRate = altas_total > 0 ? (reinternacoes / altas_total * 100) : 0;
+    // Calculate 30-day readmission rate using shared utility function (CNS-based grouping)
+    const readmissionRate = calculateReadmissionRate(patients, 30);
 
     return {
       totalPatients,
-      avgStayDays: avgStayDays.toFixed(1),
-      avgStayDaysFormatted: `${avgStayDays.toFixed(1)} dias`,
-      readmissionRate: readmissionRate.toFixed(1)
+      avgStayDays: formatDecimalBR(avgStayDays),
+      avgStayDaysFormatted: `${formatDecimalBR(avgStayDays)} dias`,
+      readmissionRate: formatDecimalBR(readmissionRate)
     };
   };
 
   // New Advanced Metrics
   const calculateAdvancedMetrics = () => {
-    // Taxa de Ocupação - capacidade por hospital
-    const totalCapacity = selectedHospital === 'planalto' ? 16 : 10;
-
-    // Calcular ocupação média histórica (desde 01/07/2024)
-    const startDate = new Date('2024-07-01');
-    const endDate = new Date();
-    const dailyOccupancies: number[] = [];
-
-    // Iterar por cada dia do período
-    for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
-      const currentDate = new Date(date);
-
-      // Contar pacientes internados neste dia
-      const occupiedBeds = patients.filter(p => {
-        const admissionDate = new Date(p.data_admissao);
-        const dischargeDate = p.data_alta ? new Date(p.data_alta) : null;
-
-        // Paciente está internado se: admissão <= dia atual E (sem alta OU alta > dia atual)
-        return admissionDate <= currentDate && (!dischargeDate || dischargeDate > currentDate);
-      }).length;
-
-      // Calcular taxa de ocupação do dia
-      const dailyRate = totalCapacity > 0 ? (occupiedBeds / totalCapacity * 100) : 0;
-      dailyOccupancies.push(dailyRate);
-    }
-
-    // Calcular média histórica
-    const occupancyRate = dailyOccupancies.length > 0
-      ? dailyOccupancies.reduce((sum, rate) => sum + rate, 0) / dailyOccupancies.length
-      : 0;
+    // Taxa de Ocupação - usar a mesma lógica do IndicadoresAssistenciais
+    const occupancyRate = calculateOccupancyRateAverage();
 
     // Ocupação atual (para referência)
+    const totalCapacity = selectedHospital === 'planalto' ? 16 : 10;
     const currentOccupancy = patients.filter(p => !p.data_alta).length;
 
     // Taxa de reinternação por período específico (7, 15, 30 dias)
@@ -271,11 +308,11 @@ export default function Dashboard() {
     const responseTime120min = Math.round(Math.random() * 15 + 85); // 85-100%
 
     return {
-      occupancyRate: occupancyRate.toFixed(1),
-      readmission7Days: readmission7Days.toFixed(1),
-      readmission15Days: readmission15Days.toFixed(1),
-      readmission30Days: readmission30Days.toFixed(1),
-      weekendDischargeRate: weekendDischargeRate.toFixed(1),
+      occupancyRate: formatDecimalBR(occupancyRate),
+      readmission7Days: formatDecimalBR(readmission7Days),
+      readmission15Days: formatDecimalBR(readmission15Days),
+      readmission30Days: formatDecimalBR(readmission30Days),
+      weekendDischargeRate: formatDecimalBR(weekendDischargeRate),
       interconsultationsVolume,
       responseTime60min,
       responseTime120min,
@@ -331,9 +368,9 @@ export default function Dashboard() {
 
     return Object.entries(disorderCount)
       .sort(([,a], [,b]) => b - a)
-      .map(([name, count], index) => ({ 
-        name, 
-        value: total > 0 ? Number(((count / total) * 100).toFixed(1)) : 0,
+      .map(([name, count], index) => ({
+        name,
+        value: total > 0 ? Number(formatDecimalBR((count / total) * 100).replace(',', '.')) : 0,
         count: count,
         color: chartColors[index % chartColors.length] || "#6b7280"
       }));
@@ -396,14 +433,34 @@ export default function Dashboard() {
       return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
     };
 
-    return Object.entries(diagnosisCount)
-      .sort(([,a], [,b]) => b - a)
-      .map(([name, value], index) => ({ 
-        name: capitalizeFirst(name), 
-        value, 
+    // Separar "Outros" do resto dos diagnósticos
+    const allDiagnoses = Object.entries(diagnosisCount);
+    const othersItem = allDiagnoses.find(([name]) => name.toLowerCase() === 'outros');
+    const regularDiagnoses = allDiagnoses.filter(([name]) => name.toLowerCase() !== 'outros');
+
+    // Ordenar diagnósticos regulares (maior para menor)
+    const sortedDiagnoses = regularDiagnoses.sort(([,a], [,b]) => b - a);
+
+    // Mapear para o formato final
+    const result = sortedDiagnoses.map(([name, value], index) => ({
+      name: capitalizeFirst(name),
+      value,
+      percentage: total > 0 ? Math.round((value / total) * 100) : 0,
+      color: chartColors[index % chartColors.length] || "#6b7280"
+    }));
+
+    // Adicionar "Outros" no final, se existir
+    if (othersItem) {
+      const [name, value] = othersItem;
+      result.push({
+        name: capitalizeFirst(name),
+        value,
         percentage: total > 0 ? Math.round((value / total) * 100) : 0,
-        color: chartColors[index % chartColors.length] || "#6b7280"
-      }));
+        color: "#6b7280" // Cor cinza para "Outros"
+      });
+    }
+
+    return result;
   };
 
   const getGenderDistribution = () => {
@@ -468,23 +525,33 @@ export default function Dashboard() {
 
   // New chart data functions
   const getCapsAdultoDistribution = () => {
-    // Lista dos principais CAPS Adulto a serem exibidos (formato do banco de dados)
-    const mainAdultoCaps = [
-      'ADULTO II ITAQUERA',
-      'ADULTO II GUAIANASES',
-      'ADULTO II SAO MIGUEL',
-      'ADULTO II ITAIM PAULISTA',
-      'ADULTO II ERMELINO MATARAZZO',
-      'ADULTO II CIDADE TIRADENTES',
-      'ADULTO III SAO MATEUS'
-    ];
+    // Normalizar nomes de CAPS (adicionar acentos)
+    const normalizeCapsName = (caps: string): string => {
+      let normalized = caps;
+
+      // Mapear SAO para SÃO
+      if (normalized.includes('SAO MIGUEL')) {
+        normalized = normalized.replace('SAO MIGUEL', 'SÃO MIGUEL');
+      }
+      if (normalized.includes('SAO MATEUS')) {
+        normalized = normalized.replace('SAO MATEUS', 'SÃO MATEUS');
+      }
+
+      // Adicionar prefixo "CAPS " se não tiver
+      if (!normalized.startsWith('CAPS ')) {
+        normalized = 'CAPS ' + normalized;
+      }
+
+      return normalized;
+    };
 
     // Contar todos os CAPS Adulto (excluindo AD)
     const capsCount = patients.reduce((acc, p) => {
       const caps = p.caps_referencia || 'Não informado';
       // Filtrar apenas CAPS Adulto (contém "ADULTO" mas não "AD ")
       if (caps.includes('ADULTO') && !caps.startsWith('AD ')) {
-        acc[caps] = (acc[caps] || 0) + 1;
+        const normalizedCaps = normalizeCapsName(caps);
+        acc[normalizedCaps] = (acc[normalizedCaps] || 0) + 1;
       }
       return acc;
     }, {} as Record<string, number>);
@@ -495,55 +562,76 @@ export default function Dashboard() {
       return [];
     }
 
-    // Calcular percentuais para os principais CAPS
-    let mainCapsTotal = 0;
-    const mainCapsData = mainAdultoCaps
-      .filter(capsName => capsCount[capsName] > 0)
-      .map(capsName => {
-        const count = capsCount[capsName];
-        const percentage = Math.round((count / total) * 100);
-        mainCapsTotal += percentage;
-        return {
-          name: capsName,
-          value: percentage,
-          fill: '#3b82f6'
-        };
-      });
-
-    // Adicionar "Outros CAPS" com o restante
-    const othersPercentage = 100 - mainCapsTotal;
-    if (othersPercentage > 0) {
-      mainCapsData.push({
-        name: 'Outros CAPS (não exibidos)',
-        value: othersPercentage,
-        fill: '#9ca3af'
-      });
-    }
+    // Ordenar por contagem (maior para menor)
+    const sortedCaps = Object.entries(capsCount)
+      .sort(([, a], [, b]) => b - a);
 
     const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#84cc16', '#eab308'];
-    return mainCapsData.map((item, index) => ({
-      ...item,
-      fill: item.name === 'Outros CAPS (não exibidos)' ? '#9ca3af' : colors[index % colors.length]
-    }));
+
+    // Pegar os 6 principais CAPS
+    const topCaps = sortedCaps.slice(0, 6);
+    const mainCapsData = topCaps.map(([capsName, count], index) => {
+      const percentage = Math.round((count / total) * 100);
+      return {
+        name: capsName,
+        value: percentage,
+        count: count,
+        fill: colors[index % colors.length]
+      };
+    });
+
+    // Calcular "Outros CAPS" se houver mais de 6
+    if (sortedCaps.length > 6) {
+      const othersCaps = sortedCaps.slice(6);
+      const othersCount = othersCaps.reduce((sum, [, count]) => sum + count, 0);
+      const othersPercentage = Math.round((othersCount / total) * 100);
+
+      if (othersPercentage > 0) {
+        mainCapsData.push({
+          name: 'Outros CAPS',
+          value: othersPercentage,
+          count: othersCount,
+          fill: '#9ca3af'
+        });
+      }
+    }
+
+    return mainCapsData;
   };
 
   const getCapsADDistribution = () => {
-    // Lista dos principais CAPS AD a serem exibidos (formato do banco de dados)
-    const mainADCaps = [
-      'AD III ITAQUERA',
-      'AD II GUAIANASES',
-      'AD II JARDIM NELIA',
-      'AD III SAO MIGUEL',
-      'AD III SAO MATEUS',
-      'AD II ERMELINO MATARAZZO'
-    ];
+    // Normalizar nomes de CAPS AD (adicionar acentos)
+    const normalizeCapsADName = (caps: string): string => {
+      let normalized = caps;
+
+      // Mapear SAO para SÃO
+      if (normalized.includes('SAO MIGUEL')) {
+        normalized = normalized.replace('SAO MIGUEL', 'SÃO MIGUEL');
+      }
+      if (normalized.includes('SAO MATEUS')) {
+        normalized = normalized.replace('SAO MATEUS', 'SÃO MATEUS');
+      }
+
+      // Mapear JARDIM NELIA para JARDIM NÉLIA
+      if (normalized.toUpperCase().includes('JARDIM NELIA')) {
+        normalized = normalized.replace(/JARDIM NELIA/gi, 'Jardim Nélia');
+      }
+
+      // Adicionar prefixo "CAPS " se não tiver
+      if (!normalized.startsWith('CAPS ')) {
+        normalized = 'CAPS ' + normalized;
+      }
+
+      return normalized;
+    };
 
     // Contar todos os CAPS AD
     const capsCount = patients.reduce((acc, p) => {
       const caps = p.caps_referencia || 'Não informado';
       // Filtrar apenas CAPS AD (começa com "AD ")
       if (caps.startsWith('AD ')) {
-        acc[caps] = (acc[caps] || 0) + 1;
+        const normalizedCaps = normalizeCapsADName(caps);
+        acc[normalizedCaps] = (acc[normalizedCaps] || 0) + 1;
       }
       return acc;
     }, {} as Record<string, number>);
@@ -554,41 +642,57 @@ export default function Dashboard() {
       return [];
     }
 
-    // Calcular percentuais para os principais CAPS AD
-    let mainCapsTotal = 0;
-    const mainCapsData = mainADCaps
-      .filter(capsName => capsCount[capsName] > 0)
-      .map(capsName => {
-        const count = capsCount[capsName];
-        const percentage = Math.round((count / total) * 100);
-        mainCapsTotal += percentage;
-        return {
-          name: capsName,
-          value: percentage,
-          fill: '#10b981'
-        };
-      });
-
-    // Adicionar "Outros CAPS" com o restante
-    const othersPercentage = 100 - mainCapsTotal;
-    if (othersPercentage > 0) {
-      mainCapsData.push({
-        name: 'Outros CAPS (não exibidos)',
-        value: othersPercentage,
-        fill: '#9ca3af'
-      });
-    }
+    // Ordenar por contagem (maior para menor)
+    const sortedCaps = Object.entries(capsCount)
+      .sort(([, a], [, b]) => b - a);
 
     const colors = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#84cc16', '#eab308'];
-    return mainCapsData.map((item, index) => ({
-      ...item,
-      fill: item.name === 'Outros CAPS (não exibidos)' ? '#9ca3af' : colors[index % colors.length]
-    }));
+
+    // Pegar os 6 principais CAPS AD
+    const topCaps = sortedCaps.slice(0, 6);
+    const mainCapsData = topCaps.map(([capsName, count], index) => {
+      const percentage = Math.round((count / total) * 100);
+      return {
+        name: capsName,
+        value: percentage,
+        count: count,
+        fill: colors[index % colors.length]
+      };
+    });
+
+    // Calcular "Outros CAPS" se houver mais de 6
+    if (sortedCaps.length > 6) {
+      const othersCaps = sortedCaps.slice(6);
+      const othersCount = othersCaps.reduce((sum, [, count]) => sum + count, 0);
+      const othersPercentage = Math.round((othersCount / total) * 100);
+
+      if (othersPercentage > 0) {
+        mainCapsData.push({
+          name: 'Outros CAPS',
+          value: othersPercentage,
+          count: othersCount,
+          fill: '#9ca3af'
+        });
+      }
+    }
+
+    return mainCapsData;
   };
 
   const getProcedenciaDistribution = () => {
     const procedenciaCount = patients.reduce((acc, p) => {
-      const procedencia = p.procedencia || 'Não informado';
+      let procedencia = p.procedencia || 'Não informado';
+
+      // Normalizar RESIDENCIA para RESIDÊNCIA
+      if (procedencia.toUpperCase() === 'RESIDENCIA') {
+        procedencia = 'RESIDÊNCIA';
+      }
+
+      // Normalizar HOSPITAL WALDOMIRO DE PAULA – PS para DEMANDA ESPONTÂNEA
+      if (procedencia.toUpperCase().includes('HOSPITAL WALDOMIRO DE PAULA')) {
+        procedencia = 'DEMANDA ESPONTÂNEA';
+      }
+
       acc[procedencia] = (acc[procedencia] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
@@ -781,7 +885,7 @@ export default function Dashboard() {
               </div>
               <div className="flex-1">
                 <h1 className="text-3xl lg:text-4xl font-black text-slate-800 tracking-tight mb-2">
-                  Bem-vindo, {profile?.nome || user?.email || 'Usuário'}!
+                  Bem-vindo, {profile?.nome || user?.email || 'Usuário'}
                 </h1>
                 <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600">
                   <div className="flex items-center gap-2">

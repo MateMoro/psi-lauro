@@ -6,6 +6,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { MiniChart } from "@/components/dashboard/MiniChart";
 import { useToast } from "@/hooks/use-toast";
 import { useHospital } from "@/contexts/HospitalContext";
+import { calculateCorrectAverageStay, calculateReadmissionRate, formatDecimalBR } from "@/lib/hospital-utils";
 
 interface Patient {
   nome: string;
@@ -37,7 +38,7 @@ export default function IndicadoresAssistenciais() {
   const [loading, setLoading] = useState(true);
   const periodFilter: PeriodFilter = 'month';
   const { toast } = useToast();
-  const { getTableName, selectedHospital } = useHospital();
+  const { getTableName, getCapacity } = useHospital();
 
   const fetchPatients = useCallback(async () => {
     try {
@@ -65,152 +66,107 @@ export default function IndicadoresAssistenciais() {
     fetchPatients();
   }, [fetchPatients, getTableName]);
 
-  // Calculate occupancy rate for Aug 2024 - Jul 2025 period
-  const calculateOccupancyRateAverage = () => {
-    const totalCapacity = 16;
-    const periodStart = new Date('2024-08-01');
-    const periodEnd = new Date('2025-07-31');
-    
-    // Filter patients within the period
-    const filteredPatients = patients.filter(p => {
-      const admissionDate = new Date(p.data_admissao);
-      const dischargeDate = p.data_alta ? new Date(p.data_alta) : null;
-      
-      // Patient was admitted before period end and (no discharge or discharged after period start)
-      return admissionDate <= periodEnd && (!dischargeDate || dischargeDate >= periodStart);
-    });
 
-    // Generate all months from Aug 2024 to Jul 2025
-    const months = [];
-    const startMonth = new Date(2024, 7, 1); // August 2024
-    const endMonth = new Date(2025, 7, 31); // July 2025
-    
-    const currentMonth = new Date(startMonth);
-    while (currentMonth <= endMonth) {
-      months.push(new Date(currentMonth));
-      currentMonth.setMonth(currentMonth.getMonth() + 1);
+  const parseLocalDate = (s?: string | null): Date | null => {
+  if (!s) return null;
+  // Aceita 'YYYY-MM-DD' e constrói Data local (sem UTC shift)
+  const [y, m, d] = s.split('-').map(Number);
+  if (!y || !m || !d) return null;
+  return new Date(y, m - 1, d);
+};
+
+  const todayLocal = () => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+};
+
+  const lastDayOfPreviousMonth = () => {
+    const now = todayLocal();
+  // dia 0 do mês atual = último dia do mês anterior
+    return new Date(now.getFullYear(), now.getMonth(), 0);
+};
+
+  const firstDayOfMonth = (d: Date) => new Date(d.getFullYear(), d.getMonth(), 1);
+  const lastDayOfMonth  = (d: Date) => new Date(d.getFullYear(), d.getMonth() + 1, 0);
+
+  const calculateOccupancyRateAverage = () => {
+    const totalCapacity = getCapacity();
+    if (totalCapacity <= 0 || patients.length === 0) return 0;
+
+    const { start: periodStart, end: periodEnd } = getOccupancyDateRange();
+
+    // Gera meses do início até o fim (mês anterior ao atual)
+    const months: Date[] = [];
+    const cursor = new Date(periodStart.getFullYear(), periodStart.getMonth(), 1);
+    const endMonth = new Date(periodEnd.getFullYear(), periodEnd.getMonth(), 1);
+    while (cursor <= endMonth) {
+      months.push(new Date(cursor));
+      cursor.setMonth(cursor.getMonth() + 1);
     }
 
-    let totalOccupancyRates = 0;
-    let monthCount = 0;
+    let sumMonthly = 0;
+    let countMonthly = 0;
 
-    months.forEach(month => {
-      const monthStart = new Date(month.getFullYear(), month.getMonth(), 1);
-      const monthEnd = new Date(month.getFullYear(), month.getMonth() + 1, 0);
-      
-      // Generate all days in the month
-      const days = [];
-      const currentDay = new Date(monthStart);
-      while (currentDay <= monthEnd) {
-        days.push(new Date(currentDay));
-        currentDay.setDate(currentDay.getDate() + 1);
+    for (const month of months) {
+      const monthStart = firstDayOfMonth(month);
+      const monthEnd   = lastDayOfMonth(month);
+
+      // todos os dias do mês
+      const days: Date[] = [];
+      for (let d = new Date(monthStart); d <= monthEnd; d.setDate(d.getDate() + 1)) {
+        days.push(new Date(d));
       }
 
-      const dailyRates: number[] = [];
-      
-      days.forEach(day => {
-        // Count unique patients by CNS who were hospitalized on this day
-        const patientsOnDay = filteredPatients.filter(p => {
-          const admissionDate = new Date(p.data_admissao);
-          const dischargeDate = p.data_alta ? new Date(p.data_alta) : null;
-          
-          return admissionDate <= day && (!dischargeDate || dischargeDate > day);
+      const dailyRates: number[] = days.map(day => {
+        // Filtra internações ativas no dia
+        const onDay = patients.filter(p => {
+          const adm  = parseLocalDate(p.data_admissao);
+          const alta = parseLocalDate(p.data_alta ?? null);
+          if (!adm) return false;
+          return adm <= day && (!alta || alta >= day);
         });
 
-        // Get unique patients by CNS (or nome if CNS not available)
-        const uniquePatients = new Set();
-        patientsOnDay.forEach(p => {
-          const identifier = p.cns || p.nome;
-          uniquePatients.add(identifier);
-        });
+        // Únicos por CNS (fallback opcional para não perder sem CNS)
+        const unique = new Set<string>();
+        for (const p of onDay) {
+          const key = p.cns?.toString().trim() || `__NO_CNS__:${p.nome ?? ''}`;
+          unique.add(key);
+        }
 
-        const dailyRate = uniquePatients.size / totalCapacity;
-        dailyRates.push(dailyRate);
+        return unique.size / totalCapacity; // proporção (0..1+)
       });
 
-      // Calculate average for this month
-      const monthlyAverage = dailyRates.length > 0 
-        ? dailyRates.reduce((sum, rate) => sum + rate, 0) / dailyRates.length 
+      const monthlyAvg = dailyRates.length
+        ? dailyRates.reduce((a, b) => a + b, 0) / dailyRates.length
         : 0;
-      
-      totalOccupancyRates += monthlyAverage;
-      monthCount++;
-    });
 
-    const avgOccupancyRate = monthCount > 0 ? (totalOccupancyRates / monthCount) * 100 : 0;
-    return avgOccupancyRate;
+      sumMonthly += monthlyAvg;
+      countMonthly += 1;
+    }
+
+    const avgOccupancyRatePct = countMonthly ? (sumMonthly / countMonthly) * 100 : 0;
+    return Number(avgOccupancyRatePct.toFixed(1));
   };
+
 
   // Calculate advanced metrics
   const calculateAdvancedMetrics = () => {
     const totalPatients = patients.length;
-    
-    // Average stay days
-    const avgStayDays = patients.reduce((acc, p) => 
-      acc + (p.dias_internacao || 0), 0) / totalPatients || 0;
+
+    // Average stay days - using correct algorithm from Python reference
+    const avgStayDays = calculateCorrectAverageStay(patients);
 
     // Taxa de Ocupação - calculate average for Aug 2024 - Jul 2025
     const occupancyRate = calculateOccupancyRateAverage();
 
     // Current occupancy for reference
-    const totalCapacity = 16;
+    const totalCapacity = getCapacity();
     const currentOccupancy = patients.filter(p => !p.data_alta).length;
 
-    // Taxa de reinternação por período específico - baseado no algoritmo Python correto
-    const calculateReadmissionsByPeriod = (days: number) => {
-      let reinternacoes = 0;
-      let altas_total = 0;
-
-      // Group patients by CNS only (not name fallback)
-      const patientGroups = patients.reduce((acc, patient) => {
-        if (!patient.cns) return acc; // Skip patients without CNS
-        const identifier = patient.cns.toString();
-        if (!acc[identifier]) {
-          acc[identifier] = [];
-        }
-        acc[identifier].push(patient);
-        return acc;
-      }, {} as Record<string, Patient[]>);
-
-      Object.values(patientGroups).forEach(admissions => {
-        const sortedAdmissions = admissions.sort((a, b) => 
-          new Date(a.data_admissao).getTime() - new Date(b.data_admissao).getTime()
-        );
-        
-        // Get all discharge dates (excluding null/undefined)
-        const datas_alta = sortedAdmissions
-          .map(admission => admission.data_alta)
-          .filter(alta => alta !== null && alta !== undefined);
-        
-        const datas_adm = sortedAdmissions.map(admission => admission.data_admissao);
-        
-        // Count readmissions: for each discharge that has a next admission
-        for (let i = 0; i < datas_alta.length - 1; i++) {
-          altas_total += 1;
-          const dischargeDate = new Date(datas_alta[i]);
-          const nextAdmissionDate = new Date(datas_adm[i + 1]);
-          
-          const daysBetween = Math.floor(
-            (nextAdmissionDate.getTime() - dischargeDate.getTime()) / (1000 * 60 * 60 * 24)
-          );
-          
-          if (daysBetween > 0 && daysBetween <= days) {
-            reinternacoes++;
-          }
-        }
-        
-        // Add the last discharge to total (if exists)
-        if (datas_alta.length > 0) {
-          altas_total += 1;
-        }
-      });
-
-      return altas_total > 0 ? (reinternacoes / altas_total * 100) : 0;
-    };
-
-    const readmission7Days = calculateReadmissionsByPeriod(7);
-    const readmission15Days = calculateReadmissionsByPeriod(15);
-    const readmission30Days = calculateReadmissionsByPeriod(30);
+    // Taxa de reinternação por período específico - usando função compartilhada
+    const readmission7Days = calculateReadmissionRate(patients, 7);
+    const readmission15Days = calculateReadmissionRate(patients, 15);
+    const readmission30Days = calculateReadmissionRate(patients, 30);
 
     // % de altas no fim de semana
     const weekendDischarges = patients.filter(p => {
@@ -228,90 +184,193 @@ export default function IndicadoresAssistenciais() {
 
     return {
       totalPatients,
-      avgStayDays: avgStayDays.toFixed(1),
-      occupancyRate: occupancyRate.toFixed(1),
-      readmission7Days: readmission7Days.toFixed(1),
-      readmission15Days: readmission15Days.toFixed(1),
-      readmission30Days: readmission30Days.toFixed(1),
-      weekendDischargeRate: weekendDischargeRate.toFixed(1),
+      avgStayDays: formatDecimalBR(avgStayDays),
+      occupancyRate: formatDecimalBR(occupancyRate),
+      readmission7Days: formatDecimalBR(readmission7Days),
+      readmission15Days: formatDecimalBR(readmission15Days),
+      readmission30Days: formatDecimalBR(readmission30Days),
+      weekendDischargeRate: formatDecimalBR(weekendDischargeRate),
       responseTime60min,
       responseTime120min,
       currentOccupancy,
-      totalCapacity
+      totalCapacity,
+      // Raw numeric values for charts
+      readmission7DaysRaw: readmission7Days,
+      readmission15DaysRaw: readmission15Days,
+      readmission30DaysRaw: readmission30Days
     };
   };
 
-  const getOccupancyTimeseries = (hospital: string) => {
-    // Dados reais baseados no hospital selecionado
-    const planaltoData = [
-      { name: '07/24', value: 88.7, period: 'month', quarter: 'Q1 24-25', year: '2024-2025' },
-      { name: '08/24', value: 83.3, period: 'month', quarter: 'Q1 24-25', year: '2024-2025' },
-      { name: '09/24', value: 87.1, period: 'month', quarter: 'Q1 24-25', year: '2024-2025' },
-      { name: '10/24', value: 92.1, period: 'month', quarter: 'Q2 24-25', year: '2024-2025' },
-      { name: '11/24', value: 83.3, period: 'month', quarter: 'Q2 24-25', year: '2024-2025' },
-      { name: '12/24', value: 87.8, period: 'month', quarter: 'Q2 24-25', year: '2024-2025' },
-      { name: '01/25', value: 86.9, period: 'month', quarter: 'Q3 24-25', year: '2024-2025' },
-      { name: '02/25', value: 92.7, period: 'month', quarter: 'Q3 24-25', year: '2024-2025' },
-      { name: '03/25', value: 91.3, period: 'month', quarter: 'Q3 24-25', year: '2024-2025' },
-      { name: '04/25', value: 93.1, period: 'month', quarter: 'Q4 24-25', year: '2024-2025' },
-      { name: '05/25', value: 88.5, period: 'month', quarter: 'Q4 24-25', year: '2024-2025' },
-      { name: '06/25', value: 89.8, period: 'month', quarter: 'Q4 24-25', year: '2024-2025' }
-    ];
+  const getOccupancyDateRange = () => {
+    if (patients.length === 0) {
+      const prev = lastDayOfPreviousMonth();
+      return { start: firstDayOfMonth(prev), end: prev, formatted: '' };
+    }
 
-    const tiradentesData = [
-      { name: '07/24', value: 85.2, period: 'month', quarter: 'Q1 24-25', year: '2024-2025' },
-      { name: '08/24', value: 89.4, period: 'month', quarter: 'Q1 24-25', year: '2024-2025' },
-      { name: '09/24', value: 91.8, period: 'month', quarter: 'Q1 24-25', year: '2024-2025' },
-      { name: '10/24', value: 88.6, period: 'month', quarter: 'Q2 24-25', year: '2024-2025' },
-      { name: '11/24', value: 90.3, period: 'month', quarter: 'Q2 24-25', year: '2024-2025' },
-      { name: '12/24', value: 92.1, period: 'month', quarter: 'Q2 24-25', year: '2024-2025' },
-      { name: '01/25', value: 87.5, period: 'month', quarter: 'Q3 24-25', year: '2024-2025' },
-      { name: '02/25', value: 89.9, period: 'month', quarter: 'Q3 24-25', year: '2024-2025' },
-      { name: '03/25', value: 93.4, period: 'month', quarter: 'Q3 24-25', year: '2024-2025' },
-      { name: '04/25', value: 91.2, period: 'month', quarter: 'Q4 24-25', year: '2024-2025' },
-      { name: '05/25', value: 86.7, period: 'month', quarter: 'Q4 24-25', year: '2024-2025' },
-      { name: '06/25', value: 88.3, period: 'month', quarter: 'Q4 24-25', year: '2024-2025' }
-    ];
+    // menor data de admissão no dataset
+    const adms = patients
+      .map(p => parseLocalDate(p.data_admissao))
+      .filter((d): d is Date => !!d);
+    const earliestAdmission = new Date(Math.min(...adms.map(d => d.getTime())));
 
-    const monthlyData = hospital === 'planalto' ? planaltoData : tiradentesData;
+    // fim = último dia do mês anterior ao atual
+    const periodEnd = lastDayOfPreviousMonth();
+
+    // formatação MM/YY
+    const formatMMYY = (date: Date) => {
+      const mm = String(date.getMonth() + 1).padStart(2, '0');
+      const yy = String(date.getFullYear()).slice(2);
+      return `${mm}/${yy}`;
+    };
+
+    return {
+      start: firstDayOfMonth(earliestAdmission),
+      end: periodEnd,
+      formatted: `${formatMMYY(firstDayOfMonth(earliestAdmission))} → ${formatMMYY(periodEnd)}`
+    };
+  };
+
+
+  const getOccupancyTimeseries = () => {
+    const totalCapacity = getCapacity();
+    if (patients.length === 0 || totalCapacity <= 0) return [];
+
+    const { start: periodStart, end: periodEnd } = getOccupancyDateRange();
+
+    // meses do início até o fim (mês anterior ao atual)
+    const months: Date[] = [];
+    const cursor = new Date(periodStart.getFullYear(), periodStart.getMonth(), 1);
+    const endMonth = new Date(periodEnd.getFullYear(), periodEnd.getMonth(), 1);
+    while (cursor <= endMonth) {
+      months.push(new Date(cursor));
+      cursor.setMonth(cursor.getMonth() + 1);
+    }
+
+    const monthlyData: TimeseriesData[] = months.map(month => {
+      const monthStart = firstDayOfMonth(month);
+      const monthEnd   = lastDayOfMonth(month);
+
+      // dias do mês
+      const days: Date[] = [];
+      for (let d = new Date(monthStart); d <= monthEnd; d.setDate(d.getDate() + 1)) {
+        days.push(new Date(d));
+      }
+
+      const dailyRates: number[] = days.map(day => {
+        const onDay = patients.filter(p => {
+          const adm  = parseLocalDate(p.data_admissao);
+          const alta = parseLocalDate(p.data_alta ?? null);
+          if (!adm) return false;
+          return adm <= day && (!alta || alta >= day);
+        });
+
+        // Únicos por CNS (com fallback opcional)
+        const unique = new Set<string>();
+        for (const p of onDay) {
+          const key = p.cns?.toString().trim() || `__NO_CNS__:${p.nome ?? ''}`;
+          unique.add(key);
+        }
+
+        return unique.size / totalCapacity; // proporção (0..1+)
+      });
+
+      const monthlyAvgPct = dailyRates.length
+        ? (dailyRates.reduce((a, b) => a + b, 0) / dailyRates.length) * 100
+        : 0;
+
+      const name = `${String(month.getMonth() + 1).padStart(2, '0')}/${String(month.getFullYear()).slice(2)}`;
+
+      // quarters opcionais (mantive seu estilo)
+      const m = month.getMonth();
+      let quarter = '';
+      if (m >= 6 && m <= 8) quarter = 'Q1 24-25';
+      else if (m >= 9 && m <= 11) quarter = 'Q2 24-25';
+      else if (m >= 0 && m <= 2) quarter = 'Q3 24-25';
+      else quarter = 'Q4 24-25';
+
+      return {
+        name,
+        value: Number(monthlyAvgPct.toFixed(1)),
+        period: 'month',
+        quarter,
+        year: `${periodStart.getFullYear()}-${periodEnd.getFullYear()}`
+      };
+    });
+
     return aggregateByPeriod(monthlyData, periodFilter);
   };
 
-  const getAverageStayTimeseries = (hospital: string) => {
-    // Dados reais baseados no hospital selecionado
-    const planaltoData = [
-      { name: '07/24', value: 24.1, period: 'month', quarter: 'Q1 24-25', year: '2024-2025' },
-      { name: '08/24', value: 10.2, period: 'month', quarter: 'Q1 24-25', year: '2024-2025' },
-      { name: '09/24', value: 12.6, period: 'month', quarter: 'Q1 24-25', year: '2024-2025' },
-      { name: '10/24', value: 16.2, period: 'month', quarter: 'Q2 24-25', year: '2024-2025' },
-      { name: '11/24', value: 15.6, period: 'month', quarter: 'Q2 24-25', year: '2024-2025' },
-      { name: '12/24', value: 14.0, period: 'month', quarter: 'Q2 24-25', year: '2024-2025' },
-      { name: '01/25', value: 16.5, period: 'month', quarter: 'Q3 24-25', year: '2024-2025' },
-      { name: '02/25', value: 20.7, period: 'month', quarter: 'Q3 24-25', year: '2024-2025' },
-      { name: '03/25', value: 17.1, period: 'month', quarter: 'Q3 24-25', year: '2024-2025' },
-      { name: '04/25', value: 15.6, period: 'month', quarter: 'Q4 24-25', year: '2024-2025' },
-      { name: '05/25', value: 10.9, period: 'month', quarter: 'Q4 24-25', year: '2024-2025' },
-      { name: '06/25', value: 10.5, period: 'month', quarter: 'Q4 24-25', year: '2024-2025' }
-    ];
-    
-    const tiradentesData = [
-      { name: '07/24', value: 10.7, period: 'month', quarter: 'Q1 24-25', year: '2024-2025' },
-      { name: '08/24', value: 5.5, period: 'month', quarter: 'Q1 24-25', year: '2024-2025' },
-      { name: '09/24', value: 4.8, period: 'month', quarter: 'Q1 24-25', year: '2024-2025' },
-      { name: '10/24', value: 5.8, period: 'month', quarter: 'Q2 24-25', year: '2024-2025' },
-      { name: '11/24', value: 5.6, period: 'month', quarter: 'Q2 24-25', year: '2024-2025' },
-      { name: '12/24', value: 7.6, period: 'month', quarter: 'Q2 24-25', year: '2024-2025' },
-      { name: '01/25', value: 6.5, period: 'month', quarter: 'Q3 24-25', year: '2024-2025' },
-      { name: '02/25', value: 7.1, period: 'month', quarter: 'Q3 24-25', year: '2024-2025' },
-      { name: '03/25', value: 6.5, period: 'month', quarter: 'Q3 24-25', year: '2024-2025' },
-      { name: '04/25', value: 6.0, period: 'month', quarter: 'Q4 24-25', year: '2024-2025' },
-      { name: '05/25', value: 7.1, period: 'month', quarter: 'Q4 24-25', year: '2024-2025' },
-      { name: '06/25', value: 5.3, period: 'month', quarter: 'Q4 24-25', year: '2024-2025' }
-    ];
-    
-    const monthlyData = hospital === 'planalto' ? planaltoData : tiradentesData;
+
+  const getAverageStayTimeseries = () => {
+    if (patients.length === 0) return [];
+
+    // Mesmo range do gráfico de ocupação (até mês anterior)
+    const { start: periodStart, end: periodEnd } = getOccupancyDateRange();
+
+    // Meses do início até o fim
+    const months: Date[] = [];
+    const cursor = new Date(periodStart.getFullYear(), periodStart.getMonth(), 1);
+    const endMonth = new Date(periodEnd.getFullYear(), periodEnd.getMonth(), 1);
+    while (cursor <= endMonth) {
+      months.push(new Date(cursor));
+      cursor.setMonth(cursor.getMonth() + 1);
+    }
+
+    const monthlyData: TimeseriesData[] = months.map(month => {
+      const monthStart = new Date(month.getFullYear(), month.getMonth(), 1);
+      const monthEnd   = new Date(month.getFullYear(), month.getMonth() + 1, 0);
+
+      // Altas do mês (válidas) com permanência > 0
+      const dischargedInMonth = patients.filter(p => {
+        const alta = parseLocalDate(p.data_alta ?? null);
+        if (!alta) return false;
+        if (alta < monthStart || alta > monthEnd) return false;
+
+        // recomputa a permanência a partir das datas, com fallback para dias_internacao
+        const adm = parseLocalDate(p.data_admissao);
+        let stayDays = 0;
+        if (adm && alta) {
+          const ms = alta.getTime() - adm.getTime();
+          stayDays = Math.floor(ms / (1000 * 60 * 60 * 24));
+        } else {
+          stayDays = p.dias_internacao || 0;
+        }
+
+        return stayDays > 0;
+      });
+
+      const avgStayDays = dischargedInMonth.length > 0
+        ? dischargedInMonth.reduce((sum, p) => {
+            const adm = parseLocalDate(p.data_admissao);
+            const alta = parseLocalDate(p.data_alta ?? null);
+            if (adm && alta) {
+              const ms = alta.getTime() - adm.getTime();
+              return sum + Math.floor(ms / (1000 * 60 * 60 * 24));
+            }
+            return sum + (p.dias_internacao || 0);
+          }, 0) / dischargedInMonth.length
+        : 0;
+
+      // Quarter opcional (mantive seu padrão)
+      const m = month.getMonth();
+      let quarter = '';
+      if (m >= 6 && m <= 8) quarter = 'Q1 24-25';
+      else if (m >= 9 && m <= 11) quarter = 'Q2 24-25';
+      else if (m >= 0 && m <= 2) quarter = 'Q3 24-25';
+      else quarter = 'Q4 24-25';
+
+      return {
+        name: `${String(month.getMonth() + 1).padStart(2, '0')}/${String(month.getFullYear()).slice(2)}`,
+        value: parseFloat(avgStayDays.toFixed(1)),
+        period: 'month',
+        quarter,
+        year: `${periodStart.getFullYear()}-${periodEnd.getFullYear()}`
+      };
+    });
+
     return aggregateByPeriod(monthlyData, periodFilter);
   };
+
 
   const getLengthOfStayDistribution = () => {
     // Define stay ranges in days
@@ -348,42 +407,48 @@ export default function IndicadoresAssistenciais() {
   const getReadmissionBarData = () => {
     const metrics = calculateAdvancedMetrics();
     return [
-      { name: 'Até 7 dias', value: parseFloat(metrics.readmission7Days) },
-      { name: 'Até 15 dias', value: parseFloat(metrics.readmission15Days) },
-      { name: 'Até 30 dias', value: parseFloat(metrics.readmission30Days) }
+      { name: 'Até 7 dias', value: metrics.readmission7DaysRaw },
+      { name: 'Até 15 dias', value: metrics.readmission15DaysRaw },
+      { name: 'Até 30 dias', value: metrics.readmission30DaysRaw }
     ];
   };
 
-  const getDischargesByWeekday = (hospital: string) => {
-    // Dados reais de altas por dia da semana baseados nas queries do banco
-    const planaltoData = [
-      { name: 'Segunda', count: 95, percentage: 23.2 },
-      { name: 'Terça', count: 73, percentage: 17.8 },
-      { name: 'Quarta', count: 77, percentage: 18.8 },
-      { name: 'Quinta', count: 64, percentage: 15.6 },
-      { name: 'Sexta', count: 69, percentage: 16.9 },
-      { name: 'Sábado', count: 19, percentage: 4.6 },
-      { name: 'Domingo', count: 12, percentage: 2.9 }
-    ];
+  const getDischargesByWeekday = () => {
+    // Count discharges by weekday from actual patient data
+    const weekdayNames = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
 
-    const tiradentesData = [
-      { name: 'Segunda', count: 206, percentage: 20.2 },
-      { name: 'Terça', count: 181, percentage: 17.8 },
-      { name: 'Quarta', count: 165, percentage: 16.2 },
-      { name: 'Quinta', count: 164, percentage: 16.1 },
-      { name: 'Sexta', count: 175, percentage: 17.2 },
-      { name: 'Sábado', count: 72, percentage: 7.1 },
-      { name: 'Domingo', count: 56, percentage: 5.5 }
-    ];
+    // Initialize counts for each weekday (1-7)
+    const weekdayCounts: Record<number, number> = {
+      1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0
+    };
 
-    const data = hospital === 'planalto' ? planaltoData : tiradentesData;
-    
-    return data.map(item => ({
-      name: item.name,
-      value: item.percentage, // Percentage for chart display
-      count: item.count, // Absolute number for tooltip
-      percentage: item.percentage
-    }));
+    // Count patients by dia_semana_alta
+    patients.forEach(p => {
+      if (p.dia_semana_alta && p.dia_semana_alta >= 1 && p.dia_semana_alta <= 7) {
+        weekdayCounts[p.dia_semana_alta]++;
+      }
+    });
+
+    // Calculate total discharges
+    const totalDischarges = Object.values(weekdayCounts).reduce((sum, count) => sum + count, 0);
+
+    // Build result array
+    const data = weekdayNames.map((name, index) => {
+      const weekdayNumber = index + 1;
+      const count = weekdayCounts[weekdayNumber];
+      const percentage = totalDischarges > 0
+        ? parseFloat(((count / totalDischarges) * 100).toFixed(1))
+        : 0;
+
+      return {
+        name,
+        value: percentage, // Percentage for chart display
+        count, // Absolute number for tooltip
+        percentage
+      };
+    });
+
+    return data;
   };
 
   // Função para agregar dados por período
@@ -473,9 +538,9 @@ export default function IndicadoresAssistenciais() {
           {/* 2.1 - Média de Permanência */}
           <div className="bg-white/80 backdrop-blur-sm rounded-xl md:rounded-2xl border border-slate-200/50 p-4 md:p-6 shadow-lg">
             <MiniChart
-              data={getAverageStayTimeseries(selectedHospital)}
+              data={getAverageStayTimeseries()}
               title="Média de Permanência"
-              subtitle={`${periodFilter === 'month' ? 'Mensal' : periodFilter === 'quarter' ? 'Trimestral' : 'Anual'} - jul/24 → jun/25 (dias)`}
+              subtitle={`${periodFilter === 'month' ? 'Mensal' : periodFilter === 'quarter' ? 'Trimestral' : 'Anual'} - ${getOccupancyDateRange().formatted} (dias)`}
               type="line"
               icon={Clock}
               hideLegend={true}
@@ -487,9 +552,9 @@ export default function IndicadoresAssistenciais() {
           {/* 2.2 - Taxa de Ocupação */}
           <div className="bg-white/80 backdrop-blur-sm rounded-xl md:rounded-2xl border border-slate-200/50 p-4 md:p-6 shadow-lg">
             <MiniChart
-              data={getOccupancyTimeseries(selectedHospital)}
+              data={getOccupancyTimeseries()}
               title="Taxa de Ocupação"
-              subtitle={`${periodFilter === 'month' ? 'Mensal' : periodFilter === 'quarter' ? 'Trimestral' : 'Anual'} - jul/24 → jun/25 (%)`}
+              subtitle={`${periodFilter === 'month' ? 'Mensal' : periodFilter === 'quarter' ? 'Trimestral' : 'Anual'} - ${getOccupancyDateRange().formatted} (%)`}
               type="line"
               icon={Bed}
               hideLegend={true}
@@ -517,7 +582,7 @@ export default function IndicadoresAssistenciais() {
           {/* 2.4 - Altas por Dia da Semana */}
           <div className="bg-white/80 backdrop-blur-sm rounded-xl md:rounded-2xl border border-slate-200/50 p-4 md:p-6 shadow-lg">
             <MiniChart
-              data={getDischargesByWeekday(selectedHospital)}
+              data={getDischargesByWeekday()}
               title="Altas por Dia da Semana"
               subtitle="Distribuição total de altas"
               type="bar"

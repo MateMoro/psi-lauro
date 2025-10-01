@@ -191,10 +191,10 @@ export function MiniChart({
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                   {showDataLabels && (
-                    <LabelList 
-                      dataKey="value" 
-                      position="top" 
-                      formatter={(value: any) => `${value}%`}
+                    <LabelList
+                      dataKey="value"
+                      position="top"
+                      formatter={(value: any) => `${Number(value).toFixed(1).replace('.', ',')}%`}
                       style={{
                         fill: '#1e293b',
                         fontSize: '12px',

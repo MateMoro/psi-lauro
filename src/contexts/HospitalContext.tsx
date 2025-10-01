@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import type { Hospital, HospitalContextType } from '@/lib/hospital-utils';
-import { getTableName } from '@/lib/hospital-utils';
+import { getTableName, getHospitalCapacity } from '@/lib/hospital-utils';
 
 const HospitalContext = createContext<HospitalContextType | undefined>(undefined);
 
@@ -29,10 +29,15 @@ export const HospitalProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return getTableName(selectedHospital);
   };
 
+  const getCapacityForContext = () => {
+    return getHospitalCapacity(selectedHospital);
+  };
+
   const value: HospitalContextType = {
     selectedHospital,
     setSelectedHospital,
     getTableName: getTableNameForContext,
+    getCapacity: getCapacityForContext,
   };
 
   return (

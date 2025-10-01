@@ -141,9 +141,6 @@ export default function Login() {
                 <CardTitle className="text-2xl font-bold text-slate-800">
                   IntegraRAPS
                 </CardTitle>
-                <CardDescription className="text-slate-600">
-                  IntegraRAPS 
-                </CardDescription>
               </div>
             </CardHeader>
 

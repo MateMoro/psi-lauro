@@ -9,6 +9,7 @@ import { RefreshCw, Calendar, MapPin, User, Filter, Database } from "lucide-reac
 import { EmptyState } from "@/components/ui/empty-state";
 import { useToast } from "@/hooks/use-toast";
 import { useHospital } from "@/contexts/HospitalContext";
+import { calculateReadmissionRate as calculateReadmissionRateShared, formatDecimalBR } from "@/lib/hospital-utils";
 
 interface PatientAdmission {
   nome: string;
@@ -27,9 +28,19 @@ interface ReadmissionPatient {
   averageInterval: number;
 }
 
+interface RawPatient {
+  data_admissao: string;
+  data_alta?: string;
+  cns?: string | number;
+  nome?: string;
+  dias_internacao?: number;
+  [key: string]: unknown;
+}
+
 export default function Reinternacoes() {
   const [readmissions, setReadmissions] = useState<ReadmissionPatient[]>([]);
   const [filteredReadmissions, setFilteredReadmissions] = useState<ReadmissionPatient[]>([]);
+  const [rawPatients, setRawPatients] = useState<RawPatient[]>([]); // Store raw patient data for shared calculations
   const [loading, setLoading] = useState(true);
   const [intervalFilter, setIntervalFilter] = useState<string>("all");
   const { toast } = useToast();
@@ -46,9 +57,13 @@ export default function Reinternacoes() {
 
       if (error) throw error;
 
-      // Group by CNS instead of name to identify readmissions (fallback to name if CNS is null)
+      // Store raw patient data for shared calculations
+      setRawPatients(data || []);
+
+      // Group by CNS only (skip patients without CNS for consistency with other pages)
       const patientGroups = (data || []).reduce((acc, patient) => {
-        const identifier = patient.cns || patient.nome || 'unknown';
+        if (!patient.cns) return acc; // Skip patients without CNS
+        const identifier = patient.cns.toString();
         if (!acc[identifier]) {
           acc[identifier] = [];
         }
@@ -61,7 +76,7 @@ export default function Reinternacoes() {
           genero: patient.genero,
         });
         return acc;
-      }, {} as Record<string | number, PatientAdmission[]>);
+      }, {} as Record<string, PatientAdmission[]>);
 
       // Filter patients with multiple admissions and calculate intervals
       const readmissionData: ReadmissionPatient[] = Object.entries(patientGroups)
@@ -155,61 +170,59 @@ export default function Reinternacoes() {
   }, [applyIntervalFilter]);
 
   const calculateReadmissionRate = (days: number) => {
-    if (readmissions.length === 0) return "0.0";
+    if (rawPatients.length === 0) return "0,0";
 
-    // Calculate rate based on total discharges, not total patients
-    let totalDischarges = 0;
-    let readmissionCount = 0;
+    // Use shared calculation function for consistency (except for > 30 days)
+    if (days === 31) {
+      // Special case for > 30 days - calculate manually
+      let totalDischarges = 0;
+      let readmissionCount = 0;
 
-    readmissions.forEach(patient => {
-      // Count discharges for this patient
-      const discharges = patient.admissions.filter(adm => adm.data_alta).length;
-      totalDischarges += discharges;
+      readmissions.forEach(patient => {
+        const sortedAdmissions = patient.admissions.sort((a, b) =>
+          new Date(a.data_admissao).getTime() - new Date(b.data_admissao).getTime()
+        );
 
-      // Count readmissions based on the new criteria
-      const sortedAdmissions = patient.admissions.sort((a, b) =>
-        new Date(a.data_admissao).getTime() - new Date(b.data_admissao).getTime()
-      );
+        const datas_alta = sortedAdmissions
+          .map(adm => adm.data_alta)
+          .filter(alta => alta !== null && alta !== undefined);
+        const datas_adm = sortedAdmissions.map(adm => adm.data_admissao);
 
-      const datas_alta = sortedAdmissions
-        .map(adm => adm.data_alta)
-        .filter(alta => alta !== null && alta !== undefined);
-      const datas_adm = sortedAdmissions.map(adm => adm.data_admissao);
+        for (let i = 0; i < datas_alta.length - 1; i++) {
+          totalDischarges += 1;
+          const altatTime = new Date(datas_alta[i]).getTime();
+          const nextAdmTime = new Date(datas_adm[i + 1]).getTime();
+          const daysBetween = Math.floor((nextAdmTime - altatTime) / (1000 * 60 * 60 * 24));
 
-      for (let i = 0; i < datas_alta.length - 1; i++) {
-        const altatTime = new Date(datas_alta[i]).getTime();
-        const nextAdmTime = new Date(datas_adm[i + 1]).getTime();
-        const daysBetween = (nextAdmTime - altatTime) / (1000 * 60 * 60 * 24);
-
-        if (days === 31) { // > 30 days
           if (daysBetween > 30) {
             readmissionCount++;
           }
-        } else { // <= days
-          if (daysBetween <= days && daysBetween > 0) {
-            readmissionCount++;
-          }
         }
-      }
-    });
 
-    const rate = totalDischarges > 0 ? (readmissionCount / totalDischarges) * 100 : 0;
-    return rate % 1 === 0 ? rate.toString() : rate.toFixed(1);
+        // Add the last discharge to total (if exists)
+        if (datas_alta.length > 0) {
+          totalDischarges += 1;
+        }
+      });
+
+      const rate = totalDischarges > 0 ? (readmissionCount / totalDischarges) * 100 : 0;
+      return formatDecimalBR(rate);
+    } else {
+      // Use shared function for 7, 15, 30 days
+      const rate = calculateReadmissionRateShared(rawPatients, days);
+      return formatDecimalBR(rate);
+    }
   };
 
   const calculateTotalReadmissionRate = () => {
-    if (readmissions.length === 0) return "0.0";
+    if (readmissions.length === 0) return "0,0";
 
     // Calculate total readmission rate (all readmissions regardless of interval)
+    // Using same logic pattern as shared function but without day limit
     let totalDischarges = 0;
     let totalReadmissions = 0;
 
     readmissions.forEach(patient => {
-      // Count discharges for this patient
-      const discharges = patient.admissions.filter(adm => adm.data_alta).length;
-      totalDischarges += discharges;
-
-      // Count all readmissions (total admissions - 1 for each patient with multiple admissions)
       const sortedAdmissions = patient.admissions.sort((a, b) =>
         new Date(a.data_admissao).getTime() - new Date(b.data_admissao).getTime()
       );
@@ -221,18 +234,24 @@ export default function Reinternacoes() {
 
       // Count all valid readmissions (where discharge date < next admission date)
       for (let i = 0; i < datas_alta.length - 1; i++) {
+        totalDischarges += 1;
         const altatTime = new Date(datas_alta[i]).getTime();
         const nextAdmTime = new Date(datas_adm[i + 1]).getTime();
-        const daysBetween = (nextAdmTime - altatTime) / (1000 * 60 * 60 * 24);
+        const daysBetween = Math.floor((nextAdmTime - altatTime) / (1000 * 60 * 60 * 24));
 
         if (daysBetween > 0) {
           totalReadmissions++;
         }
       }
+
+      // Add the last discharge to total (if exists)
+      if (datas_alta.length > 0) {
+        totalDischarges += 1;
+      }
     });
 
     const rate = totalDischarges > 0 ? (totalReadmissions / totalDischarges) * 100 : 0;
-    return rate % 1 === 0 ? rate.toString() : rate.toFixed(1);
+    return formatDecimalBR(rate);
   };
 
   const formatDate = (dateString: string) => {

@@ -13,6 +13,12 @@ export default function Pacientes() {
   const [selectedPaciente, setSelectedPaciente] = useState<PacienteEnriquecido | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // Filtra pacientes únicos por CNS
+  const pacientesUnicos = pacientes.filter(
+    (paciente, index, self) =>
+      paciente.cns && self.findIndex(p => p.cns === paciente.cns) === index
+  );
+
   const handlePacienteClick = (paciente: PacienteEnriquecido) => {
     setSelectedPaciente(paciente);
     setIsModalOpen(true);
@@ -62,7 +68,7 @@ export default function Pacientes() {
           </div>
           {searchTerm && (
             <p className="mt-2 text-sm text-gray-600">
-              {pacientes.length} paciente(s) encontrado(s) para "{searchTerm}"
+              {pacientesUnicos.length} paciente(s) encontrado(s) para "{searchTerm}"
             </p>
           )}
         </div>
@@ -93,7 +99,7 @@ export default function Pacientes() {
                 </Card>
               ))}
             </div>
-          ) : pacientes.length === 0 ? (
+          ) : pacientesUnicos.length === 0 ? (
             <div className="text-center py-12">
               <UserPlus className="mx-auto h-16 w-16 text-slate-400 mb-4" />
               <h3 className="text-lg font-semibold text-slate-700 mb-2">
@@ -108,7 +114,7 @@ export default function Pacientes() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {pacientes.map((paciente) => (
+              {pacientesUnicos.map((paciente) => (
                 <Card
                   key={paciente.id}
                   className="cursor-pointer hover:shadow-md transition-all duration-200 hover:scale-105"
@@ -197,29 +203,29 @@ export default function Pacientes() {
         </div>
 
         {/* Statistics Summary */}
-        {!isLoading && pacientes.length > 0 && (
+        {!isLoading && pacientesUnicos.length > 0 && (
           <div className="bg-gradient-to-br from-slate-50 to-white shadow-lg backdrop-blur-sm ring-1 ring-slate-200/50 rounded-xl p-6">
             <h3 className="text-lg font-semibold text-slate-700 mb-4">Resumo</h3>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="text-center">
-                <p className="text-2xl font-bold text-blue-600">{pacientes.length}</p>
+                <p className="text-2xl font-bold text-blue-600">{pacientesUnicos.length}</p>
                 <p className="text-sm text-gray-600">Total de Pacientes</p>
               </div>
               <div className="text-center">
                 <p className="text-2xl font-bold text-green-600">
-                  {pacientes.filter(p => p.numeroInternacoes === 1).length}
+                  {pacientesUnicos.filter(p => p.numeroInternacoes === 1).length}
                 </p>
                 <p className="text-sm text-gray-600">Primeira Internação</p>
               </div>
               <div className="text-center">
                 <p className="text-2xl font-bold text-yellow-600">
-                  {pacientes.filter(p => p.numeroInternacoes === 2).length}
+                  {pacientesUnicos.filter(p => p.numeroInternacoes === 2).length}
                 </p>
                 <p className="text-sm text-gray-600">Segunda Internação</p>
               </div>
               <div className="text-center">
                 <p className="text-2xl font-bold text-red-600">
-                  {pacientes.filter(p => p.numeroInternacoes > 2).length}
+                  {pacientesUnicos.filter(p => p.numeroInternacoes > 2).length}
                 </p>
                 <p className="text-sm text-gray-600">Múltiplas Reinternações</p>
               </div>

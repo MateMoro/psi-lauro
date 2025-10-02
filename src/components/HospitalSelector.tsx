@@ -19,10 +19,10 @@ export function HospitalSelector() {
 
   return (
     <div className="flex items-center gap-2">
-      <Building2 className="h-4 w-4 text-slate-600" />
+      <Building2 className="hidden md:block h-4 w-4 text-slate-600" />
       <Select value={selectedHospital} onValueChange={handleHospitalChange}>
-        <SelectTrigger className="w-[220px] h-10 text-sm border-slate-300 bg-white/80 backdrop-blur-sm">
-          <SelectValue placeholder="Selecionar hospital" />
+        <SelectTrigger className="w-32 md:w-[220px] h-10 text-xs md:text-sm border-slate-300 bg-white/80 backdrop-blur-sm">
+          <SelectValue placeholder="Hospital" />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="planalto">

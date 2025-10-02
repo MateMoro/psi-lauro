@@ -13,8 +13,8 @@ export function DashboardHeader() {
         </h1>
       </div>
 
-      <div className="flex items-center gap-1 lg:gap-2">
-        {/* Emergency Logout Button - Hidden on mobile */}
+      <div className="flex items-center gap-1 md:gap-2">
+        {/* Emergency Logout Button - Visible on all devices */}
         <Button
           onClick={() => {
             console.log('🚨 EMERGENCY LOGOUT CLICKED');
@@ -25,16 +25,16 @@ export function DashboardHeader() {
           }}
           variant="outline"
           size="sm"
-          className="hidden md:flex border-slate-300 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+          className="flex border-slate-300 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
         >
-          <LogOut className="h-4 w-4 mr-1" />
-          SAIR
+          <LogOut className="h-4 w-4" />
+          <span className="hidden md:inline ml-1">SAIR</span>
         </Button>
-        
-        <div className="block mr-4">
+
+        <div className="flex">
           <HospitalSelector />
         </div>
-        
+
       </div>
     </header>
   );

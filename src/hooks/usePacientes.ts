@@ -23,7 +23,7 @@ export interface PacienteEnriquecido extends Paciente {
   iniciais: string;
 }
 
-export function usePacientes() {
+export function usePacientes(mostrarApenasInternados: boolean = false) {
   const [searchTerm, setSearchTerm] = useState('');
   const { getTableName, selectedHospital } = useHospital();
 
@@ -115,23 +115,54 @@ export function usePacientes() {
 
   // Filtrar pacientes baseado no termo de busca
   const pacientesFiltrados = useMemo(() => {
-    if (!searchTerm.trim()) return pacientesEnriquecidos;
+    let resultado = pacientesEnriquecidos;
 
-    const termo = searchTerm.toLowerCase().trim();
+    // Aplicar filtro de busca por nome/iniciais/CNS
+    if (searchTerm.trim()) {
+      const termo = searchTerm.toLowerCase().trim();
 
-    return pacientesEnriquecidos.filter(paciente => {
-      // Busca por nome completo
-      const nomeMatch = paciente.nome?.toLowerCase().includes(termo);
+      resultado = resultado.filter(paciente => {
+        // Busca por nome completo
+        const nomeMatch = paciente.nome?.toLowerCase().includes(termo);
 
-      // Busca por iniciais
-      const iniciaisMatch = paciente.iniciais.toLowerCase().includes(termo);
+        // Busca por iniciais
+        const iniciaisMatch = paciente.iniciais.toLowerCase().includes(termo);
 
-      // Busca por CNS
-      const cnsMatch = paciente.cns?.includes(termo);
+        // Busca por CNS
+        const cnsMatch = paciente.cns?.includes(termo);
 
-      return nomeMatch || iniciaisMatch || cnsMatch;
-    });
-  }, [pacientesEnriquecidos, searchTerm]);
+        return nomeMatch || iniciaisMatch || cnsMatch;
+      });
+    }
+
+    // Aplicar filtro de pacientes internados atualmente
+    if (mostrarApenasInternados) {
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0); // Normalizar para meia-noite
+
+      resultado = resultado.filter(paciente => {
+        // Parse das datas
+        const dataAdmissao = paciente.data_admissao ? new Date(paciente.data_admissao) : null;
+        const dataAlta = paciente.data_alta ? new Date(paciente.data_alta) : null;
+
+        // Normalizar datas para comparação (sem horário)
+        if (dataAdmissao) {
+          dataAdmissao.setHours(0, 0, 0, 0);
+        }
+        if (dataAlta) {
+          dataAlta.setHours(0, 0, 0, 0);
+        }
+
+        // Lógica: admissão <= hoje E (alta é null OU alta >= hoje)
+        const admitidoAteHoje = dataAdmissao && dataAdmissao <= hoje;
+        const semAltaOuAltaFutura = !dataAlta || dataAlta >= hoje;
+
+        return admitidoAteHoje && semAltaOuAltaFutura;
+      });
+    }
+
+    return resultado;
+  }, [pacientesEnriquecidos, searchTerm, mostrarApenasInternados]);
 
   return {
     pacientes: pacientesFiltrados,

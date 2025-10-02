@@ -38,7 +38,7 @@ export default function IndicadoresAssistenciais() {
   const [loading, setLoading] = useState(true);
   const periodFilter: PeriodFilter = 'month';
   const { toast } = useToast();
-  const { getTableName, getCapacity } = useHospital();
+  const { getTableName, getCapacity, selectedHospital } = useHospital();
 
   const fetchPatients = useCallback(async () => {
     try {
@@ -193,11 +193,7 @@ export default function IndicadoresAssistenciais() {
       responseTime60min,
       responseTime120min,
       currentOccupancy,
-      totalCapacity,
-      // Raw numeric values for charts
-      readmission7DaysRaw: readmission7Days,
-      readmission15DaysRaw: readmission15Days,
-      readmission30DaysRaw: readmission30Days
+      totalCapacity
     };
   };
 
@@ -207,11 +203,21 @@ export default function IndicadoresAssistenciais() {
       return { start: firstDayOfMonth(prev), end: prev, formatted: '' };
     }
 
+    // Define hospital-specific minimum start dates
+    const hospitalMinDates = {
+      planalto: new Date(2024, 6, 1),    // July 1, 2024
+      tiradentes: new Date(2024, 7, 1)   // August 1, 2024
+    };
+
     // menor data de admissão no dataset
     const adms = patients
       .map(p => parseLocalDate(p.data_admissao))
       .filter((d): d is Date => !!d);
     const earliestAdmission = new Date(Math.min(...adms.map(d => d.getTime())));
+
+    // Use the maximum of (earliest admission, hospital minimum date)
+    const hospitalMinDate = hospitalMinDates[selectedHospital];
+    const actualStartDate = earliestAdmission > hospitalMinDate ? earliestAdmission : hospitalMinDate;
 
     // fim = último dia do mês anterior ao atual
     const periodEnd = lastDayOfPreviousMonth();
@@ -224,9 +230,9 @@ export default function IndicadoresAssistenciais() {
     };
 
     return {
-      start: firstDayOfMonth(earliestAdmission),
+      start: firstDayOfMonth(actualStartDate),
       end: periodEnd,
-      formatted: `${formatMMYY(firstDayOfMonth(earliestAdmission))} → ${formatMMYY(periodEnd)}`
+      formatted: `${formatMMYY(firstDayOfMonth(actualStartDate))} → ${formatMMYY(periodEnd)}`
     };
   };
 
@@ -407,9 +413,9 @@ export default function IndicadoresAssistenciais() {
   const getReadmissionBarData = () => {
     const metrics = calculateAdvancedMetrics();
     return [
-      { name: 'Até 7 dias', value: metrics.readmission7DaysRaw },
-      { name: 'Até 15 dias', value: metrics.readmission15DaysRaw },
-      { name: 'Até 30 dias', value: metrics.readmission30DaysRaw }
+      { name: 'Até 7 dias', value: parseFloat(metrics.readmission7Days.replace(',', '.')) },
+      { name: 'Até 15 dias', value: parseFloat(metrics.readmission15Days.replace(',', '.')) },
+      { name: 'Até 30 dias', value: parseFloat(metrics.readmission30Days.replace(',', '.')) }
     ];
   };
 

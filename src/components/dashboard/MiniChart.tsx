@@ -166,18 +166,18 @@ export function MiniChart({
                       const count = props.payload?.count;
                       const percentage = props.payload?.percentage;
                       return [
-                        `${count !== undefined ? count : value} altas${percentage !== undefined ? ` (${percentage}%)` : ''}`,
+                        `${count !== undefined ? count : value} altas${percentage !== undefined ? ` (${Number(percentage).toFixed(1).replace('.', ',')}%)` : ''}`,
                         'Valor'
                       ];
                     }
                     if (title.toLowerCase().includes('satisfação')) {
                       return [
-                        `${value}%`,
+                        `${Number(value).toFixed(1).replace('.', ',')}%`,
                         'Taxa de Satisfação'
                       ];
                     }
                     return [
-                      `${value}${title.toLowerCase().includes('length of stay') || title.toLowerCase().includes('los') ? ' pacientes' : (typeof value === 'number' && value <= 100 ? '%' : '')}`, 
+                      `${Number(value).toFixed(1).replace('.', ',')}${title.toLowerCase().includes('length of stay') || title.toLowerCase().includes('los') ? ' pacientes' : (typeof value === 'number' && value <= 100 ? '%' : '')}`,
                       'Valor'
                     ];
                   }}
@@ -224,9 +224,9 @@ export function MiniChart({
                   }
                   tickFormatter={showYAxis ? (value) => {
                     if (title.toLowerCase().includes('permanência') || title.toLowerCase().includes('média de permanência')) {
-                      return `${Number(value).toFixed(1)}`;
+                      return `${Number(value).toFixed(1).replace('.', ',')}`;
                     }
-                    return `${value}%`;
+                    return `${Number(value).toFixed(1).replace('.', ',')}%`;
                   } : undefined}
                 />
                 <Tooltip 
@@ -242,9 +242,9 @@ export function MiniChart({
                   }}
                   formatter={(value: any) => {
                     if (title.toLowerCase().includes('permanência') || title.toLowerCase().includes('média de permanência')) {
-                      return [`${Number(value).toFixed(1)} dias`, 'Média de Permanência'];
+                      return [`${Number(value).toFixed(1).replace('.', ',')} dias`, 'Média de Permanência'];
                     }
-                    return [`${value}%`, 'Taxa de Ocupação'];
+                    return [`${Number(value).toFixed(1).replace('.', ',')}%`, 'Taxa de Ocupação'];
                   }}
                 />
                 <Line 
@@ -310,7 +310,7 @@ export function MiniChart({
                   <span className="text-xs font-semibold text-slate-700">{item.name}</span>
                 </div>
                 <span className="text-sm font-bold text-slate-800">
-                  {typeof item.value === 'number' ? item.value.toFixed(1) : item.value}
+                  {typeof item.value === 'number' ? item.value.toFixed(1).replace('.', ',') : item.value}
                   {title.toLowerCase().includes('length of stay') || title.toLowerCase().includes('los') ? ' pacientes' : title.toLowerCase().includes('dia da semana') ? '' : '%'}
                 </span>
               </div>

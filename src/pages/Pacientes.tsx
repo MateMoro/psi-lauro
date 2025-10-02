@@ -1,15 +1,17 @@
 import { useState } from "react";
-import { UserPlus, Search, AlertTriangle, User, MapPin, Calendar } from "lucide-react";
+import { UserPlus, Search, AlertTriangle, User, MapPin, Calendar, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Switch } from "@/components/ui/switch";
 import { usePacientes, PacienteEnriquecido } from "@/hooks/usePacientes";
 import { PacienteModal } from "@/components/pacientes/PacienteModal";
 
 export default function Pacientes() {
-  const { pacientes, searchTerm, setSearchTerm, isLoading, error } = usePacientes();
+  const [mostrarApenasInternados, setMostrarApenasInternados] = useState(false);
+  const { pacientes, searchTerm, setSearchTerm, isLoading, error } = usePacientes(mostrarApenasInternados);
   const [selectedPaciente, setSelectedPaciente] = useState<PacienteEnriquecido | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -70,6 +72,38 @@ export default function Pacientes() {
             <p className="mt-2 text-sm text-gray-600">
               {pacientesUnicos.length} paciente(s) encontrado(s) para "{searchTerm}"
             </p>
+          )}
+        </div>
+
+        {/* Filter Section */}
+        <div className="bg-gradient-to-br from-slate-50 to-white shadow-lg backdrop-blur-sm ring-1 ring-slate-200/50 rounded-xl p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-blue-100">
+                <Filter className="h-4 w-4 text-blue-600" />
+              </div>
+              <div className="flex-1">
+                <label htmlFor="internados-filter" className="text-sm font-semibold text-slate-800 cursor-pointer">
+                  Mostrar apenas pacientes internados atualmente
+                </label>
+                <p className="text-xs text-slate-500">
+                  Filtra pacientes que estão internados hoje
+                </p>
+              </div>
+            </div>
+            <Switch
+              id="internados-filter"
+              checked={mostrarApenasInternados}
+              onCheckedChange={setMostrarApenasInternados}
+            />
+          </div>
+          {mostrarApenasInternados && (
+            <div className="mt-3 pt-3 border-t border-slate-200">
+              <Badge variant="default" className="bg-blue-600">
+                <Filter className="h-3 w-3 mr-1" />
+                Filtro ativo: {pacientesUnicos.length} paciente(s) internado(s)
+              </Badge>
+            </div>
           )}
         </div>
 

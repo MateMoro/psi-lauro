@@ -215,42 +215,60 @@ export default function Reinternacoes() {
   };
 
   const calculateTotalReadmissionRate = () => {
-    if (readmissions.length === 0) return "0,0";
+    if (rawPatients.length === 0) return "0,0";
 
-    // Calculate total readmission rate (all readmissions regardless of interval)
-    // Using same logic pattern as shared function but without day limit
-    let totalDischarges = 0;
-    let totalReadmissions = 0;
+    // Group ALL patients by CNS (matching Python logic)
+    const patientGroups = rawPatients.reduce((acc, patient) => {
+      if (!patient.cns) return acc; // Skip patients without CNS (like dropna in Python)
+      const cnsKey = patient.cns.toString();
+      if (!acc[cnsKey]) {
+        acc[cnsKey] = [];
+      }
+      acc[cnsKey].push(patient);
+      return acc;
+    }, {} as Record<string, RawPatient[]>);
 
-    readmissions.forEach(patient => {
-      const sortedAdmissions = patient.admissions.sort((a, b) =>
+    let reinternacoes = 0;
+    let altas_total = 0;
+
+    // For each patient group (by CNS)
+    Object.values(patientGroups).forEach(grupo => {
+      // Sort by admission date
+      const sortedGrupo = grupo.sort((a, b) =>
         new Date(a.data_admissao).getTime() - new Date(b.data_admissao).getTime()
       );
 
-      const datas_alta = sortedAdmissions
-        .map(adm => adm.data_alta)
+      const datas_adm = sortedGrupo.map(p => p.data_admissao);
+      const datas_alta_validas = sortedGrupo
+        .map(p => p.data_alta)
         .filter(alta => alta !== null && alta !== undefined);
-      const datas_adm = sortedAdmissions.map(adm => adm.data_admissao);
 
-      // Count all valid readmissions (where discharge date < next admission date)
-      for (let i = 0; i < datas_alta.length - 1; i++) {
-        totalDischarges += 1;
-        const altatTime = new Date(datas_alta[i]).getTime();
-        const nextAdmTime = new Date(datas_adm[i + 1]).getTime();
-        const daysBetween = Math.floor((nextAdmTime - altatTime) / (1000 * 60 * 60 * 24));
+      // Loop through all discharges except the last
+      for (let i = 0; i < datas_alta_validas.length - 1; i++) {
+        altas_total += 1;
+        const discharge = datas_alta_validas[i];
+        const next_adm = i + 1 < datas_adm.length ? datas_adm[i + 1] : null;
 
-        if (daysBetween > 0) {
-          totalReadmissions++;
+        if (discharge && next_adm) {
+          const dischargeDate = new Date(discharge);
+          const nextAdmDate = new Date(next_adm);
+          const days_between = Math.floor(
+            (nextAdmDate.getTime() - dischargeDate.getTime()) / (1000 * 60 * 60 * 24)
+          );
+
+          if (days_between > 0) {
+            reinternacoes += 1;
+          }
         }
       }
 
       // Add the last discharge to total (if exists)
-      if (datas_alta.length > 0) {
-        totalDischarges += 1;
+      if (datas_alta_validas.length > 0) {
+        altas_total += 1;
       }
     });
 
-    const rate = totalDischarges > 0 ? (totalReadmissions / totalDischarges) * 100 : 0;
+    const rate = altas_total > 0 ? (reinternacoes / altas_total) * 100 : 0;
     return formatDecimalBR(rate);
   };
 

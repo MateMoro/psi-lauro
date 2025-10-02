@@ -884,7 +884,7 @@ export default function Dashboard() {
                 <BarChart3 className="h-8 w-8 text-white drop-shadow-sm" />
               </div>
               <div className="flex-1">
-                <h1 className="text-3xl lg:text-4xl font-black text-slate-800 tracking-tight mb-2">
+                <h1 className="text-1xl lg:text-1xl font-black text-slate-800 tracking-tight mb-2">
                   Bem-vindo, {profile?.nome || user?.email || 'Usuário'}
                 </h1>
                 <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600">

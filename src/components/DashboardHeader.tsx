@@ -8,7 +8,7 @@ export function DashboardHeader() {
     <header className="h-20 border-b border-slate-200/60 bg-gradient-to-r from-slate-50 to-white flex items-center justify-between px-6 shadow-sm sticky top-0 z-40 backdrop-blur-sm">
       <div className="flex items-center gap-2 md:gap-3">
         <SidebarTrigger className="text-slate-600 hover:text-slate-800 transition-colors" />
-        <h1 className="text-base md:text-lg font-black text-slate-800 tracking-tight">
+        <h1 className="text-xl md:text-2xl font-black text-slate-800 tracking-tight">
           IntegraRAPS<span className="hidden md:inline"> – Inteligência Analítica</span>
         </h1>
       </div>

@@ -18,6 +18,17 @@ export const getHospitalDisplayName = (hospital: Hospital): string => {
   }
 };
 
+export const getHospitalShortName = (hospital: Hospital): string => {
+  switch (hospital) {
+    case 'planalto':
+      return 'Planalto';
+    case 'tiradentes':
+      return 'Tiradentes';
+    default:
+      return 'Hospital';
+  }
+};
+
 export const getTableName = (hospital: Hospital): string => {
   return hospital === 'planalto' ? 'pacientes_planalto' : 'pacientes_tiradentes';
 };

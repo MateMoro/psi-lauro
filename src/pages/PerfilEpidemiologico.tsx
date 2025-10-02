@@ -71,10 +71,10 @@ export default function PerfilEpidemiologico() {
 
     return Object.entries(genderCount)
       .filter(([, value]) => value > 0)
-      .map(([name, value], index) => ({ 
-        name: name.charAt(0).toUpperCase() + name.slice(1).toLowerCase(), 
-        value: Math.round((value / patients.length) * 100), 
-        color: colors[index] || "#6b7280" 
+      .map(([name, value], index) => ({
+        name: name.charAt(0).toUpperCase() + name.slice(1).toLowerCase(),
+        value: parseFloat(((value / patients.length) * 100).toFixed(1)),
+        color: colors[index] || "#6b7280"
       }));
   };
 
@@ -119,7 +119,7 @@ export default function PerfilEpidemiologico() {
     const total = validPatients.length;
     return Object.entries(ageRanges).map(([name, count]) => ({
       name,
-      value: total > 0 ? Math.round((count / total) * 100) : 0,
+      value: total > 0 ? parseFloat(((count / total) * 100).toFixed(1)) : 0,
       count
     }));
   };
@@ -223,10 +223,10 @@ export default function PerfilEpidemiologico() {
 
     ages.sort((a, b) => a - b);
     const sum = ages.reduce((a, b) => a + b, 0);
-    const average = (sum / ages.length).toFixed(1);
+    const average = (sum / ages.length).toFixed(1).replace('.', ',');
     const median = ages.length % 2 === 0
-      ? ((ages[ages.length / 2 - 1] + ages[ages.length / 2]) / 2).toFixed(1)
-      : ages[Math.floor(ages.length / 2)].toFixed(1);
+      ? ((ages[ages.length / 2 - 1] + ages[ages.length / 2]) / 2).toFixed(1).replace('.', ',')
+      : ages[Math.floor(ages.length / 2)].toFixed(1).replace('.', ',');
 
     return {
       average,
@@ -278,7 +278,7 @@ export default function PerfilEpidemiologico() {
 
     const result = top4.map(([, { count, displayName }]) => ({
       name: displayName,
-      value: total > 0 ? Math.round((count / total) * 100) : 0,
+      value: total > 0 ? parseFloat(((count / total) * 100).toFixed(1)) : 0,
       count
     }));
 
@@ -286,7 +286,7 @@ export default function PerfilEpidemiologico() {
       const othersCount = others.reduce((sum, [, { count }]) => sum + count, 0);
       result.push({
         name: 'Outros',
-        value: total > 0 ? Math.round((othersCount / total) * 100) : 0,
+        value: total > 0 ? parseFloat(((othersCount / total) * 100).toFixed(1)) : 0,
         count: othersCount
       });
     }
@@ -426,14 +426,14 @@ export default function PerfilEpidemiologico() {
                     <div key={index} className="space-y-2">
                       <div className="flex justify-between items-center">
                         <span className="text-xs font-semibold text-slate-700">{item.name}</span>
-                        <span className="text-xs font-bold text-slate-800">{item.value}%</span>
+                        <span className="text-xs font-bold text-slate-800">{item.value.toFixed(1).replace('.', ',')}%</span>
                       </div>
                       <div className="w-full bg-slate-200 rounded-full h-2">
-                        <div 
+                        <div
                           className="h-2 rounded-full transition-all duration-500"
-                          style={{ 
-                            width: `${item.value}%`, 
-                            backgroundColor: item.color 
+                          style={{
+                            width: `${item.value}%`,
+                            backgroundColor: item.color
                           }}
                         />
                       </div>

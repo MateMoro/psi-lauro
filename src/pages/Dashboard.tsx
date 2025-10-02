@@ -110,7 +110,7 @@ export default function Dashboard() {
       const result = weekdayNames.map((name, index) => ({
         name,
         value: fixedCounts[index],
-        percentage: Math.round((fixedCounts[index] / total) * 100)
+        percentage: parseFloat(((fixedCounts[index] / total) * 100).toFixed(1))
       }));
 
       setWeekdayDischarges(result);
@@ -370,7 +370,7 @@ export default function Dashboard() {
       .sort(([,a], [,b]) => b - a)
       .map(([name, count], index) => ({
         name,
-        value: total > 0 ? Number(formatDecimalBR((count / total) * 100).replace(',', '.')) : 0,
+        value: total > 0 ? parseFloat(((count / total) * 100).toFixed(1)) : 0,
         count: count,
         color: chartColors[index % chartColors.length] || "#6b7280"
       }));
@@ -445,7 +445,7 @@ export default function Dashboard() {
     const result = sortedDiagnoses.map(([name, value], index) => ({
       name: capitalizeFirst(name),
       value,
-      percentage: total > 0 ? Math.round((value / total) * 100) : 0,
+      percentage: total > 0 ? parseFloat(((value / total) * 100).toFixed(1)) : 0,
       color: chartColors[index % chartColors.length] || "#6b7280"
     }));
 
@@ -455,7 +455,7 @@ export default function Dashboard() {
       result.push({
         name: capitalizeFirst(name),
         value,
-        percentage: total > 0 ? Math.round((value / total) * 100) : 0,
+        percentage: total > 0 ? parseFloat(((value / total) * 100).toFixed(1)) : 0,
         color: "#6b7280" // Cor cinza para "Outros"
       });
     }
@@ -516,10 +516,10 @@ export default function Dashboard() {
     });
 
     const total = patients.length;
-    return Object.entries(ageRanges).map(([name, count]) => ({ 
-      name, 
-      value: total > 0 ? Math.round((count / total) * 100) : 0,
-      count 
+    return Object.entries(ageRanges).map(([name, count]) => ({
+      name,
+      value: total > 0 ? parseFloat(((count / total) * 100).toFixed(1)) : 0,
+      count
     }));
   };
 
@@ -571,7 +571,7 @@ export default function Dashboard() {
     // Pegar os 6 principais CAPS
     const topCaps = sortedCaps.slice(0, 6);
     const mainCapsData = topCaps.map(([capsName, count], index) => {
-      const percentage = Math.round((count / total) * 100);
+      const percentage = parseFloat(((count / total) * 100).toFixed(1));
       return {
         name: capsName,
         value: percentage,
@@ -584,7 +584,7 @@ export default function Dashboard() {
     if (sortedCaps.length > 6) {
       const othersCaps = sortedCaps.slice(6);
       const othersCount = othersCaps.reduce((sum, [, count]) => sum + count, 0);
-      const othersPercentage = Math.round((othersCount / total) * 100);
+      const othersPercentage = parseFloat(((othersCount / total) * 100).toFixed(1));
 
       if (othersPercentage > 0) {
         mainCapsData.push({
@@ -651,7 +651,7 @@ export default function Dashboard() {
     // Pegar os 6 principais CAPS AD
     const topCaps = sortedCaps.slice(0, 6);
     const mainCapsData = topCaps.map(([capsName, count], index) => {
-      const percentage = Math.round((count / total) * 100);
+      const percentage = parseFloat(((count / total) * 100).toFixed(1));
       return {
         name: capsName,
         value: percentage,
@@ -664,7 +664,7 @@ export default function Dashboard() {
     if (sortedCaps.length > 6) {
       const othersCaps = sortedCaps.slice(6);
       const othersCount = othersCaps.reduce((sum, [, count]) => sum + count, 0);
-      const othersPercentage = Math.round((othersCount / total) * 100);
+      const othersPercentage = parseFloat(((othersCount / total) * 100).toFixed(1));
 
       if (othersPercentage > 0) {
         mainCapsData.push({
@@ -700,10 +700,10 @@ export default function Dashboard() {
     const total = patients.length;
     return Object.entries(procedenciaCount)
       .sort(([,a], [,b]) => b - a)
-      .map(([name, count]) => ({ 
+      .map(([name, count]) => ({
         name,
-        value: total > 0 ? Math.round((count / total) * 100) : 0,
-        count 
+        value: total > 0 ? parseFloat(((count / total) * 100).toFixed(1)) : 0,
+        count
       }));
   };
 
@@ -834,7 +834,7 @@ export default function Dashboard() {
       
       return {
         name: month.name,
-        value: Math.round(occupancyRate),
+        value: parseFloat(occupancyRate.toFixed(1)),
         admissions: data.admissions,
         discharges: data.discharges
       };

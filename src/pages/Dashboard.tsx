@@ -126,11 +126,21 @@ export default function Dashboard() {
       return { start: firstDayOfMonth(prev), end: prev, formatted: '' };
     }
 
+    // Define hospital-specific minimum start dates
+    const hospitalMinDates = {
+      planalto: new Date(2024, 6, 1),    // July 1, 2024
+      tiradentes: new Date(2024, 7, 1)   // August 1, 2024
+    };
+
     // menor data de admissão no dataset
     const adms = patients
       .map(p => parseLocalDate(p.data_admissao))
       .filter((d): d is Date => !!d);
     const earliestAdmission = new Date(Math.min(...adms.map(d => d.getTime())));
+
+    // Use the maximum of (earliest admission, hospital minimum date)
+    const hospitalMinDate = hospitalMinDates[selectedHospital];
+    const actualStartDate = earliestAdmission > hospitalMinDate ? earliestAdmission : hospitalMinDate;
 
     // fim = último dia do mês anterior ao atual
     const periodEnd = lastDayOfPreviousMonth();
@@ -143,9 +153,9 @@ export default function Dashboard() {
     };
 
     return {
-      start: firstDayOfMonth(earliestAdmission),
+      start: firstDayOfMonth(actualStartDate),
       end: periodEnd,
-      formatted: `${formatMMYY(firstDayOfMonth(earliestAdmission))} → ${formatMMYY(periodEnd)}`
+      formatted: `${formatMMYY(firstDayOfMonth(actualStartDate))} → ${formatMMYY(periodEnd)}`
     };
   };
 

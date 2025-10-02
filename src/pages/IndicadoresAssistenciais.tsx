@@ -205,7 +205,7 @@ export default function IndicadoresAssistenciais() {
 
     // Define hospital-specific minimum start dates
     const hospitalMinDates = {
-      planalto: new Date(2024, 6, 1),    // July 1, 2024
+      planalto: new Date(2024, 7, 1),    // July 1, 2024
       tiradentes: new Date(2024, 7, 1)   // August 1, 2024
     };
 

@@ -11,15 +11,23 @@ import { PacienteModal } from "@/components/pacientes/PacienteModal";
 
 export default function Pacientes() {
   const [mostrarApenasInternados, setMostrarApenasInternados] = useState(false);
+  const [mostrarApenasReinternacoes, setMostrarApenasReinternacoes] = useState(false);
   const { pacientes, searchTerm, setSearchTerm, isLoading, error } = usePacientes(mostrarApenasInternados);
   const [selectedPaciente, setSelectedPaciente] = useState<PacienteEnriquecido | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Filtra pacientes únicos por CNS
-  const pacientesUnicos = pacientes.filter(
+  let pacientesUnicos = pacientes.filter(
     (paciente, index, self) =>
       paciente.cns && self.findIndex(p => p.cns === paciente.cns) === index
   );
+
+  // Aplica filtro de reinternações (3 ou mais internações)
+  if (mostrarApenasReinternacoes) {
+    pacientesUnicos = pacientesUnicos.filter(
+      paciente => paciente.numeroInternacoes >= 3
+    );
+  }
 
   const handlePacienteClick = (paciente: PacienteEnriquecido) => {
     setSelectedPaciente(paciente);
@@ -77,32 +85,67 @@ export default function Pacientes() {
 
         {/* Filter Section */}
         <div className="bg-gradient-to-br from-slate-50 to-white shadow-lg backdrop-blur-sm ring-1 ring-slate-200/50 rounded-xl p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-100">
-                <Filter className="h-4 w-4 text-blue-600" />
+          <div className="space-y-4">
+            {/* Filtro de Internados */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-blue-100">
+                  <Filter className="h-4 w-4 text-blue-600" />
+                </div>
+                <div className="flex-1">
+                  <label htmlFor="internados-filter" className="text-sm font-semibold text-slate-800 cursor-pointer">
+                    Mostrar apenas pacientes internados atualmente
+                  </label>
+                  <p className="text-xs text-slate-500">
+                    Filtra pacientes que estão internados hoje
+                  </p>
+                </div>
               </div>
-              <div className="flex-1">
-                <label htmlFor="internados-filter" className="text-sm font-semibold text-slate-800 cursor-pointer">
-                  Mostrar apenas pacientes internados atualmente
-                </label>
-                <p className="text-xs text-slate-500">
-                  Filtra pacientes que estão internados hoje
-                </p>
-              </div>
+              <Switch
+                id="internados-filter"
+                checked={mostrarApenasInternados}
+                onCheckedChange={setMostrarApenasInternados}
+              />
             </div>
-            <Switch
-              id="internados-filter"
-              checked={mostrarApenasInternados}
-              onCheckedChange={setMostrarApenasInternados}
-            />
+
+            {/* Filtro de Reinternações */}
+            <div className="flex items-center justify-between pt-4 border-t border-slate-200">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-red-100">
+                  <AlertTriangle className="h-4 w-4 text-red-600" />
+                </div>
+                <div className="flex-1">
+                  <label htmlFor="reinternacoes-filter" className="text-sm font-semibold text-slate-800 cursor-pointer">
+                    Mostrar apenas pacientes com 3 ou mais internações
+                  </label>
+                  <p className="text-xs text-slate-500">
+                    Filtra pacientes com múltiplas reinternações
+                  </p>
+                </div>
+              </div>
+              <Switch
+                id="reinternacoes-filter"
+                checked={mostrarApenasReinternacoes}
+                onCheckedChange={setMostrarApenasReinternacoes}
+              />
+            </div>
           </div>
-          {mostrarApenasInternados && (
-            <div className="mt-3 pt-3 border-t border-slate-200">
-              <Badge variant="default" className="bg-blue-600">
-                <Filter className="h-3 w-3 mr-1" />
-                Filtro ativo: {pacientesUnicos.length} paciente(s) internado(s)
-              </Badge>
+
+          {/* Status dos Filtros */}
+          {(mostrarApenasInternados || mostrarApenasReinternacoes) && (
+            <div className="mt-4 pt-4 border-t border-slate-200 flex flex-wrap gap-2">
+              {mostrarApenasInternados && (
+                <Badge variant="default" className="bg-blue-600">
+                  <Filter className="h-3 w-3 mr-1" />
+                  Internados: {pacientesUnicos.length} paciente(s)
+                </Badge>
+              )}
+              {mostrarApenasReinternacoes && (
+                <Badge variant="destructive">
+                  <AlertTriangle className="h-3 w-3 mr-1" />
+                  3+ Internações: {pacientesUnicos.length} paciente(s)
+                </Badge>
+              )}
             </div>
           )}
         </div>
